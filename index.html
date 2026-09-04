@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Basic page setup -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- The browser-tab title -->
+    <title>SiTC Games</title>
+
+    <!-- Hub styling kept in its own file -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Main SiTC Games heading -->
+    <header class="site-header">
+        <h1>SiTC Games</h1>
+        <p>Explore the laboratory. Complete the challenges. Collect the badges.</p>
+    </header>
+
+    <main>
+
+        <!-- =========================================================
+             LAB PASSPORT
+             hub.js will update these badges automatically depending
+             on what the player has completed on this browser/device.
+             ========================================================= -->
+        <section class="passport">
+            <div class="passport-heading">
+                <div>
+                    <p class="eyebrow">YOUR PROGRESS</p>
+                    <h2>My Lab Passport</h2>
+                </div>
+
+                <!-- JavaScript changes this number automatically -->
+                <div id="progressCount" class="progress-count">0 / 5</div>
+            </div>
+
+            <div class="passport-badges">
+
+                <div class="passport-badge" data-passport-lab="transfusion">
+                    <span class="badge-icon">🩸</span>
+                    <span>Transfusion</span>
+                    <strong class="badge-status">Not completed</strong>
+                </div>
+
+                <div class="passport-badge" data-passport-lab="chemistry">
+                    <span class="badge-icon">🧪</span>
+                    <span>Clinical Chemistry</span>
+                    <strong class="badge-status">Not completed</strong>
+                </div>
+
+                <div class="passport-badge" data-passport-lab="microbiology">
+                    <span class="badge-icon">🦠</span>
+                    <span>Microbiology</span>
+                    <strong class="badge-status">Not completed</strong>
+                </div>
+
+                <div class="passport-badge" data-passport-lab="haematology">
+                    <span class="badge-icon">🔬</span>
+                    <span>Haematology</span>
+                    <strong class="badge-status">Not completed</strong>
+                </div>
+
+                <div class="passport-badge" data-passport-lab="histology">
+                    <span class="badge-icon">🔎</span>
+                    <span>Histology</span>
+                    <strong class="badge-status">Not completed</strong>
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- =========================================================
+             AVAILABLE GAMES
+             These cards will eventually become the actual lab games.
+             The existing Lab Hero prototype already links to its
+             current folder in this repository.
+             ========================================================= -->
+        <section class="games-section">
+
+            <div class="section-heading">
+                <p class="eyebrow">CHOOSE YOUR NEXT MISSION</p>
+                <h2>Laboratory Games</h2>
+            </div>
+
+            <div class="game-grid">
+
+                <article class="game-card">
+                    <div class="game-icon">🩸</div>
+                    <h3>Transfusion</h3>
+                    <p>Help Nicky and discover how scientists find safe blood for patients.</p>
+                    <button class="game-button disabled" disabled>
+                        Coming Soon
+                    </button>
+                </article>
+
+                <article class="game-card">
+                    <div class="game-icon">🧪</div>
+                    <h3>Lab Hero</h3>
+                    <p>Play the first SiTC Games prototype.</p>
+
+                    <!-- Relative link means GitHub Pages opens the
+                         existing lab-hero folder within SiTC-Games. -->
+                    <a class="game-button" href="lab-hero/">
+                        Play Prototype
+                    </a>
+                </article>
+
+                <article class="game-card">
+                    <div class="game-icon">🦠</div>
+                    <h3>Microbiology</h3>
+                    <p>A new laboratory mission will appear here.</p>
+                    <button class="game-button disabled" disabled>
+                        Coming Soon
+                    </button>
+                </article>
+
+                <article class="game-card">
+                    <div class="game-icon">🔬</div>
+                    <h3>Haematology</h3>
+                    <p>A new laboratory mission will appear here.</p>
+                    <button class="game-button disabled" disabled>
+                        Coming Soon
+                    </button>
+                </article>
+
+                <article class="game-card">
+                    <div class="game-icon">🔎</div>
+                    <h3>Histology</h3>
+                    <p>A new laboratory mission will appear here.</p>
+                    <button class="game-button disabled" disabled>
+                        Coming Soon
+                    </button>
+                </article>
+
+            </div>
+        </section>
+
+
+        <!-- =========================================================
+             TEMPORARY DEVELOPMENT CONTROLS
+             These are ONLY here so we can test whether localStorage
+             and the passport work before the real games exist.
+             We will remove this section later.
+             ========================================================= -->
+        <section class="developer-test">
+            <h2>Passport Test</h2>
+            <p>
+                Temporary controls for testing browser-stored progress.
+            </p>
+
+            <button id="testCompleteTransfusion">
+                Mark Transfusion Complete
+            </button>
+
+            <button id="testResetPassport">
+                Reset Passport
+            </button>
+        </section>
+
+    </main>
+
+    <!-- Passport behaviour -->
+    <script src="hub.js"></script>
+
+</body>
+</html>
