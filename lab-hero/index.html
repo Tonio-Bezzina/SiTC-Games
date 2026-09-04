@@ -1,1 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Lab Hero</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!--
+    The app shell fills the browser window.
+    The game stage inside it always remains 16:9.
+  -->
+  <main id="appShell">
+    <section id="rotateScreen" aria-live="polite">
+      <div class="rotateCard">
+        <div class="rotateIcon" aria-hidden="true">📱↻</div>
+        <h1>Turn your device</h1>
+        <p>This game is played in landscape mode.</p>
+      </div>
+    </section>
 
+    <section id="startScreen" class="overlayScreen">
+      <div class="startCard">
+        <h1>🧪 Lab Hero</h1>
+        <p>Help the laboratory choose which sample needs to be tested first.</p>
+        <button id="playButton" type="button">Play</button>
+      </div>
+    </section>
+
+    <section id="gameStage" aria-label="Lab Hero game">
+      <div class="gameTopBar">
+        <div>
+          <h1>🧪 Lab Hero</h1>
+          <p>Which sample should the laboratory test first?</p>
+        </div>
+
+        <div class="topActions">
+          <div class="scoreBox">Score: <strong id="score">0</strong></div>
+          <button id="fullscreenButton" type="button" class="smallButton">Full screen</button>
+          <button id="exitButton" type="button" class="smallButton">Exit</button>
+        </div>
+      </div>
+
+      <div class="sampleGrid">
+        <button class="sample" data-priority="1" type="button">
+          <div class="tube" aria-hidden="true">
+            <div class="tubeLiquid"></div>
+          </div>
+          <strong>Health Centre</strong>
+          <span>Routine blood test</span>
+        </button>
+
+        <button class="sample" data-priority="3" type="button">
+          <div class="tube" aria-hidden="true">
+            <div class="tubeLiquid"></div>
+          </div>
+          <strong>Emergency Department</strong>
+          <span>Patient suddenly became very unwell</span>
+        </button>
+
+        <button class="sample" data-priority="1" type="button">
+          <div class="tube" aria-hidden="true">
+            <div class="tubeLiquid"></div>
+          </div>
+          <strong>Outpatient Clinic</strong>
+          <span>Routine check-up</span>
+        </button>
+      </div>
+
+      <div id="feedback" aria-live="polite">Choose a sample.</div>
+
+      <div class="bottomActions">
+        <button id="restartButton" type="button">Try again</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

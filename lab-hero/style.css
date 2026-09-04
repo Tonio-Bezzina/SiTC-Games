@@ -1,0 +1,272 @@
+/*
+  LAB HERO PROTOTYPE
+  The browser window can be any shape, but #gameStage always stays 16:9.
+  Extra space becomes letterboxing rather than stretching the game.
+*/
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #17324d;
+  background: #111820;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+button:focus-visible {
+  outline: 4px solid #ffd54a;
+  outline-offset: 3px;
+}
+
+#appShell {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #111820;
+  overflow: hidden;
+}
+
+/*
+  This keeps the game at exactly 16:9 while making it as large as possible.
+*/
+#gameStage {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  height: min(100vh, calc(100vw * 9 / 16));
+  aspect-ratio: 16 / 9;
+  padding: clamp(14px, 2vw, 32px);
+  background: #f4f8fb;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.gameTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.gameTopBar h1 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 42px);
+}
+
+.gameTopBar p {
+  margin: 6px 0 0;
+  font-size: clamp(13px, 1.4vw, 20px);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.scoreBox,
+.smallButton,
+#restartButton {
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+
+.scoreBox {
+  background: white;
+  font-size: clamp(14px, 1.4vw, 20px);
+  white-space: nowrap;
+}
+
+.smallButton,
+#restartButton {
+  border: 0;
+  cursor: pointer;
+  background: #246b9e;
+  color: white;
+  min-height: 44px;
+}
+
+.sampleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.6vw, 22px);
+  width: 100%;
+}
+
+.sample {
+  min-width: 0;
+  min-height: clamp(145px, 26vh, 250px);
+  padding: clamp(10px, 1.5vw, 20px);
+  border: 3px solid #d9e3eb;
+  border-radius: 16px;
+  background: white;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.sample strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(13px, 1.5vw, 20px);
+}
+
+.sample span {
+  display: block;
+  margin-top: 6px;
+  line-height: 1.3;
+  font-size: clamp(11px, 1.25vw, 17px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sample:hover {
+    transform: translateY(-3px);
+    border-color: #4184b8;
+  }
+}
+
+.tube {
+  position: relative;
+  width: clamp(28px, 4vw, 50px);
+  height: clamp(62px, 9vw, 112px);
+  margin: 0 auto;
+  border: clamp(3px, 0.35vw, 5px) solid #34495e;
+  border-radius: 5px 5px 16px 16px;
+  overflow: hidden;
+  background: white;
+}
+
+.tube::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: -4px;
+  left: -4px;
+  width: calc(100% + 8px);
+  height: 18%;
+  background: #7c3aed;
+  border-bottom: 3px solid #34495e;
+}
+
+.tubeLiquid {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 55%;
+  background: #bd3f47;
+}
+
+.correct {
+  border-color: #2e9d62 !important;
+  background: #e9f8ef !important;
+}
+
+.incorrect {
+  border-color: #cf4b4b !important;
+  background: #fdecec !important;
+}
+
+#feedback {
+  min-height: 54px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: white;
+  text-align: center;
+  font-weight: bold;
+  font-size: clamp(13px, 1.4vw, 19px);
+  display: grid;
+  place-items: center;
+}
+
+.bottomActions {
+  display: flex;
+  justify-content: center;
+}
+
+/*
+  Start and portrait screens sit above the game.
+*/
+.overlayScreen,
+#rotateScreen {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #111820;
+  color: white;
+}
+
+.startCard,
+.rotateCard {
+  width: min(560px, 90vw);
+  text-align: center;
+  padding: 30px;
+  border-radius: 20px;
+  background: #1d2a36;
+}
+
+.startCard h1,
+.rotateCard h1 {
+  margin-top: 0;
+}
+
+#playButton {
+  min-width: 160px;
+  min-height: 54px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: #f0b429;
+  color: #102030;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.rotateIcon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/*
+  The rotate screen is hidden in landscape.
+*/
+#rotateScreen {
+  display: none;
+  z-index: 20;
+}
+
+/*
+  Phones/tablets held vertically are blocked until rotated.
+*/
+@media (orientation: portrait) {
+  #rotateScreen {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sample {
+    transition: none;
+  }
+}
