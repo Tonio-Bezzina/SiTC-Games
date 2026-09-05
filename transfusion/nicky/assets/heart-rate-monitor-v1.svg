@@ -1,47 +1,70 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 260" role="img" aria-label="Heart-rate monitor displaying a moving green heartbeat trace">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" role="img" aria-label="Wall-mounted heart-rate monitor angled toward the nurse with a moving green heartbeat trace">
   <defs>
     <linearGradient id="case" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#f8fbfd"/>
-      <stop offset="1" stop-color="#cbd8df"/>
+      <stop offset="1" stop-color="#c8d8df"/>
+    </linearGradient>
+    <linearGradient id="side" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#8197a1"/>
+      <stop offset="1" stop-color="#526b76"/>
     </linearGradient>
     <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#09252f"/>
       <stop offset="1" stop-color="#031115"/>
     </linearGradient>
-    <filter id="glow" x="-30%" y="-100%" width="160%" height="300%">
-      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <filter id="glow" x="-20%" y="-70%" width="140%" height="240%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <clipPath id="screenClip"><rect x="28" y="29" width="304" height="154" rx="14"/></clipPath>
+    <clipPath id="screenClip">
+      <polygon points="50,65 304,79 304,190 50,205"/>
+    </clipPath>
   </defs>
-  <rect x="8" y="8" width="344" height="226" rx="24" fill="url(#case)" stroke="#7c919c" stroke-width="8"/>
-  <rect x="28" y="29" width="304" height="154" rx="14" fill="url(#screen)"/>
-  <g opacity=".16" stroke="#78d9c8" stroke-width="1">
-    <path d="M28 67h304M28 105h304M28 143h304"/>
-    <path d="M79 29v154M130 29v154M181 29v154M232 29v154M283 29v154"/>
+
+  <g fill="none" stroke="#728791" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M347 101h46V68h31" stroke-width="16"/>
+    <path d="M394 69v103" stroke-width="11"/>
+    <circle cx="394" cy="101" r="13" fill="#9babb2" stroke-width="6"/>
   </g>
+
+  <polygon points="319,52 358,69 358,221 319,240" fill="url(#side)" stroke="#526b76" stroke-width="7"/>
+  <polygon points="22,34 319,52 319,240 22,263" fill="url(#case)" stroke="#7b919b" stroke-width="8" stroke-linejoin="round"/>
+  <polygon points="50,65 304,79 304,190 50,205" fill="url(#screen)" stroke="#36515b" stroke-width="5" stroke-linejoin="round"/>
+
+  <g clip-path="url(#screenClip)" opacity=".18" stroke="#78d9c8" stroke-width="1">
+    <path d="M48 93l258 13M48 123l258 8M48 153l258 3M48 183l258-2"/>
+    <path d="M93 63v140M144 67v133M195 70v127M246 74v120"/>
+  </g>
+
   <g clip-path="url(#screenClip)" filter="url(#glow)">
-    <path class="ecg-trace" pathLength="1" d="M-20 111h55l12-7 12 7h29l10-19 13 45 17-90 18 64h31l13-8 12 8h45l10-20 13 46 17-90 18 64h72" fill="none" stroke="#43f2a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <g class="ecg-scroll" transform="matrix(1 .05 0 1 0 0)">
+      <path d="M-160 128h30l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h45" fill="none" stroke="#43f2a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
   </g>
-  <g font-family="Arial, sans-serif" font-weight="700">
-    <text x="42" y="214" font-size="21" fill="#244653">NICKY</text>
-    <text x="257" y="211" font-size="22" fill="#159866">98</text>
-    <text x="295" y="211" font-size="12" fill="#50707c">BPM</text>
+
+  <g transform="matrix(1 .05 0 1 0 0)" font-family="Arial, sans-serif" font-weight="700">
+    <text x="49" y="230" font-size="18" fill="#244653">NICKY</text>
+    <circle cx="222" cy="221" r="7" fill="#43c6e5"/>
+    <circle cx="244" cy="222" r="7" fill="#ffc83d"/>
+    <text x="263" y="230" font-size="21" fill="#159866">98</text>
+    <text x="295" y="231" font-size="10" fill="#50707c">BPM</text>
   </g>
-  <circle cx="217" cy="207" r="9" fill="#43c6e5"/>
-  <circle cx="242" cy="207" r="9" fill="#ffc83d"/>
-  <path d="M55 234v18M305 234v18" stroke="#718792" stroke-width="12" stroke-linecap="round"/>
+
+  <path d="M337 226c-4 25-22 31-19 62" fill="none" stroke="#526b76" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="319" cy="286" r="7" fill="#d3e0e5" stroke="#526b76" stroke-width="4"/>
+
   <style>
-    .ecg-trace {
-      stroke-dasharray: .25 .75;
-      animation: heartbeat 1.35s linear infinite;
+    .ecg-scroll {
+      animation: ecg-scroll 1.65s linear infinite;
+      transform-box: fill-box;
+      transform-origin: center;
     }
-    @keyframes heartbeat {
-      from { stroke-dashoffset: 0; }
-      to { stroke-dashoffset: -1; }
+    @keyframes ecg-scroll {
+      from { translate: 0 0; }
+      to { translate: -150px 0; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .ecg-trace { animation: none; stroke-dasharray: none; }
+      .ecg-scroll { animation: none; }
     }
   </style>
 </svg>

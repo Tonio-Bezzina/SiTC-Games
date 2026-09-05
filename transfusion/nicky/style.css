@@ -195,8 +195,8 @@ a:focus-visible {
 .scene-monitor {
     position: absolute;
     z-index: 2;
-    top: 5%;
-    right: 3%;
+    top: 7%;
+    right: 24%;
     width: 31%;
     height: auto;
     pointer-events: none;
@@ -233,7 +233,7 @@ a:focus-visible {
 
 .scene-nicky {
     z-index: 3;
-    left: 1%;
+    left: 12%;
     bottom: 0;
     width: 86%;
     height: 59%;
