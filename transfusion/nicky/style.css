@@ -192,6 +192,18 @@ a:focus-visible {
     object-position: 55% center;
 }
 
+.scene-monitor {
+    position: absolute;
+    z-index: 2;
+    top: 5%;
+    right: 3%;
+    width: 31%;
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+    filter: drop-shadow(0 6px 8px rgba(4, 31, 46, .25));
+}
+
 .scene-character {
     position: absolute;
     display: block;
@@ -211,20 +223,20 @@ a:focus-visible {
 }
 
 .scene-doctor {
-    z-index: 2;
-    right: -3%;
-    bottom: 9%;
-    width: 48%;
-    height: 88%;
+    z-index: 5;
+    right: -10%;
+    bottom: 2%;
+    width: 43%;
+    height: 82%;
     animation: doctor-idle 6.4s ease-in-out -2s infinite;
 }
 
 .scene-nicky {
     z-index: 3;
-    left: 4%;
+    left: 1%;
     bottom: 0;
-    width: 92%;
-    height: 60%;
+    width: 86%;
+    height: 59%;
     object-position: center bottom;
     animation: nicky-idle 4.6s ease-in-out -1s infinite;
 }
