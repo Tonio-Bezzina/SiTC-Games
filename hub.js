@@ -710,6 +710,70 @@ function createLabCard(
     card.appendChild(button);
 
 
+   /* =====================================================
+   MAKE THE WHOLE CARD CLICKABLE
+
+   Only laboratories that are currently available become
+   clickable.
+
+   Clicking an existing button/link is ignored here because
+   that interactive element already handles its own action.
+
+   Keyboard support is also included so Enter/Space can open
+   the laboratory when the card itself has focus.
+   ===================================================== */
+
+   if (lab.available) {
+   
+       card.classList.add("clickable");
+   
+       card.setAttribute("role", "link");
+       card.setAttribute("tabindex", "0");
+   
+       card.addEventListener(
+           "click",
+           function (event) {
+   
+               /* Do not interfere with a link or button that
+                  the player clicked directly. */
+               if (
+                   event.target.closest(
+                       "a, button"
+                   )
+               ) {
+                   return;
+               }
+   
+               window.location.href =
+                   lab.href;
+   
+           }
+       );
+   
+   
+       card.addEventListener(
+           "keydown",
+           function (event) {
+   
+               if (
+                   event.key === "Enter"
+                   ||
+                   event.key === " "
+               ) {
+   
+                   event.preventDefault();
+   
+                   window.location.href =
+                       lab.href;
+   
+               }
+   
+           }
+       );
+   
+   }
+
+
     return card;
 
 }
