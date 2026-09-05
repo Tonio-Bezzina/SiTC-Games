@@ -59,7 +59,7 @@ const labs = [
 
         /* Until we build the Transfusion sub-hub,
            keep the Enter Lab button disabled. */
-        available: false,
+        available: true,
 
         /* The main case is the one required for the lab badge. */
         mainCase: "nicky",
