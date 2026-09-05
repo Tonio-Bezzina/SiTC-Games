@@ -156,11 +156,12 @@ function attemptFullscreen() {
 function renderStart() {
     screenHost.innerHTML = `
         <section class="screen start-screen">
-            <div class="start-visual" role="img" aria-label="Nicky resting with his teddy bear, with a nurse and doctor beside his hospital bed">
+            <div class="start-visual" role="img" aria-label="Nicky resting with his teddy bear, with a nurse and doctor beside his hospital bed and a heart-rate monitor running">
                 <img class="scene-room" src="assets/hospital-room-v1.png" alt="" draggable="false">
+                <img class="scene-monitor" src="assets/heart-rate-monitor-v1.svg" alt="" draggable="false">
                 <img class="scene-character scene-nurse" src="assets/nurse-v1.png" alt="" draggable="false">
-                <img class="scene-character scene-doctor" src="assets/doctor-v1.png" alt="" draggable="false">
                 <img class="scene-character scene-nicky" src="assets/nicky-v1.png" alt="" draggable="false">
+                <img class="scene-character scene-doctor" src="assets/doctor-v1.png" alt="" draggable="false">
             </div>
             <div class="start-panel">
                 <p class="mission-kicker">TRANSFUSION LAB · MAIN MISSION</p>

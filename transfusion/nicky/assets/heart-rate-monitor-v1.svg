@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 260" role="img" aria-label="Heart-rate monitor displaying a moving green heartbeat trace">
+  <defs>
+    <linearGradient id="case" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8fbfd"/>
+      <stop offset="1" stop-color="#cbd8df"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#09252f"/>
+      <stop offset="1" stop-color="#031115"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-100%" width="160%" height="300%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <clipPath id="screenClip"><rect x="28" y="29" width="304" height="154" rx="14"/></clipPath>
+  </defs>
+  <rect x="8" y="8" width="344" height="226" rx="24" fill="url(#case)" stroke="#7c919c" stroke-width="8"/>
+  <rect x="28" y="29" width="304" height="154" rx="14" fill="url(#screen)"/>
+  <g opacity=".16" stroke="#78d9c8" stroke-width="1">
+    <path d="M28 67h304M28 105h304M28 143h304"/>
+    <path d="M79 29v154M130 29v154M181 29v154M232 29v154M283 29v154"/>
+  </g>
+  <g clip-path="url(#screenClip)" filter="url(#glow)">
+    <path class="ecg-trace" pathLength="1" d="M-20 111h55l12-7 12 7h29l10-19 13 45 17-90 18 64h31l13-8 12 8h45l10-20 13 46 17-90 18 64h72" fill="none" stroke="#43f2a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-weight="700">
+    <text x="42" y="214" font-size="21" fill="#244653">NICKY</text>
+    <text x="257" y="211" font-size="22" fill="#159866">98</text>
+    <text x="295" y="211" font-size="12" fill="#50707c">BPM</text>
+  </g>
+  <circle cx="217" cy="207" r="9" fill="#43c6e5"/>
+  <circle cx="242" cy="207" r="9" fill="#ffc83d"/>
+  <path d="M55 234v18M305 234v18" stroke="#718792" stroke-width="12" stroke-linecap="round"/>
+  <style>
+    .ecg-trace {
+      stroke-dasharray: .25 .75;
+      animation: heartbeat 1.35s linear infinite;
+    }
+    @keyframes heartbeat {
+      from { stroke-dashoffset: 0; }
+      to { stroke-dashoffset: -1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ecg-trace { animation: none; stroke-dasharray: none; }
+    }
+  </style>
+</svg>
