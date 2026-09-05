@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!--
+        Basic page setup.
+        This page is the Transfusion Laboratory sub-hub.
+    -->
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Transfusion Laboratory | SiTC Games</title>
+
+    <!--
+        Styling specifically for the Transfusion hub.
+    -->
+    <link
+        rel="stylesheet"
+        href="transfusion.css"
+    >
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         LAB HEADER
+         ===================================================== -->
+
+    <header class="lab-header">
+
+        <div class="header-content">
+
+            <!--
+                ../ means go back one folder to the main
+                SiTC Games hub.
+            -->
+            <a
+                class="back-link"
+                href="../"
+            >
+                ← SiTC Games
+            </a>
+
+
+            <div class="lab-title-area">
+
+                <div class="large-lab-icon">
+                    🩸
+                </div>
+
+                <div>
+
+                    <p class="header-kicker">
+                        LABORATORY
+                    </p>
+
+                    <h1>
+                        Transfusion
+                    </h1>
+
+                    <p class="header-description">
+                        Discover how biomedical scientists
+                        help make blood transfusions safe.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <!-- =================================================
+             TRANSFUSION PROGRESS
+             ================================================= -->
+
+        <section class="lab-progress-card">
+
+            <div class="badge-area">
+
+                <!--
+                    JavaScript will change the appearance of this
+                    once Nicky's main mission is completed.
+                -->
+                <div
+                    id="transfusionBadge"
+                    class="transfusion-badge"
+                >
+                    🩸
+                </div>
+
+
+                <div>
+
+                    <p class="eyebrow">
+                        YOUR TRANSFUSION BADGE
+                    </p>
+
+                    <h2 id="badgeTitle">
+                        Badge Not Yet Earned
+                    </h2>
+
+                    <p id="badgeDescription">
+                        Complete the Main Mission
+                        to earn your Transfusion badge.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- Overall case progress inside Transfusion -->
+            <div class="case-progress-area">
+
+                <div class="case-progress-heading">
+
+                    <strong id="caseProgressText">
+                        0 / 3 cases
+                    </strong>
+
+                    <span id="caseStars">
+                        ☆☆☆
+                    </span>
+
+                </div>
+
+
+                <div class="progress-track">
+
+                    <div
+                        id="caseProgressFill"
+                        class="progress-fill"
+                    ></div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MAIN MISSION
+             ================================================= -->
+
+        <section class="missions-section">
+
+            <div class="section-heading">
+
+                <p class="eyebrow">
+                    START HERE
+                </p>
+
+                <h2>
+                    Main Mission
+                </h2>
+
+                <p>
+                    Complete this mission to earn
+                    your Transfusion Laboratory badge.
+                </p>
+
+            </div>
+
+
+            <article class="mission-card main-mission">
+
+                <div class="mission-label">
+                    MAIN MISSION
+                </div>
+
+
+                <div class="mission-art">
+                    🚑 🩸
+                </div>
+
+
+                <div class="mission-content">
+
+                    <h3>
+                        Nicky's Blood Bank Rescue
+                    </h3>
+
+                    <p>
+                        Nicky has been injured and needs blood.
+                        Help the laboratory identify his blood group
+                        and find a safe transfusion.
+                    </p>
+
+
+                    <!-- Age modes available for this case -->
+                    <div class="age-levels">
+
+                        <span>
+                            Ages 7–9
+                        </span>
+
+                        <span>
+                            Ages 10–12
+                        </span>
+
+                        <span>
+                            Ages 13–16
+                        </span>
+
+                    </div>
+
+
+                    <div class="mission-meta">
+
+                        <span>
+                            ⏱ 3–5 minutes
+                        </span>
+
+                        <span id="nickyStatus">
+                            Not completed
+                        </span>
+
+                    </div>
+
+
+                    <!--
+                        This does not open the game yet because
+                        we have not built Nicky's game.
+
+                        JavaScript will later control this button.
+                    -->
+                    <button
+                        id="nickyButton"
+                        class="mission-button"
+                        disabled
+                    >
+                        Game Coming Soon
+                    </button>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- =================================================
+             EXTRA CASES
+             ================================================= -->
+
+        <section class="missions-section bonus-section">
+
+            <div class="section-heading">
+
+                <p class="eyebrow">
+                    KEEP EXPLORING
+                </p>
+
+                <h2>
+                    More Transfusion Cases
+                </h2>
+
+                <p>
+                    Complete the Main Mission to unlock
+                    more challenges.
+                </p>
+
+            </div>
+
+
+            <div class="bonus-grid">
+
+
+                <!-- ================= CASE 2 ================= -->
+
+                <article
+                    class="mission-card bonus-mission"
+                    data-bonus-case="case-2"
+                >
+
+                    <div class="lock-symbol">
+                        🔒
+                    </div>
+
+
+                    <div class="mission-art">
+                        🧫
+                    </div>
+
+
+                    <div class="mission-content">
+
+                        <h3>
+                            Case 2
+                        </h3>
+
+                        <p>
+                            Another Transfusion Laboratory
+                            challenge will appear here.
+                        </p>
+
+
+                        <div class="age-levels">
+
+                            <span>
+                                Age levels to be decided
+                            </span>
+
+                        </div>
+
+
+                        <div class="mission-meta">
+
+                            <span>
+                                ⏱ 3–5 minutes
+                            </span>
+
+                            <span class="bonus-status">
+                                Locked
+                            </span>
+
+                        </div>
+
+
+                        <button
+                            class="mission-button bonus-button"
+                            disabled
+                        >
+                            Complete Main Mission First
+                        </button>
+
+                    </div>
+
+                </article>
+
+
+                <!-- ================= CASE 3 ================= -->
+
+                <article
+                    class="mission-card bonus-mission"
+                    data-bonus-case="case-3"
+                >
+
+                    <div class="lock-symbol">
+                        🔒
+                    </div>
+
+
+                    <div class="mission-art">
+                        🧪
+                    </div>
+
+
+                    <div class="mission-content">
+
+                        <h3>
+                            Case 3
+                        </h3>
+
+                        <p>
+                            Another Transfusion Laboratory
+                            challenge will appear here.
+                        </p>
+
+
+                        <div class="age-levels">
+
+                            <span>
+                                Age levels to be decided
+                            </span>
+
+                        </div>
+
+
+                        <div class="mission-meta">
+
+                            <span>
+                                ⏱ 3–5 minutes
+                            </span>
+
+                            <span class="bonus-status">
+                                Locked
+                            </span>
+
+                        </div>
+
+
+                        <button
+                            class="mission-button bonus-button"
+                            disabled
+                        >
+                            Complete Main Mission First
+                        </button>
+
+                    </div>
+
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             MASTERED MESSAGE
+             Hidden until every Transfusion case is complete.
+             ================================================= -->
+
+        <section
+            id="masterCard"
+            class="master-card hidden"
+        >
+
+            <div class="master-icon">
+                🏆
+            </div>
+
+            <div>
+
+                <p class="eyebrow">
+                    LAB MASTERED
+                </p>
+
+                <h2>
+                    Transfusion Master
+                </h2>
+
+                <p>
+                    You completed every available
+                    Transfusion Laboratory case.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             TEMPORARY DEVELOPMENT TESTING
+
+             We'll remove this once Nicky's actual game exists.
+             ================================================= -->
+
+        <section class="developer-test">
+
+            <p class="eyebrow">
+                DEVELOPMENT ONLY
+            </p>
+
+            <h2>
+                Test Transfusion Progress
+            </h2>
+
+            <button id="testNickyComplete">
+                Simulate Completing Nicky
+            </button>
+
+            <button id="testAllCases">
+                Simulate Completing All Cases
+            </button>
+
+            <button id="testResetTransfusion">
+                Reset Transfusion Progress
+            </button>
+
+        </section>
+
+
+        <!-- =================================================
+             RETURN TO MAIN HUB
+             ================================================= -->
+
+        <div class="return-area">
+
+            <a
+                class="return-button"
+                href="../"
+            >
+                ← Return to Laboratory Hub
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <!--
+        Handles Transfusion progress and reads the same
+        localStorage data used by the main SiTC Games hub.
+    -->
+    <script src="transfusion-hub.js"></script>
+
+</body>
+
+</html>
