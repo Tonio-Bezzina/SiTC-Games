@@ -471,15 +471,87 @@ main {
 }
 
 
-/* Completing every case upgrades the card again. */
+/* =========================================================
+   MASTERED LABORATORY
+
+   Once every case in the laboratory has been completed,
+   the entire card becomes gold rather than only changing
+   its title/status text.
+   ========================================================= */
 
 .lab-card.mastered {
-    border-color:
-        #e2a900;
+    border-color: #d9a800;
+
+    background:
+        linear-gradient(
+            145deg,
+            #fff1a8 0%,
+            #ffd94f 48%,
+            #fff4b8 100%
+        );
 
     box-shadow:
-        0 12px 30px
-        rgba(184, 137, 0, 0.17);
+        0 14px 32px
+        rgba(174, 125, 0, 0.25);
+}
+
+
+/* Keep the main laboratory name strong and readable
+   against the gold background. */
+
+.lab-card.mastered h3 {
+    color: #624700;
+}
+
+
+/* Description text becomes a darker warm tone. */
+
+.lab-card.mastered .lab-description {
+    color: #6f5a24;
+}
+
+
+/* Case counter also follows the mastered colour scheme. */
+
+.lab-card.mastered .case-count {
+    color: #725a16;
+}
+
+
+/* Give the mastered badge itself a stronger gold treatment. */
+
+.lab-card.mastered .lab-badge {
+    background:
+        linear-gradient(
+            145deg,
+            #fff9c9,
+            #ffd43b
+        );
+
+    border-color: #c99500;
+
+    box-shadow:
+        0 7px 18px
+        rgba(145, 102, 0, 0.22);
+}
+
+
+/* The mastery title becomes dark gold for good contrast. */
+
+.lab-card.mastered .lab-badge-status {
+    color: #684900;
+}
+
+
+/* Completed case progress becomes a deeper gold. */
+
+.lab-card.mastered .case-progress-fill {
+    background:
+        linear-gradient(
+            90deg,
+            #c58d00,
+            #f3b900
+        );
 }
 
 
@@ -952,4 +1024,21 @@ main {
         font-size: 3rem;
     }
 
+}
+
+/* =========================================================
+   CLICKABLE LAB CARDS
+
+   Available laboratories behave like large touch targets.
+   This is particularly useful on phones and tablets.
+   ========================================================= */
+
+.lab-card.clickable {
+    cursor: pointer;
+}
+
+.lab-card.clickable:active {
+    transform:
+        translateY(-1px)
+        scale(0.99);
 }
