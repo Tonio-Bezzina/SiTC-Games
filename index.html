@@ -1,170 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Basic page setup -->
+    <!-- Basic page configuration -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- The browser-tab title -->
     <title>SiTC Games</title>
 
-    <!-- Hub styling kept in its own file -->
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-    <!-- Main SiTC Games heading -->
+    <!-- =========================================================
+         MAIN HEADER
+         Later we can add the approved MABS / Mater Dei logos here
+         without changing the rest of the hub structure.
+         ========================================================= -->
     <header class="site-header">
-        <h1>SiTC Games</h1>
-        <p>Explore the laboratory. Complete the challenges. Collect the badges.</p>
+
+        <div class="header-content">
+
+            <p class="header-kicker">SCIENCE IN THE CITY</p>
+
+            <h1>SiTC Games</h1>
+
+            <p class="header-description">
+                Explore the laboratories, complete their missions
+                and become a Young Scientist.
+            </p>
+
+        </div>
+
     </header>
+
 
     <main>
 
         <!-- =========================================================
-             LAB PASSPORT
-             hub.js will update these badges automatically depending
-             on what the player has completed on this browser/device.
+             OVERALL YOUNG SCIENTIST PROGRESS
+
+             A laboratory counts once its MAIN mission is completed.
+             Bonus cases do not affect eligibility for Young Scientist.
              ========================================================= -->
-        <section class="passport">
-            <div class="passport-heading">
-                <div>
-                    <p class="eyebrow">YOUR PROGRESS</p>
-                    <h2>My Lab Passport</h2>
-                </div>
+        <section class="young-scientist-progress">
 
-                <!-- JavaScript changes this number automatically -->
-                <div id="progressCount" class="progress-count">0 / 5</div>
-            </div>
+            <div class="mission-text">
 
-            <div class="passport-badges">
+                <p class="eyebrow">YOUR MISSION</p>
 
-                <div class="passport-badge" data-passport-lab="transfusion">
-                    <span class="badge-icon">🩸</span>
-                    <span>Transfusion</span>
-                    <strong class="badge-status">Not completed</strong>
-                </div>
+                <h2>Become a Young Scientist</h2>
 
-                <div class="passport-badge" data-passport-lab="chemistry">
-                    <span class="badge-icon">🧪</span>
-                    <span>Clinical Chemistry</span>
-                    <strong class="badge-status">Not completed</strong>
-                </div>
-
-                <div class="passport-badge" data-passport-lab="microbiology">
-                    <span class="badge-icon">🦠</span>
-                    <span>Microbiology</span>
-                    <strong class="badge-status">Not completed</strong>
-                </div>
-
-                <div class="passport-badge" data-passport-lab="haematology">
-                    <span class="badge-icon">🔬</span>
-                    <span>Haematology</span>
-                    <strong class="badge-status">Not completed</strong>
-                </div>
-
-                <div class="passport-badge" data-passport-lab="histology">
-                    <span class="badge-icon">🔎</span>
-                    <span>Histology</span>
-                    <strong class="badge-status">Not completed</strong>
-                </div>
+                <p>
+                    Complete the main mission from every laboratory
+                    to collect all the lab badges.
+                </p>
 
             </div>
+
+            <div class="overall-progress">
+
+                <strong id="labProgressCount">
+                    0 / 5
+                </strong>
+
+                <span>
+                    lab badges
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- Appears automatically when every lab badge is earned -->
+        <section
+            id="youngScientistComplete"
+            class="young-scientist-complete hidden"
+        >
+
+            <div class="completion-symbol">
+                🏆
+            </div>
+
+            <div>
+                <p class="eyebrow">
+                    MISSION COMPLETE
+                </p>
+
+                <h2>
+                    SiTC Young Scientist
+                </h2>
+
+                <p>
+                    You completed the main mission
+                    from every laboratory!
+                </p>
+            </div>
+
         </section>
 
 
         <!-- =========================================================
-             AVAILABLE GAMES
-             These cards will eventually become the actual lab games.
-             The existing Lab Hero prototype already links to its
-             current folder in this repository.
+             LABORATORY HUB
+
+             hub.js generates the laboratory cards from one central
+             configuration. This means we won't need to manually
+             rewrite this HTML whenever another lab or case is added.
              ========================================================= -->
-        <section class="games-section">
+        <section class="laboratories-section">
 
             <div class="section-heading">
-                <p class="eyebrow">CHOOSE YOUR NEXT MISSION</p>
-                <h2>Laboratory Games</h2>
-            </div>
 
-            <div class="game-grid">
+                <p class="eyebrow">
+                    CHOOSE A LABORATORY
+                </p>
 
-                <article class="game-card">
-                    <div class="game-icon">🩸</div>
-                    <h3>Transfusion</h3>
-                    <p>Help Nicky and discover how scientists find safe blood for patients.</p>
-                    <button class="game-button disabled" disabled>
-                        Coming Soon
-                    </button>
-                </article>
+                <h2>
+                    Laboratory Missions
+                </h2>
 
-                <article class="game-card">
-                    <div class="game-icon">🧪</div>
-                    <h3>Lab Hero</h3>
-                    <p>Play the first SiTC Games prototype.</p>
-
-                    <!-- Relative link means GitHub Pages opens the
-                         existing lab-hero folder within SiTC-Games. -->
-                    <a class="game-button" href="lab-hero/">
-                        Play Prototype
-                    </a>
-                </article>
-
-                <article class="game-card">
-                    <div class="game-icon">🦠</div>
-                    <h3>Microbiology</h3>
-                    <p>A new laboratory mission will appear here.</p>
-                    <button class="game-button disabled" disabled>
-                        Coming Soon
-                    </button>
-                </article>
-
-                <article class="game-card">
-                    <div class="game-icon">🔬</div>
-                    <h3>Haematology</h3>
-                    <p>A new laboratory mission will appear here.</p>
-                    <button class="game-button disabled" disabled>
-                        Coming Soon
-                    </button>
-                </article>
-
-                <article class="game-card">
-                    <div class="game-icon">🔎</div>
-                    <h3>Histology</h3>
-                    <p>A new laboratory mission will appear here.</p>
-                    <button class="game-button disabled" disabled>
-                        Coming Soon
-                    </button>
-                </article>
+                <p>
+                    Earn the main badge, then return for more cases
+                    and try to master the laboratory.
+                </p>
 
             </div>
+
+
+            <!-- Laboratory cards will be inserted here by hub.js -->
+            <div
+                id="labGrid"
+                class="lab-grid"
+            ></div>
+
         </section>
 
 
         <!-- =========================================================
              TEMPORARY DEVELOPMENT CONTROLS
-             These are ONLY here so we can test whether localStorage
-             and the passport work before the real games exist.
-             We will remove this section later.
+
+             These let us test badge, case and mastery behaviour
+             before the real games exist.
+
+             This whole section will be removed before launch.
              ========================================================= -->
         <section class="developer-test">
-            <h2>Passport Test</h2>
-            <p>
-                Temporary controls for testing browser-stored progress.
+
+            <p class="eyebrow">
+                DEVELOPMENT ONLY
             </p>
 
-            <button id="testCompleteTransfusion">
-                Mark Transfusion Complete
+            <h2>
+                Progress Test
+            </h2>
+
+            <p>
+                These buttons simulate completing Transfusion games.
+            </p>
+
+
+            <!-- Simulates completing the main Nicky game -->
+            <button id="testMainMission">
+                Complete Transfusion Main Mission
             </button>
 
-            <button id="testResetPassport">
-                Reset Passport
+
+            <!-- Simulates completing every Transfusion case -->
+            <button id="testAllTransfusion">
+                Complete All Transfusion Cases
             </button>
+
+
+            <!-- Deletes all locally stored progress -->
+            <button id="testResetProgress">
+                Reset All Progress
+            </button>
+
         </section>
 
     </main>
 
-    <!-- Passport behaviour -->
+
+    <!-- Shared hub / progress system -->
     <script src="hub.js"></script>
 
 </body>
