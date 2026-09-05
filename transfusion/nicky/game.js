@@ -157,7 +157,7 @@ function renderStart() {
     screenHost.innerHTML = `
         <section class="screen start-screen">
             <div class="start-visual">
-                <img src="assets/nicky-emergency.png" alt="Nicky in a hospital bed with two friendly healthcare professionals preparing a transfusion">
+                <img src="assets/nicky-emergency.png?v=e55cd056147b" alt="Nicky in a hospital bed with two friendly healthcare professionals preparing a transfusion">
                 <span class="monitor-pulse" aria-hidden="true"></span>
             </div>
             <div class="start-panel">
