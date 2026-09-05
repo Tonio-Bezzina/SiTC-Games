@@ -173,45 +173,80 @@ a:focus-visible {
     background: #0b5c82;
 }
 
+/* Each character has its own transparent asset and independent idle movement. */
 .start-visual {
     position: relative;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
+    isolation: isolate;
+    background: #cbe7ef;
 }
 
-.start-visual img {
+.scene-room {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 56% center;
-    animation: scene-breathe 6s ease-in-out infinite alternate;
+    object-position: 55% center;
 }
 
-@keyframes scene-breathe {
-    from { transform: scale(1.015) translateX(0); }
-    to { transform: scale(1.045) translateX(-0.6%); }
-}
-
-.start-visual::after {
-    content: "";
+.scene-character {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent 62%, #0b5c82 100%);
+    display: block;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    transform-origin: 50% 95%;
 }
 
-.monitor-pulse {
-    position: absolute;
-    top: 23%;
-    right: 23%;
-    width: 11%;
-    height: 4px;
-    border-radius: 999px;
-    background: #43f2a4;
-    box-shadow: 0 0 12px #43f2a4;
-    animation: monitor 1.15s steps(2) infinite;
+.scene-nurse {
+    z-index: 1;
+    left: -3%;
+    bottom: 9%;
+    width: 48%;
+    height: 84%;
+    animation: nurse-idle 5.7s ease-in-out infinite;
 }
 
-@keyframes monitor { 50% { opacity: .25; transform: scaleX(.72); } }
+.scene-doctor {
+    z-index: 2;
+    right: -3%;
+    bottom: 9%;
+    width: 48%;
+    height: 88%;
+    animation: doctor-idle 6.4s ease-in-out -2s infinite;
+}
+
+.scene-nicky {
+    z-index: 3;
+    left: 4%;
+    bottom: 0;
+    width: 92%;
+    height: 60%;
+    object-position: center bottom;
+    animation: nicky-idle 4.6s ease-in-out -1s infinite;
+}
+
+@keyframes nurse-idle {
+    0%, 100% { transform: rotate(-.4deg); }
+    50% { transform: rotate(.5deg) translateY(-2px); }
+}
+
+@keyframes doctor-idle {
+    0%, 100% { transform: rotate(.35deg); }
+    50% { transform: rotate(-.45deg) translateY(-1px); }
+}
+
+@keyframes nicky-idle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scene-character { animation: none; }
+}
 
 .start-panel {
     z-index: 2;
