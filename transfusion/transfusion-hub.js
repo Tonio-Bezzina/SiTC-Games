@@ -339,16 +339,8 @@ function updateMainMission(progress) {
             "Completed ★";
 
 
-        /* The real game does not exist yet, so keep the
-           button disabled for now.
-
-           Later this will become something such as:
-           "Play Again". */
         button.textContent =
-            "Game Coming Soon";
-
-        button.disabled =
-            true;
+            "Play Again";
 
     } else {
 
@@ -362,10 +354,7 @@ function updateMainMission(progress) {
 
 
         button.textContent =
-            "Game Coming Soon";
-
-        button.disabled =
-            true;
+            "Start Mission";
 
     }
 
@@ -782,74 +771,6 @@ function resetTransfusionProgress() {
     renderTransfusionHub();
 
 }
-
-
-/* =========================================================
-   TEMPORARY DEVELOPMENT CONTROLS
-   ========================================================= */
-
-
-/* Simulate reaching the end of Nicky's Blood Bank Rescue.
-
-   This should:
-   - earn Nicky's star
-   - earn the Transfusion badge
-   - unlock the bonus cases */
-document
-    .getElementById(
-        "testNickyComplete"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            completeCase(
-                "nicky"
-            );
-
-        }
-    );
-
-
-/* Simulate completing all currently registered
-   Transfusion games.
-
-   This should also award Transfusion Master. */
-document
-    .getElementById(
-        "testAllCases"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            TRANSFUSION_CASES.forEach(
-                function (caseId) {
-
-                    completeCase(
-                        caseId
-                    );
-
-                }
-            );
-
-        }
-    );
-
-
-/* Reset ONLY the Transfusion Laboratory. */
-document
-    .getElementById(
-        "testResetTransfusion"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            resetTransfusionProgress();
-
-        }
-    );
 
 
 /* =========================================================
