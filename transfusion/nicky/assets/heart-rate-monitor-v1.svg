@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" role="img" aria-label="Wall-mounted heart-rate monitor angled toward the nurse with a moving green heartbeat trace">
   <defs>
     <linearGradient id="case" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f8fbfd"/>
+      <stop offset="0" stop-color="#fbfdfe"/>
       <stop offset="1" stop-color="#c8d8df"/>
     </linearGradient>
     <linearGradient id="side" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#8197a1"/>
-      <stop offset="1" stop-color="#526b76"/>
+      <stop stop-color="#8da0a9"/>
+      <stop offset="1" stop-color="#536b76"/>
     </linearGradient>
     <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#09252f"/>
@@ -17,54 +17,43 @@
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <clipPath id="screenClip">
-      <polygon points="50,65 304,79 304,190 50,205"/>
+      <path d="M55 82Q49 83 49 90L49 190Q49 198 56 199L294 224Q304 225 304 214L304 70Q304 61 295 62Z"/>
     </clipPath>
   </defs>
 
   <g fill="none" stroke="#728791" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M347 101h46V68h31" stroke-width="16"/>
+    <path d="M350 100h43V68h31" stroke-width="16"/>
     <path d="M394 69v103" stroke-width="11"/>
     <circle cx="394" cy="101" r="13" fill="#9babb2" stroke-width="6"/>
   </g>
 
-  <polygon points="319,52 358,69 358,221 319,240" fill="url(#side)" stroke="#526b76" stroke-width="7"/>
-  <polygon points="22,34 319,52 319,240 22,263" fill="url(#case)" stroke="#7b919b" stroke-width="8" stroke-linejoin="round"/>
-  <polygon points="50,65 304,79 304,190 50,205" fill="url(#screen)" stroke="#36515b" stroke-width="5" stroke-linejoin="round"/>
+  <!-- The right edge is deliberately taller, creating perspective toward the nurse. -->
+  <path d="M310 34L350 51Q357 54 357 63L357 229Q357 238 350 242L310 263Z" fill="url(#side)" stroke="#526b76" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M35 53Q22 54 22 68L22 224Q22 238 35 239L305 264Q319 265 319 250L319 48Q319 33 305 35Z" fill="url(#case)" stroke="#7b919b" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M55 82Q49 83 49 90L49 190Q49 198 56 199L294 224Q304 225 304 214L304 70Q304 61 295 62Z" fill="url(#screen)" stroke="#36515b" stroke-width="5" stroke-linejoin="round"/>
 
   <g clip-path="url(#screenClip)" opacity=".18" stroke="#78d9c8" stroke-width="1">
-    <path d="M48 93l258 13M48 123l258 8M48 153l258 3M48 183l258-2"/>
-    <path d="M93 63v140M144 67v133M195 70v127M246 74v120"/>
+    <path d="M47 104L307 96M47 130l260 3M47 157l260 13M47 184l260 23"/>
+    <path d="M94 77v127M145 73v136M196 69v145M247 66v153"/>
   </g>
 
-  <g clip-path="url(#screenClip)" filter="url(#glow)">
-    <g class="ecg-scroll" transform="matrix(1 .05 0 1 0 0)">
-      <path d="M-160 128h30l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h34l8-6 8 6h22l9-18 11 43 13-78 15 53h45" fill="none" stroke="#43f2a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g clip-path="url(#screenClip)" filter="url(#glow)" transform="matrix(1 .085 0 1 0 -8)">
+    <g>
+      <path d="M-170 139h40l9-5 9 5h23l9-18 11 45 13-80 15 53h40l9-5 9 5h23l9-18 11 45 13-80 15 53h40l9-5 9 5h23l9-18 11 45 13-80 15 53h40l9-5 9 5h23l9-18 11 45 13-80 15 53h40l9-5 9 5h23l9-18 11 45 13-80 15 53h55" fill="none" stroke="#43f2a4" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <animateTransform attributeName="transform" type="translate" from="0 0" to="-150 0" dur="1.65s" repeatCount="indefinite"/>
     </g>
   </g>
 
-  <g transform="matrix(1 .05 0 1 0 0)" font-family="Arial, sans-serif" font-weight="700">
-    <text x="49" y="230" font-size="18" fill="#244653">NICKY</text>
-    <circle cx="222" cy="221" r="7" fill="#43c6e5"/>
-    <circle cx="244" cy="222" r="7" fill="#ffc83d"/>
-    <text x="263" y="230" font-size="21" fill="#159866">98</text>
-    <text x="295" y="231" font-size="10" fill="#50707c">BPM</text>
+  <!-- Patient name and heart-rate reading remain on the white panel. -->
+  <g transform="matrix(1 .085 0 1 0 -4)" font-family="Arial, sans-serif" font-weight="700">
+    <text x="48" y="224" font-size="18" fill="#244653">NICKY</text>
+    <circle cx="221" cy="224" r="7" fill="#43c6e5"/>
+    <circle cx="243" cy="226" r="7" fill="#ffc83d"/>
+    <text x="261" y="233" font-size="21" fill="#159866">98</text>
+    <text x="293" y="236" font-size="10" fill="#50707c">BPM</text>
   </g>
 
-  <path d="M337 226c-4 25-22 31-19 62" fill="none" stroke="#526b76" stroke-width="6" stroke-linecap="round"/>
-  <circle cx="319" cy="286" r="7" fill="#d3e0e5" stroke="#526b76" stroke-width="4"/>
-
-  <style>
-    .ecg-scroll {
-      animation: ecg-scroll 1.65s linear infinite;
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-    @keyframes ecg-scroll {
-      from { translate: 0 0; }
-      to { translate: -150px 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .ecg-scroll { animation: none; }
-    }
-  </style>
+  <path d="M337 232c-4 22-21 28-18 56" fill="none" stroke="#526b76" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="320" cy="286" r="7" fill="#d3e0e5" stroke="#526b76" stroke-width="4"/>
 </svg>
+
