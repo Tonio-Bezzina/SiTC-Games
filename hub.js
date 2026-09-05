@@ -1,229 +1,900 @@
 /* =========================================================
-   SiTC GAMES HUB - PASSPORT SYSTEM
+   SiTC GAMES - SHARED PROGRESS SYSTEM
 
-   This file:
-   1. Stores completed lab sections in browser localStorage.
-   2. Reads saved progress whenever the hub opens.
-   3. Updates the passport visually.
-   4. Provides temporary test buttons while we are developing.
+   STRUCTURE
+
+   Laboratory
+       ↓
+   Main Mission
+       → earns Lab Badge
+       ↓
+   Additional Cases
+       → earn Case Stars
+       ↓
+   Complete every case
+       → earns "Lab Master" title
+
+   Complete the main mission in EVERY laboratory
+       → earns "SiTC Young Scientist"
+
+   Everything is stored locally in the player's browser.
    ========================================================= */
 
 
-/* ---------- PASSPORT CONFIGURATION ---------- */
+/* =========================================================
+   STORAGE
+   ========================================================= */
 
-/* This is the key used to save the passport inside the browser.
-   Keeping one shared key means every SiTC game can later read and
-   update the same passport. */
-const STORAGE_KEY = "sitcLabPassport";
+/* We are using a new key because the original prototype stored
+   only simple true/false lab badges.
+
+   This version stores individual completed cases as well. */
+const STORAGE_KEY = "sitcGameProgressV2";
 
 
-/* These are the laboratories currently shown in the prototype hub.
-   We can add/remove sections later after the committee confirms
-   exactly which labs are participating. */
+/* =========================================================
+   LABORATORY CONFIGURATION
+
+   This becomes our central list of laboratories and games.
+
+   Later, adding another case usually means adding one entry here
+   rather than redesigning the whole hub.
+   ========================================================= */
+
 const labs = [
-    "transfusion",
-    "chemistry",
-    "microbiology",
-    "haematology",
-    "histology"
+
+    {
+        id: "transfusion",
+
+        name: "Transfusion",
+
+        icon: "🩸",
+
+        description:
+            "Discover how biomedical scientists find safe blood for patients.",
+
+        /* This will eventually open:
+           /SiTC-Games/transfusion/ */
+        href: "transfusion/",
+
+        /* Until we build the Transfusion sub-hub,
+           keep the Enter Lab button disabled. */
+        available: false,
+
+        /* The main case is the one required for the lab badge. */
+        mainCase: "nicky",
+
+        cases: [
+
+            {
+                id: "nicky",
+                name: "Nicky's Blood Bank Rescue",
+                main: true
+            },
+
+            {
+                id: "case-2",
+                name: "Future Transfusion Case",
+                main: false
+            },
+
+            {
+                id: "case-3",
+                name: "Future Transfusion Case",
+                main: false
+            }
+
+        ],
+
+        masterTitle:
+            "Transfusion Master"
+    },
+
+
+    {
+        id: "chemistry",
+
+        name: "Clinical Chemistry",
+
+        icon: "🧪",
+
+        description:
+            "Investigate how laboratory tests reveal what is happening inside the body.",
+
+        href: "chemistry/",
+
+        available: false,
+
+        mainCase: "main",
+
+        cases: [
+
+            {
+                id: "main",
+                name: "Main Chemistry Mission",
+                main: true
+            }
+
+        ],
+
+        masterTitle:
+            "Clinical Chemistry Master"
+    },
+
+
+    {
+        id: "microbiology",
+
+        name: "Microbiology",
+
+        icon: "🦠",
+
+        description:
+            "Explore microorganisms and discover how scientists identify them.",
+
+        href: "microbiology/",
+
+        available: false,
+
+        mainCase: "main",
+
+        cases: [
+
+            {
+                id: "main",
+                name: "Main Microbiology Mission",
+                main: true
+            }
+
+        ],
+
+        masterTitle:
+            "Microbiology Master"
+    },
+
+
+    {
+        id: "haematology",
+
+        name: "Haematology",
+
+        icon: "🔬",
+
+        description:
+            "Explore blood cells and the clues they can reveal.",
+
+        href: "haematology/",
+
+        available: false,
+
+        mainCase: "main",
+
+        cases: [
+
+            {
+                id: "main",
+                name: "Main Haematology Mission",
+                main: true
+            }
+
+        ],
+
+        masterTitle:
+            "Haematology Master"
+    },
+
+
+    {
+        id: "histology",
+
+        name: "Histology",
+
+        icon: "🔎",
+
+        description:
+            "Look closely at tissues and discover the patterns scientists investigate.",
+
+        href: "histology/",
+
+        available: false,
+
+        mainCase: "main",
+
+        cases: [
+
+            {
+                id: "main",
+                name: "Main Histology Mission",
+                main: true
+            }
+
+        ],
+
+        masterTitle:
+            "Histology Master"
+    }
+
 ];
 
 
-/* ---------- LOAD PASSPORT ---------- */
+/* =========================================================
+   LOAD SAVED PROGRESS
+   ========================================================= */
 
-function loadPassport() {
+function loadProgress() {
 
-    /* Try to retrieve the previously saved passport. */
-    const savedPassport = localStorage.getItem(STORAGE_KEY);
+    const saved =
+        localStorage.getItem(STORAGE_KEY);
 
-    /* If nothing has been saved yet, create a fresh empty passport. */
-    if (!savedPassport) {
 
-        return createEmptyPassport();
+    /* No progress exists yet. */
+    if (!saved) {
+
+        return {
+            completedCases: {}
+        };
 
     }
 
-    /* Convert the stored text back into a JavaScript object.
-       Check if the saved data is valid. If not, we will fall back
-       to a new empty passport rather than breaking the hub. */
+
+    /* Check that the stored JSON is valid.
+
+       Corrupt or manually edited browser data should never stop
+       the website from loading. */
     try {
 
-        const passport = JSON.parse(savedPassport);
+        const progress =
+            JSON.parse(saved);
 
-        /* Make sure every currently configured lab exists.
-           This is useful later when we add new laboratories:
-           old users will automatically receive the new section
-           as incomplete without losing their existing badges. */
-        labs.forEach(function (lab) {
 
-            if (passport[lab] === undefined) {
-                passport[lab] = false;
-            }
+        if (!progress.completedCases) {
 
-        });
+            progress.completedCases = {};
 
-        return passport;
+        }
+
+
+        return progress;
 
     } catch (error) {
 
-        console.error("Could not read SiTC Lab Passport:", error);
+        console.error(
+            "Could not load SiTC progress:",
+            error
+        );
 
-        return createEmptyPassport();
+
+        return {
+            completedCases: {}
+        };
 
     }
 
 }
 
 
-/* ---------- CREATE EMPTY PASSPORT ---------- */
+/* =========================================================
+   SAVE PROGRESS
+   ========================================================= */
 
-function createEmptyPassport() {
+function saveProgress(progress) {
 
-    const passport = {};
-
-    /* Every laboratory starts as incomplete. */
-    labs.forEach(function (lab) {
-        passport[lab] = false;
-    });
-
-    return passport;
-
-}
-
-
-/* ---------- SAVE PASSPORT ---------- */
-
-function savePassport(passport) {
-
-    /* localStorage can only save text, so the passport object
-       is converted into JSON before being stored. */
     localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify(passport)
+        JSON.stringify(progress)
     );
 
 }
 
 
-/* ---------- MARK A LAB AS COMPLETE ---------- */
+/* =========================================================
+   COMPLETE A CASE
 
-function completeLab(labName) {
+   Later, each real game can call:
 
-    const passport = loadPassport();
+       completeCase("transfusion", "nicky");
 
-    /* Check that this is a recognised laboratory before saving it.
-       If so, mark it as complete. */
-    if (labs.includes(labName)) {
+   when its final screen is reached.
+   ========================================================= */
 
-        passport[labName] = true;
+function completeCase(labId, caseId) {
 
-        savePassport(passport);
+    const progress =
+        loadProgress();
 
-        updatePassportDisplay();
+
+    /* Create the laboratory's list if this is the first
+       case completed from that lab. */
+    if (!progress.completedCases[labId]) {
+
+        progress.completedCases[labId] = [];
 
     }
 
+
+    /* Avoid saving the same case more than once. */
+    if (
+        !progress.completedCases[labId]
+            .includes(caseId)
+    ) {
+
+        progress.completedCases[labId]
+            .push(caseId);
+
+    }
+
+
+    saveProgress(progress);
+
+    renderHub();
+
 }
 
 
-/* ---------- RESET PASSPORT ---------- */
+/* =========================================================
+   CHECK WHETHER A CASE IS COMPLETE
+   ========================================================= */
 
-function resetPassport() {
+function isCaseComplete(
+    progress,
+    labId,
+    caseId
+) {
 
-    /* Remove the saved passport completely.
-       The next load will create a new blank passport. */
-    localStorage.removeItem(STORAGE_KEY);
+    const completed =
+        progress.completedCases[labId] || [];
 
-    updatePassportDisplay();
+
+    return completed.includes(caseId);
 
 }
 
 
-/* ---------- UPDATE THE HUB DISPLAY ---------- */
+/* =========================================================
+   CHECK WHETHER LAB BADGE IS EARNED
 
-function updatePassportDisplay() {
+   Only the laboratory's MAIN case is required.
+   ========================================================= */
 
-    const passport = loadPassport();
+function isLabBadgeEarned(
+    progress,
+    lab
+) {
 
-    let completedCount = 0;
+    return isCaseComplete(
+        progress,
+        lab.id,
+        lab.mainCase
+    );
 
-    /* Find every passport badge shown on the page. */
-    const badgeElements =
-        document.querySelectorAll("[data-passport-lab]");
+}
 
-    badgeElements.forEach(function (badgeElement) {
 
-        const labName =
-            badgeElement.dataset.passportLab;
+/* =========================================================
+   CHECK WHETHER LAB IS MASTERED
 
-        const statusElement =
-            badgeElement.querySelector(".badge-status");
+   Every listed case must be completed.
+   ========================================================= */
 
-        /* Check whether this particular laboratory has been completed. */
-        if (passport[labName]) {
+function isLabMastered(
+    progress,
+    lab
+) {
 
-            completedCount++;
+    return lab.cases.every(
+        function (gameCase) {
 
-            /* The CSS uses this class to turn the grey badge
-               into an earned badge. */
-            badgeElement.classList.add("completed");
+            return isCaseComplete(
+                progress,
+                lab.id,
+                gameCase.id
+            );
 
-            statusElement.textContent = "Badge earned ★";
+        }
+    );
+
+}
+
+
+/* =========================================================
+   COUNT COMPLETED CASES
+   ========================================================= */
+
+function countCompletedCases(
+    progress,
+    lab
+) {
+
+    return lab.cases.filter(
+        function (gameCase) {
+
+            return isCaseComplete(
+                progress,
+                lab.id,
+                gameCase.id
+            );
+
+        }
+    ).length;
+
+}
+
+
+/* =========================================================
+   CREATE CASE STAR DISPLAY
+   ========================================================= */
+
+function createCaseStars(
+    completed,
+    total
+) {
+
+    let stars = "";
+
+
+    for (
+        let i = 0;
+        i < total;
+        i++
+    ) {
+
+        if (i < completed) {
+
+            stars += "★";
 
         } else {
 
-            badgeElement.classList.remove("completed");
-
-            statusElement.textContent = "Not completed";
+            stars += "☆";
 
         }
 
-    });
+    }
 
 
-    /* Update the "0 / 5" progress counter at the top. */
-    const progressCount =
-        document.getElementById("progressCount");
-
-    progressCount.textContent =
-        completedCount + " / " + labs.length;
+    return stars;
 
 }
 
 
-/* ---------- TEMPORARY DEVELOPMENT BUTTONS ---------- */
+/* =========================================================
+   CREATE ONE LABORATORY CARD
+   ========================================================= */
 
-/* This button lets us pretend the Transfusion game has been completed
-   before we actually build the Transfusion game. */
-const testCompleteButton =
-    document.getElementById("testCompleteTransfusion");
+function createLabCard(
+    lab,
+    progress
+) {
 
-testCompleteButton.addEventListener(
-    "click",
-    function () {
+    const badgeEarned =
+        isLabBadgeEarned(
+            progress,
+            lab
+        );
 
-        completeLab("transfusion");
+
+    const mastered =
+        isLabMastered(
+            progress,
+            lab
+        );
+
+
+    const completedCases =
+        countCompletedCases(
+            progress,
+            lab
+        );
+
+
+    const totalCases =
+        lab.cases.length;
+
+
+    const percentage =
+        Math.round(
+            (
+                completedCases /
+                totalCases
+            ) * 100
+        );
+
+
+    /* Main card */
+    const card =
+        document.createElement("article");
+
+    card.className =
+        "lab-card";
+
+
+    if (badgeEarned) {
+
+        card.classList.add(
+            "badge-earned"
+        );
 
     }
-);
 
 
-/* This button clears all progress so we can test repeatedly. */
-const testResetButton =
-    document.getElementById("testResetPassport");
+    if (mastered) {
 
-testResetButton.addEventListener(
-    "click",
-    function () {
-
-        resetPassport();
+        card.classList.add(
+            "mastered"
+        );
 
     }
-);
 
 
-/* ---------- INITIAL PAGE LOAD ---------- */
+    /* ---------- BADGE ---------- */
 
-/* As soon as the hub opens, read the saved passport and update
-   all badges before the user starts interacting with the page. */
-updatePassportDisplay();
+    const badge =
+        document.createElement("div");
+
+    badge.className =
+        "lab-badge";
+
+
+    badge.innerHTML = `
+        <span class="lab-icon">
+            ${lab.icon}
+        </span>
+
+        <span class="badge-mark">
+            ${badgeEarned ? "★" : ""}
+        </span>
+    `;
+
+
+    /* ---------- NAME ---------- */
+
+    const title =
+        document.createElement("h3");
+
+    title.textContent =
+        lab.name;
+
+
+    /* ---------- BADGE STATUS ---------- */
+
+    const badgeStatus =
+        document.createElement("div");
+
+    badgeStatus.className =
+        "lab-badge-status";
+
+
+    if (mastered) {
+
+        badgeStatus.textContent =
+            lab.masterTitle;
+
+    } else if (badgeEarned) {
+
+        badgeStatus.textContent =
+            "Lab Badge Earned";
+
+    } else {
+
+        badgeStatus.textContent =
+            "Main Mission Not Yet Completed";
+
+    }
+
+
+    /* ---------- DESCRIPTION ---------- */
+
+    const description =
+        document.createElement("p");
+
+    description.className =
+        "lab-description";
+
+    description.textContent =
+        lab.description;
+
+
+    /* ---------- CASE STARS ---------- */
+
+    const stars =
+        document.createElement("div");
+
+    stars.className =
+        "case-stars";
+
+    stars.textContent =
+        createCaseStars(
+            completedCases,
+            totalCases
+        );
+
+
+    /* ---------- CASE COUNT ---------- */
+
+    const caseCount =
+        document.createElement("div");
+
+    caseCount.className =
+        "case-count";
+
+    caseCount.textContent =
+        completedCases +
+        " / " +
+        totalCases +
+        " cases completed";
+
+
+    /* ---------- PROGRESS BAR ---------- */
+
+    const progressTrack =
+        document.createElement("div");
+
+    progressTrack.className =
+        "case-progress-track";
+
+
+    const progressFill =
+        document.createElement("div");
+
+    progressFill.className =
+        "case-progress-fill";
+
+    progressFill.style.width =
+        percentage + "%";
+
+
+    progressTrack.appendChild(
+        progressFill
+    );
+
+
+    /* ---------- ENTER LAB BUTTON ---------- */
+
+    let button;
+
+
+    if (lab.available) {
+
+        button =
+            document.createElement("a");
+
+        button.href =
+            lab.href;
+
+        button.className =
+            "lab-button";
+
+        button.textContent =
+            "Enter Lab";
+
+    } else {
+
+        button =
+            document.createElement("button");
+
+        button.className =
+            "lab-button disabled";
+
+        button.disabled =
+            true;
+
+        button.textContent =
+            "Coming Soon";
+
+    }
+
+
+    /* ---------- BUILD CARD ---------- */
+
+    card.appendChild(badge);
+
+    card.appendChild(title);
+
+    card.appendChild(
+        badgeStatus
+    );
+
+    card.appendChild(
+        description
+    );
+
+    card.appendChild(stars);
+
+    card.appendChild(
+        caseCount
+    );
+
+    card.appendChild(
+        progressTrack
+    );
+
+    card.appendChild(button);
+
+
+    return card;
+
+}
+
+
+/* =========================================================
+   RENDER WHOLE HUB
+   ========================================================= */
+
+function renderHub() {
+
+    const progress =
+        loadProgress();
+
+
+    const grid =
+        document.getElementById(
+            "labGrid"
+        );
+
+
+    grid.innerHTML = "";
+
+
+    let earnedLabBadges = 0;
+
+
+    /* Build each laboratory card. */
+    labs.forEach(
+        function (lab) {
+
+            if (
+                isLabBadgeEarned(
+                    progress,
+                    lab
+                )
+            ) {
+
+                earnedLabBadges++;
+
+            }
+
+
+            grid.appendChild(
+                createLabCard(
+                    lab,
+                    progress
+                )
+            );
+
+        }
+    );
+
+
+    /* ---------- OVERALL COUNTER ---------- */
+
+    const counter =
+        document.getElementById(
+            "labProgressCount"
+        );
+
+
+    counter.textContent =
+        earnedLabBadges +
+        " / " +
+        labs.length;
+
+
+    /* ---------- YOUNG SCIENTIST ---------- */
+
+    const completionBox =
+        document.getElementById(
+            "youngScientistComplete"
+        );
+
+
+    if (
+        earnedLabBadges ===
+        labs.length
+    ) {
+
+        completionBox
+            .classList
+            .remove("hidden");
+
+    } else {
+
+        completionBox
+            .classList
+            .add("hidden");
+
+    }
+
+}
+
+
+/* =========================================================
+   RESET ALL PROGRESS
+   ========================================================= */
+
+function resetProgress() {
+
+    localStorage.removeItem(
+        STORAGE_KEY
+    );
+
+    renderHub();
+
+}
+
+
+/* =========================================================
+   TEMPORARY DEVELOPMENT CONTROLS
+   ========================================================= */
+
+
+/* Simulate completing Nicky.
+
+   This earns:
+   - Nicky's case star
+   - the Transfusion Lab Badge */
+document
+    .getElementById(
+        "testMainMission"
+    )
+    .addEventListener(
+        "click",
+        function () {
+
+            completeCase(
+                "transfusion",
+                "nicky"
+            );
+
+        }
+    );
+
+
+/* Simulate completing every current Transfusion case.
+
+   This should award the Transfusion Master title. */
+document
+    .getElementById(
+        "testAllTransfusion"
+    )
+    .addEventListener(
+        "click",
+        function () {
+
+            completeCase(
+                "transfusion",
+                "nicky"
+            );
+
+            completeCase(
+                "transfusion",
+                "case-2"
+            );
+
+            completeCase(
+                "transfusion",
+                "case-3"
+            );
+
+        }
+    );
+
+
+/* Clear everything. */
+document
+    .getElementById(
+        "testResetProgress"
+    )
+    .addEventListener(
+        "click",
+        function () {
+
+            resetProgress();
+
+        }
+    );
+
+
+/* =========================================================
+   INITIAL PAGE LOAD
+   ========================================================= */
+
+renderHub();
