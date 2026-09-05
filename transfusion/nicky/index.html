@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#073c63">
+    <title>Nicky's Blood Bank Rescue | SiTC Games</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Portrait devices see a clear rotation prompt while the 16:9 game remains mounted behind it. -->
+    <aside id="rotateScreen" aria-live="polite">
+        <div class="rotate-card">
+            <span class="rotate-phone" aria-hidden="true">📱↻</span>
+            <h1>Turn your device</h1>
+            <p>Nicky's mission works best in landscape mode.</p>
+        </div>
+    </aside>
+
+    <main id="gameShell">
+        <section id="gameStage" aria-label="Nicky's Blood Bank Rescue game">
+            <!-- The top bar stays visible throughout the mission so children always know where they are. -->
+            <header class="game-bar">
+                <a class="exit-link" href="../" aria-label="Return to the Transfusion Laboratory">← Lab</a>
+                <div class="mission-name">
+                    <span class="drop-icon" aria-hidden="true">●</span>
+                    <div>
+                        <strong>Nicky's Blood Bank Rescue</strong>
+                        <small id="modeLabel">Choose a level</small>
+                    </div>
+                </div>
+                <div class="progress-wrap" aria-label="Mission progress">
+                    <span id="stepLabel">Ready</span>
+                    <div id="progressDots" class="progress-dots" aria-hidden="true"></div>
+                </div>
+                <button id="soundButton" class="icon-button" type="button" aria-pressed="true" aria-label="Turn sound off">🔊</button>
+                <button id="fullscreenButton" class="icon-button" type="button" aria-label="Enter full screen">⛶</button>
+            </header>
+
+            <div id="screenHost" class="screen-host" aria-live="polite">
+                <!-- JavaScript renders each self-contained mission screen here. -->
+            </div>
+
+            <footer class="game-footer">
+                <div id="guide" class="guide">
+                    <span class="guide-avatar" aria-hidden="true">🔬</span>
+                    <p id="guideText">Choose your mission level to begin.</p>
+                </div>
+                <button id="nextButton" class="primary-button hidden" type="button">Continue →</button>
+            </footer>
+        </section>
+    </main>
+
+    <!-- Reusable feedback appears over the current task without replacing the laboratory bench. -->
+    <div id="feedbackModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="feedbackTitle">
+        <div class="modal-card">
+            <div id="feedbackIcon" class="feedback-icon" aria-hidden="true">⭐</div>
+            <h2 id="feedbackTitle">Great work!</h2>
+            <p id="feedbackText"></p>
+            <button id="feedbackButton" class="primary-button" type="button">Continue</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
