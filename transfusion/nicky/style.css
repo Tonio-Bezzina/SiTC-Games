@@ -926,13 +926,21 @@ a:focus-visible {
 }
 
 .tube-label-initials {
+    display: none;
     font-size: 1.45em;
     font-weight: 900;
     line-height: 1;
     text-align: center;
 }
 
-.tube-label-details { display: none; }
+.tube-label-details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    height: 100%;
+}
+
 .sample-station.expanded .tube-label-initials { display: none; }
 .sample-station.expanded .tube-label-details {
     display: flex;
@@ -940,6 +948,13 @@ a:focus-visible {
     justify-content: center;
     gap: 1px;
     height: 100%;
+}
+
+/* Compact initials are only needed where a mobile preview is too small for
+   the complete tube label. Desktop previews retain every identifier. */
+@media (max-width: 900px) {
+    .sample-station:not(.expanded) .tube-label-initials { display: block; }
+    .sample-station:not(.expanded) .tube-label-details { display: none; }
 }
 
 .paper-request-copy {
@@ -1423,7 +1438,7 @@ a:focus-visible {
     }
 
     .sample-station.expanded .tube-asset-wrap {
-        top: -36px;
+        top: -46px;
         bottom: auto;
         left: calc(50% - 80px);
         width: 160px;
@@ -1433,7 +1448,7 @@ a:focus-visible {
     }
 
     .sample-station.expanded .tube-label-overlay {
-        top: 42%;
+        top: 30%;
         left: 23%;
         width: 54%;
         height: 21%;
@@ -1446,7 +1461,7 @@ a:focus-visible {
     .sample-station.expanded .tube-label-copy { gap: 0; }
 
     .sample-station.expanded .paper-asset-wrap {
-        top: 154px;
+        top: 76px;
         right: 7%;
         bottom: 0;
         left: 7%;
