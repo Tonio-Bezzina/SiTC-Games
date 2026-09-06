@@ -31,10 +31,10 @@ const modeDetails = {
 };
 
 const patientVariants = [
-    { name: "Nicky Borg", id: "MRN 428731", dob: "14/06/2017" },
-    { name: "Nicky Galea", id: "MRN 615204", dob: "22/09/2016" },
-    { name: "Nicky Vella", id: "MRN 307518", dob: "03/12/2017" },
-    { name: "Nicky Camilleri", id: "MRN 842963", dob: "28/02/2016" }
+    { name: "Nicky Borg", id: "MRN 428731" },
+    { name: "Nicky Galea", id: "MRN 615204" },
+    { name: "Nicky Vella", id: "MRN 307518" },
+    { name: "Nicky Camilleri", id: "MRN 842963" }
 ];
 
 const emergencyLines = [
@@ -55,6 +55,8 @@ const state = {
     selectedReagent: null,
     selectedBloodPack: null,
     bloodChoiceBusy: false,
+    missionStartedAt: null,
+    sampleScenario: null,
     soundOn: true,
     modalAction: null
 };
@@ -190,7 +192,9 @@ function renderStart() {
 
 function startMission(mode) {
     state.mode = mode;
-    state.patient = randomItem(patientVariants);
+    state.missionStartedAt = new Date();
+    state.patient = createMissionPatient(randomItem(patientVariants), mode, state.missionStartedAt);
+    state.sampleScenario = createSampleScenario(state.patient, mode, state.missionStartedAt);
     state.firstTryWins = 0;
     state.taskCount = 0;
     state.placedReagents = new Set();
@@ -430,87 +434,294 @@ async function handBloodToNurse(pack) {
     });
 }
 
-function changeOneDigit(id) {
-    const digits = id.split("");
-    const indexes = digits.map((character, index) => (/\d/.test(character) ? index : -1)).filter((index) => index >= 0);
-    const position = randomItem(indexes);
-    digits[position] = String((Number(digits[position]) + randomItem([1, 2, 7])) % 10);
-    return digits.join("");
+const ageRanges = {
+    junior: [7, 9],
+    explorer: [10, 12],
+    challenge: [13, 16]
+};
+
+const collectorInitials = ["AB", "KM", "LT", "RS"];
+
+function twoDigits(value) {
+    return String(value).padStart(2, "0");
 }
 
-function buildWrongSample(patient) {
-    if (state.mode === "challenge") {
-        const subtleVariants = [
-            { ...patient, id: changeOneDigit(patient.id), mismatch: "one-digit patient number difference" },
-            { ...patient, name: patient.name.replace("Nicky", "Nicki"), mismatch: "small spelling difference" },
-            { ...patient, dob: patient.dob.replace(/^(\d{2})\/(\d{2})/, "$2/$1"), mismatch: "date digits in a different order" }
-        ];
-        return randomItem(subtleVariants);
+function formatDate(date) {
+    return `${twoDigits(date.getDate())}/${twoDigits(date.getMonth() + 1)}/${date.getFullYear()}`;
+}
+
+function formatDateTime(date) {
+    return `${formatDate(date)}, ${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}`;
+}
+
+function createMissionPatient(basePatient, mode, referenceDate) {
+    const [minimumAge, maximumAge] = ageRanges[mode];
+    const age = minimumAge + Math.floor(Math.random() * (maximumAge - minimumAge + 1));
+    const month = Math.floor(Math.random() * 12);
+    let day = 1 + Math.floor(Math.random() * 12);
+    if (day === month + 1) day = day === 12 ? 11 : day + 1;
+    const birthdayHasPassed = month < referenceDate.getMonth()
+        || (month === referenceDate.getMonth() && day <= referenceDate.getDate());
+    const year = referenceDate.getFullYear() - age - (birthdayHasPassed ? 0 : 1);
+    return { ...basePatient, dob: formatDate(new Date(year, month, day)), age };
+}
+
+function alterMrnSubtly(id) {
+    const prefix = id.slice(0, id.search(/\d/));
+    const digits = id.replace(/\D/g, "").split("");
+    const canTranspose = digits.some((digit, index) => index < digits.length - 1 && digit !== digits[index + 1]);
+
+    if (canTranspose && Math.random() < .5) {
+        const positions = digits.map((digit, index) => index < digits.length - 1 && digit !== digits[index + 1] ? index : -1).filter((index) => index >= 0);
+        const index = randomItem(positions);
+        [digits[index], digits[index + 1]] = [digits[index + 1], digits[index]];
+    } else {
+        const index = Math.floor(Math.random() * digits.length);
+        digits[index] = String((Number(digits[index]) + randomItem([1, 3, 7])) % 10);
     }
 
-    const other = randomItem(patientVariants.filter((candidate) => candidate.name !== patient.name));
-    return { ...other, mismatch: "different patient details", obvious: true };
+    return `${prefix}${digits.join("")}`;
 }
 
-function labelMarkup(sample) {
+function alterDobByOneDigit(dob) {
+    const pieces = dob.split("");
+    const lastIndex = pieces.length - 1;
+    pieces[lastIndex] = pieces[lastIndex] === "9" ? "8" : String(Number(pieces[lastIndex]) + 1);
+    return pieces.join("");
+}
+
+function alterDobClearly(dob) {
+    const [day, month, year] = dob.split("/");
+    return `${day}/${month}/${Number(year) - 3}`;
+}
+
+function transposeDob(dob) {
+    const [day, month, year] = dob.split("/");
+    return `${month}/${day}/${year}`;
+}
+
+function closePatientName(name) {
+    const closeSurnames = {
+        Borg: "Borgg",
+        Galea: "Galia",
+        Vella: "Vela",
+        Camilleri: "Camileri"
+    };
+    const surname = name.split(" ").slice(1).join(" ");
+    return `Nicky ${closeSurnames[surname] || `${surname}i`}`;
+}
+
+function createWrongSample(patient, mode) {
+    if (mode === "junior") {
+        return { ...patient, name: randomItem(["Maya Zammit", "Luca Farrugia", "Sara Mifsud"]), mismatchField: "name" };
+    }
+
+    if (mode === "explorer") {
+        return randomItem([
+            { ...patient, name: randomItem(["Daniel Grech", "Maya Attard", "Leah Spiteri"]), mismatchField: "name" },
+            { ...patient, id: `MRN ${randomItem(["950124", "173806", "564290"])}`, mismatchField: "mrn" },
+            { ...patient, dob: alterDobClearly(patient.dob), mismatchField: "dob" }
+        ]);
+    }
+
+    return randomItem([
+        { ...patient, id: alterMrnSubtly(patient.id), mismatchField: "mrn" },
+        { ...patient, name: closePatientName(patient.name), mismatchField: "name" },
+        { ...patient, dob: alterDobByOneDigit(patient.dob), mismatchField: "dob" },
+        { ...patient, dob: transposeDob(patient.dob), mismatchField: "dob" }
+    ]);
+}
+
+function createSampleScenario(patient, mode, missionStartedAt) {
+    const correct = { ...patient, correct: true, collector: randomItem(collectorInitials) };
+    const wrong = { ...createWrongSample(patient, mode), correct: false, collector: randomItem(collectorInitials) };
+    const correctFirst = Math.random() < .5;
+    return {
+        requestDateTime: formatDateTime(missionStartedAt),
+        correctSide: correctFirst ? "left" : "right",
+        samples: correctFirst ? [correct, wrong] : [wrong, correct]
+    };
+}
+
+function monitorField(label, value, field = "", extraClass = "") {
+    const attribute = field ? ` data-reference-field="${field}"` : "";
+    return `<div class="monitor-request-field ${extraClass}"${attribute}><dt>${label}</dt><dd>${value}<span class="reference-marker">Reference</span></dd></div>`;
+}
+
+function requestMonitorMarkup(scenario) {
+    const patient = state.patient;
     return `
-        <span class="label-table">
-            <span class="label-row"><strong>Name</strong><span>${sample.name}</span></span>
-            <span class="label-row"><strong>Patient no.</strong><span>${sample.id}</span></span>
-            <span class="label-row"><strong>Date of birth</strong><span>${sample.dob}</span></span>
+        <div class="request-monitor" aria-label="Transfusion Laboratory Request reference">
+            <img src="assets/screen-3/request-monitor.png" alt="Laboratory request monitor">
+            <div class="request-monitor-ui">
+                <header><strong>Transfusion Laboratory Request</strong><span>Priority: Emergency</span></header>
+                <dl>
+                    ${monitorField("Patient name", patient.name, "name")}
+                    ${monitorField("MRN", patient.id, "mrn")}
+                    ${monitorField("Date of birth", patient.dob, "dob")}
+                    ${monitorField("Location", "Emergency Department")}
+                    ${monitorField("Component required", "Red cell concentrate")}
+                    ${monitorField("Quantity", "1 unit")}
+                    ${monitorField("Tests required", "ABO/RhD grouping and compatibility")}
+                    ${monitorField("Specimen required", "EDTA whole blood")}
+                    ${monitorField("Request date/time", scenario.requestDateTime)}
+                    ${monitorField("Specimen status", "Awaiting valid sample")}
+                    ${monitorField("Blood group", '<span class="warning-triangle" aria-hidden="true">!</span> Unknown — awaiting testing', "", "blood-group-status")}
+                </dl>
+            </div>
+        </div>
+    `;
+}
+
+function mismatchNote() {
+    return '<span class="mismatch-note"><span aria-hidden="true">!</span> Mismatch</span>';
+}
+
+function tubeLabelMarkup(sample) {
+    return `
+        <span class="tube-label-copy">
+            <span data-sample-field="name"><b>${sample.name}</b>${mismatchNote()}</span>
+            <span data-sample-field="mrn">${sample.id}${mismatchNote()}</span>
+            <span data-sample-field="dob">${sample.dob}${mismatchNote()}</span>
         </span>
+        <span class="sample-barcode" aria-hidden="true"></span>
+    `;
+}
+
+function paperRow(label, value, field = "") {
+    const attribute = field ? ` data-sample-field="${field}"` : "";
+    return `<span class="paper-request-row"${attribute}><b>${label}</b><span>${value}${mismatchNote()}</span></span>`;
+}
+
+function paperRequestMarkup(sample, scenario) {
+    return `
+        <span class="paper-request-copy">
+            <strong>Blood Transfusion Request</strong>
+            <span class="paper-request-list">
+                ${paperRow("Patient name", sample.name, "name")}
+                ${paperRow("MRN", sample.id, "mrn")}
+                ${paperRow("Date of birth", sample.dob, "dob")}
+                ${paperRow("Priority", "Emergency")}
+                ${paperRow("Component", "Red cell concentrate")}
+                ${paperRow("Quantity", "1 unit")}
+                ${paperRow("Clinical reason", "Emergency blood loss")}
+                ${paperRow("Location", "Emergency Department")}
+                ${paperRow("Collection date/time", scenario.requestDateTime)}
+                ${paperRow("Collector", sample.collector)}
+                ${paperRow("Specimen", "EDTA whole blood")}
+            </span>
+        </span>
+    `;
+}
+
+function sampleStationMarkup(sample, index, scenario) {
+    const number = index + 1;
+    const word = number === 1 ? "one" : "two";
+    return `
+        <article class="sample-station station-${number}" data-sample-station data-correct="${sample.correct}" data-mismatch-field="${sample.mismatchField || ""}">
+            <button class="station-inspect" type="button" aria-label="Select sample set ${word} to inspect details" aria-expanded="false">
+                <span class="station-number">Sample set ${number}</span>
+                <span class="tube-asset-wrap">
+                    <img src="assets/screen-3/edta-tube.png" alt="Purple-top EDTA sample tube">
+                    <span class="tube-label-overlay">${tubeLabelMarkup(sample)}</span>
+                </span>
+                <span class="paper-asset-wrap">
+                    <img src="assets/screen-3/paper-request.png" alt="Paper blood-request form">
+                    ${paperRequestMarkup(sample, scenario)}
+                </span>
+                <span class="inspect-prompt">Tap to inspect</span>
+            </button>
+            <div class="station-review-actions">
+                <button class="select-sample-button primary-button" type="button" aria-label="Select sample set ${word} for analysis">Select this sample →</button>
+                <button class="close-sample-button" type="button" aria-label="Close sample set ${word}">Compare other sample</button>
+            </div>
+        </article>
     `;
 }
 
 function renderSampleCheck() {
     beginTask();
-    const correct = { ...state.patient, correct: true };
-    const wrong = { ...buildWrongSample(state.patient), correct: false };
-    const samples = shuffle([correct, wrong]);
+    if (!state.sampleScenario) state.sampleScenario = createSampleScenario(state.patient, state.mode, state.missionStartedAt || new Date());
+    const scenario = state.sampleScenario;
 
     screenHost.innerHTML = `
-        <section class="screen">
-            <h1 class="screen-title">Stop and check the sample</h1>
-            <p class="screen-instruction">Compare both sample labels with Nicky's request. Select the exact match.</p>
-            <div class="task-layout" style="--columns:3">
-                <article class="request-card">
-                    <h3>Nicky's request</h3>
-                    ${labelMarkup(state.patient)}
-                </article>
-                ${samples.map((sample, index) => `
-                    <button class="sample-card ${sample.obvious ? "obvious-wrong" : ""}" type="button" data-sample="${sample.correct}" data-mismatch="${sample.mismatch || ""}">
-                        <strong>Sample ${index + 1}</strong>
-                        ${labelMarkup(sample)}
-                    </button>
-                `).join("")}
+        <section class="screen sample-check-screen" aria-labelledby="sampleCheckTitle">
+            <img class="sample-workbench-background" src="assets/screen-3/workbench-background.png" alt="">
+            <div class="sample-check-heading">
+                <h1 id="sampleCheckTitle" class="screen-title">First we check and confirm the sample details</h1>
+                <p class="screen-instruction"><span class="wide-instruction">Compare the monitor request with both sample labels and request forms. Select the exact match.</span><span class="compact-instruction">Compare the monitor with both samples. Select the exact match.</span></p>
             </div>
+            ${requestMonitorMarkup(scenario)}
+            <div class="sample-stations" data-correct-side="${scenario.correctSide}">
+                ${scenario.samples.map((sample, index) => sampleStationMarkup(sample, index, scenario)).join("")}
+            </div>
+            <p class="sample-check-live" aria-live="polite"></p>
         </section>
     `;
 
     const clue = state.mode === "challenge"
-        ? "Check every character—one small difference means the sample must not be used."
-        : "Names, patient numbers and dates of birth must all match.";
+        ? "Inspect each complete set carefully—one small identifier difference means it cannot be used."
+        : "The name, MRN and date of birth must match on the monitor, tube and paper request.";
     setGuide(clue);
-    document.querySelectorAll("[data-sample]").forEach((button) => {
-        button.addEventListener("click", () => chooseSample(button));
+
+    document.querySelectorAll(".station-inspect").forEach((button) => {
+        button.addEventListener("click", () => openSampleStation(button.closest(".sample-station")));
+    });
+    document.querySelectorAll(".close-sample-button").forEach((button) => {
+        button.addEventListener("click", () => closeSampleStation(button.closest(".sample-station")));
+    });
+    document.querySelectorAll(".select-sample-button").forEach((button) => {
+        button.addEventListener("click", () => chooseSample(button.closest(".sample-station")));
     });
 }
 
-function chooseSample(button) {
-    if (button.dataset.sample !== "true") {
+function openSampleStation(station) {
+    document.querySelectorAll(".sample-station.expanded").forEach((item) => closeSampleStation(item));
+    station.classList.add("expanded");
+    station.querySelector(".station-inspect").setAttribute("aria-expanded", "true");
+    document.querySelector(".sample-check-screen").classList.add("reviewing-sample");
+    station.querySelector(".select-sample-button").focus();
+}
+
+function closeSampleStation(station) {
+    station.classList.remove("expanded");
+    station.querySelector(".station-inspect").setAttribute("aria-expanded", "false");
+    if (!document.querySelector(".sample-station.expanded")) document.querySelector(".sample-check-screen")?.classList.remove("reviewing-sample");
+    station.querySelector(".station-inspect").focus();
+}
+
+function clearSampleMismatchHighlights() {
+    document.querySelectorAll(".sample-field-mismatch, .reference-field-mismatch").forEach((field) => {
+        field.classList.remove("sample-field-mismatch", "reference-field-mismatch");
+    });
+}
+
+function chooseSample(station) {
+    if (station.dataset.correct !== "true") {
         state.firstAttempt = false;
-        button.classList.add("wrong");
-        const detail = state.mode === "challenge" ? `The labels have a ${button.dataset.mismatch}.` : "This sample belongs to a different patient.";
-        showFeedback({ correct: false, title: "Labels do not match", message: `${detail} Check all three identifiers again.`, button: "Check again" });
+        clearSampleMismatchHighlights();
+        const field = station.dataset.mismatchField;
+        station.querySelectorAll(`[data-sample-field="${field}"]`).forEach((item) => item.classList.add("sample-field-mismatch"));
+        document.querySelector(`[data-reference-field="${field}"]`)?.classList.add("reference-field-mismatch");
+        const messages = {
+            name: "Check the patient name. It does not match the request.",
+            mrn: "Check the MRN. One or more digits do not match the request.",
+            dob: "Check the date of birth. It does not match the request."
+        };
+        const message = messages[field];
+        document.querySelector(".sample-check-live").textContent = message;
+        showFeedback({ correct: false, title: "Sample details do not match", message, button: "Check again" });
         return;
     }
 
     markFirstTry();
-    button.classList.add("correct");
+    clearSampleMismatchHighlights();
+    station.classList.add("sample-correct");
+    document.querySelector(".sample-check-live").textContent = "Correct sample selected.";
     showFeedback({
         correct: true,
         title: "Identity confirmed",
-        message: "The sample exactly matches Nicky's request. It is safe to begin blood grouping.",
+        message: "Correct — the patient name, MRN and date of birth match the blood request.",
         action: () => moveTo(4)
     });
 }
