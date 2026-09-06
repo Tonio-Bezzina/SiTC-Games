@@ -1012,3 +1012,4 @@ fullscreenButton.addEventListener("click", attemptFullscreen);
 updateChrome();
 renderStart();
 
+
