@@ -347,6 +347,240 @@ a:focus-visible {
 .junior-hint { animation: hint-pulse 1.4s ease-in-out infinite; }
 @keyframes hint-pulse { 50% { transform: scale(1.045); border-color: var(--gold); box-shadow: 0 0 0 7px rgba(255,200,61,.22); } }
 
+/* Screen 2 uses the supplied blood-bank artwork while keeping labels and interaction in HTML. */
+.blood-bank-screen {
+    position: relative;
+    isolation: isolate;
+    padding: 0;
+    overflow: hidden;
+    background: #cfeeff;
+}
+
+.blood-bank-room {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    pointer-events: none;
+    user-select: none;
+}
+
+.blood-bank-brief {
+    position: absolute;
+    z-index: 6;
+    top: clamp(7px, 1.8vh, 17px);
+    left: 33%;
+    width: 37%;
+    padding: clamp(8px, 1.1vw, 14px) clamp(10px, 1.4vw, 18px);
+    border: 2px solid rgba(255,255,255,.78);
+    border-radius: clamp(12px, 1.5vw, 20px);
+    background: rgba(248,253,255,.91);
+    box-shadow: 0 8px 24px rgba(5,55,92,.15);
+    backdrop-filter: blur(5px);
+    pointer-events: none;
+}
+
+.blood-bank-brief .mission-kicker { margin-bottom: 3px; color: #9d1835; }
+.blood-bank-brief .screen-title { font-size: clamp(1rem, 2.15vw, 1.9rem); }
+.blood-bank-brief .screen-instruction { font-size: clamp(.68rem, 1.05vw, .94rem); }
+
+.blood-fridge {
+    position: absolute;
+    z-index: 2;
+    left: clamp(2px, 1vw, 14px);
+    bottom: 1%;
+    height: 97%;
+    aspect-ratio: 2 / 3;
+    filter: drop-shadow(0 10px 17px rgba(4,41,78,.24));
+}
+
+.blood-fridge > img {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+.fridge-cool-glow {
+    position: absolute;
+    z-index: 1;
+    top: 14%;
+    right: 6%;
+    width: 58%;
+    height: 72%;
+    border-radius: 22%;
+    background: rgba(125,226,255,.28);
+    box-shadow: 0 0 28px 13px rgba(112,222,255,.28);
+    animation: fridge-glow 3.4s ease-in-out infinite alternate;
+}
+
+@keyframes fridge-glow { to { opacity: .62; } }
+
+.shelf-blood-pack {
+    position: absolute;
+    z-index: 4;
+    left: 62%;
+    width: 18%;
+    aspect-ratio: 2 / 3;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    filter: drop-shadow(0 3px 3px rgba(3,29,55,.28));
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.shelf-blood-pack > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+.shelf-1 { top: 20.5%; }
+.shelf-2 { top: 38%; }
+.shelf-3 { top: 55.5%; }
+.shelf-4 { top: 73%; }
+
+.shelf-blood-label {
+    position: absolute;
+    left: 25%;
+    right: 25%;
+    top: 45%;
+    height: 24%;
+    display: grid;
+    place-items: center;
+    border-radius: 4px;
+    color: #8f132b;
+    font-size: clamp(.54rem, 1.08vw, .92rem);
+    font-weight: 950;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.shelf-blood-pack:hover,
+.shelf-blood-pack:focus-visible,
+.shelf-blood-pack.selected {
+    outline: 3px solid #ffc83d;
+    outline-offset: 2px;
+    filter: drop-shadow(0 4px 5px rgba(3,29,55,.32)) drop-shadow(0 0 8px rgba(255,200,61,.85));
+}
+
+.shelf-blood-pack.dragging {
+    z-index: 100;
+    margin: 0;
+    cursor: grabbing;
+    filter: drop-shadow(0 12px 13px rgba(3,29,55,.42));
+    animation: none;
+    pointer-events: none;
+}
+
+.shelf-blood-pack.returning,
+.shelf-blood-pack.handover {
+    transition: left .36s cubic-bezier(.2,.75,.25,1), top .36s cubic-bezier(.2,.75,.25,1), transform .36s ease, opacity .36s ease;
+}
+
+.shelf-blood-pack[hidden] { display: none; }
+.blood-bank-screen.entering .shelf-blood-pack,
+.blood-bank-screen.entering .nurse-receiving-zone { pointer-events: none; }
+.blood-pack-dragging { overflow: hidden; touch-action: none; }
+
+.junior-blood-hint { animation: junior-pack-pulse 1.45s ease-in-out infinite; }
+.junior-blood-hint.dragging { animation: none; }
+@keyframes junior-pack-pulse {
+    50% { transform: scale(1.09); filter: drop-shadow(0 0 9px rgba(255,200,61,.95)); }
+}
+
+.nurse-receiving-zone {
+    position: absolute;
+    z-index: 3;
+    right: 0;
+    bottom: -1%;
+    height: 96%;
+    aspect-ratio: 2 / 3;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+
+.blood-bank-nurse {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+    animation: nurse-waiting 3.8s ease-in-out infinite alternate;
+    transform-origin: 55% 96%;
+}
+
+@keyframes nurse-waiting {
+    from { transform: translateX(-.5%) scale(.998); }
+    to { transform: translateX(.7%) scale(1.006); }
+}
+
+.receive-target {
+    position: absolute;
+    z-index: 5;
+    top: 22%;
+    left: -1%;
+    width: 35%;
+    height: 29%;
+    border: 3px dashed rgba(255,255,255,.72);
+    border-radius: 50%;
+    background: rgba(61,200,227,.09);
+    box-shadow: 0 0 0 4px rgba(16,113,154,.09);
+    opacity: .48;
+    pointer-events: none;
+    transition: opacity .16s, transform .16s, background .16s, box-shadow .16s;
+}
+
+.receive-caption {
+    position: absolute;
+    z-index: 6;
+    top: 45%;
+    left: -5%;
+    padding: 5px 9px;
+    border-radius: 999px;
+    color: white;
+    background: rgba(5,69,107,.82);
+    font-size: clamp(.55rem, .92vw, .78rem);
+    font-weight: 900;
+    white-space: nowrap;
+    opacity: .82;
+    pointer-events: none;
+}
+
+.nurse-receiving-zone:hover .receive-target,
+.nurse-receiving-zone:focus-visible .receive-target,
+.nurse-receiving-zone.drag-over .receive-target {
+    opacity: 1;
+    transform: scale(1.09);
+    border-color: #ffc83d;
+    background: rgba(67,242,164,.25);
+    box-shadow: 0 0 0 8px rgba(255,200,61,.2), 0 0 24px rgba(67,242,164,.72);
+}
+
+.nurse-receiving-zone:focus-visible { outline: 3px solid #ffc83d; outline-offset: -5px; }
+.nurse-receiving-zone.received { cursor: default; }
+.nurse-receiving-zone.received .blood-bank-nurse { animation: none; }
+.nurse-receiving-zone.received .receive-target,
+.nurse-receiving-zone.received .receive-caption { display: none; }
+
 .request-card {
     padding: clamp(9px, 1.3vw, 17px);
     border: 3px dashed #58b9d5;
@@ -547,8 +781,15 @@ a:focus-visible {
     .start-panel > p:not(.mission-kicker) { margin: 5px 0 7px; line-height: 1.25; }
     .level-card { min-height: 63px; }
     .sample-card::before { display: none; }
+    .blood-bank-brief { top: 5px; padding: 6px 10px; }
+    .blood-bank-brief .screen-instruction { margin-top: 2px; }
+    .receive-caption { padding: 3px 7px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    .shelf-blood-pack.returning,
+    .shelf-blood-pack.handover,
+    .receive-target { transition-duration: .001ms !important; }
 }
+

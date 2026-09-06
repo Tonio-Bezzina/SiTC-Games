@@ -53,6 +53,8 @@ const state = {
     placedReagents: new Set(),
     mixedWells: new Set(),
     selectedReagent: null,
+    selectedBloodPack: null,
+    bloodChoiceBusy: false,
     soundOn: true,
     modalAction: null
 };
@@ -190,6 +192,8 @@ function startMission(mode) {
     state.taskCount = 0;
     state.placedReagents = new Set();
     state.mixedWells = new Set();
+    state.selectedBloodPack = null;
+    state.bloodChoiceBusy = false;
     state.step = 2;
     attemptFullscreen();
     updateChrome();
@@ -201,45 +205,224 @@ function renderBloodChoice() {
     beginTask();
     const units = shuffle(["O−", "A+", "AB+", "B−"]);
     screenHost.innerHTML = `
-        <section class="screen">
-            <h1 class="screen-title">Choose emergency red cells</h1>
-            <p class="screen-instruction">Nicky's blood group is not known yet. Tap the safest unit to send immediately.</p>
-            <div class="task-layout" style="--columns:4">
-                ${units.map((type) => `
-                    <button class="choice-card blood-choice ${state.mode === "junior" && type === "O−" ? "junior-hint" : ""}" type="button" data-blood="${type}">
-                        <span class="blood-bag" aria-hidden="true"><span class="blood-type">${type}</span></span>
-                        <strong>Red cells</strong>
+        <section class="screen blood-bank-screen entering" aria-labelledby="bloodBankTitle">
+            <img class="blood-bank-room" src="assets/screen-2/blood-bank-room.png" alt="">
+            <div class="blood-bank-brief">
+                <p class="mission-kicker">EMERGENCY BLOOD ISSUE</p>
+                <h1 id="bloodBankTitle" class="screen-title">Choose emergency red cells</h1>
+                <p id="bloodBankInstruction" class="screen-instruction">Move the safest unit from the fridge to the nurse.</p>
+            </div>
+            <div class="blood-fridge" aria-label="Open blood storage refrigerator with four shelves">
+                <div class="fridge-cool-glow" aria-hidden="true"></div>
+                <img src="assets/screen-2/blood-fridge-open.png" alt="Open blood storage refrigerator">
+                ${units.map((type, shelf) => `
+                    <button class="shelf-blood-pack shelf-${shelf + 1} ${state.mode === "junior" && type === "O−" ? "junior-blood-hint" : ""}" type="button" data-blood="${type}" aria-pressed="false" aria-describedby="bloodBankInstruction" aria-label="${type} red-cell pack on shelf ${shelf + 1}">
+                        <img src="assets/screen-2/red-cell-pack-blank.png" alt="">
+                        <span class="shelf-blood-label">${type}</span>
                     </button>
                 `).join("")}
             </div>
+            <button class="nurse-receiving-zone" type="button" data-receive-blood aria-label="Give the selected red-cell pack to the nurse">
+                <span class="receive-target" aria-hidden="true"></span>
+                <img class="blood-bank-nurse" src="assets/screen-2/nurse-waiting.png" alt="Nurse waiting to receive the emergency red-cell pack">
+                <span class="receive-caption">Give selected pack</span>
+            </button>
         </section>
     `;
 
-    setGuide(state.mode === "junior" ? "Look for the gently glowing O-negative unit." : "Emergency O-negative red cells can be used before the patient's group is known.");
-    document.querySelectorAll("[data-blood]").forEach((button) => {
-        button.addEventListener("click", () => chooseEmergencyBlood(button));
+    state.selectedBloodPack = null;
+    state.bloodChoiceBusy = false;
+    setGuide(state.mode === "junior" ? "Drag the gently pulsing O-negative unit to the nurse, or select it and then tap her hand." : "Drag a unit to the nurse, or select it and then tap her hand.");
+    document.querySelectorAll(".shelf-blood-pack").forEach(setUpBloodPack);
+
+    const receivingZone = document.querySelector("[data-receive-blood]");
+    receivingZone.addEventListener("click", () => {
+        if (document.querySelector(".blood-bank-screen.entering")) return;
+        if (state.selectedBloodPack && !state.bloodChoiceBusy) handBloodToNurse(state.selectedBloodPack);
+    });
+    window.setTimeout(() => document.querySelector(".blood-bank-screen")?.classList.remove("entering"), 500);
+}
+
+function selectBloodPack(pack) {
+    if (state.bloodChoiceBusy || document.querySelector(".blood-bank-screen.entering")) return;
+    document.querySelectorAll(".shelf-blood-pack.selected").forEach((item) => {
+        item.classList.remove("selected");
+        item.setAttribute("aria-pressed", "false");
+    });
+    pack.classList.add("selected");
+    pack.setAttribute("aria-pressed", "true");
+    state.selectedBloodPack = pack;
+    setGuide(`${pack.dataset.blood} selected. Drag it to the nurse or tap the nurse's hand to give it to her.`);
+}
+
+function setUpBloodPack(pack) {
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+    let dragging = false;
+
+    pack.addEventListener("dragstart", (event) => event.preventDefault());
+    pack.addEventListener("click", () => selectBloodPack(pack));
+    pack.addEventListener("pointerdown", (event) => {
+        if (state.bloodChoiceBusy || document.querySelector(".blood-bank-screen.entering") || (event.button !== undefined && event.button !== 0)) return;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startY = event.clientY;
+        const rect = pack.getBoundingClientRect();
+        offsetX = event.clientX - rect.left;
+        offsetY = event.clientY - rect.top;
+        pack._homeRect = rect;
+        pack.setPointerCapture(pointerId);
+        selectBloodPack(pack);
+    });
+    pack.addEventListener("pointermove", (event) => {
+        if (event.pointerId !== pointerId || state.bloodChoiceBusy) return;
+        if (!dragging && Math.hypot(event.clientX - startX, event.clientY - startY) > 6) {
+            dragging = true;
+            liftBloodPack(pack, pack._homeRect);
+            document.body.classList.add("blood-pack-dragging");
+        }
+        if (!dragging) return;
+        event.preventDefault();
+        pack.style.left = `${event.clientX - offsetX}px`;
+        pack.style.top = `${event.clientY - offsetY}px`;
+        updateReceivingHighlight(event.clientX, event.clientY);
+    });
+    pack.addEventListener("pointerup", (event) => {
+        if (event.pointerId !== pointerId) return;
+        pointerId = null;
+        document.body.classList.remove("blood-pack-dragging");
+        if (!dragging) return;
+        dragging = false;
+        const overNurse = isOverReceivingArea(event.clientX, event.clientY);
+        updateReceivingHighlight(-1, -1);
+        if (overNurse) handBloodToNurse(pack);
+        else returnBloodPack(pack);
+    });
+    pack.addEventListener("pointercancel", (event) => {
+        if (event.pointerId !== pointerId) return;
+        pointerId = null;
+        dragging = false;
+        document.body.classList.remove("blood-pack-dragging");
+        updateReceivingHighlight(-1, -1);
+        returnBloodPack(pack);
     });
 }
 
-function chooseEmergencyBlood(button) {
-    if (button.dataset.blood !== "O−") {
-        state.firstAttempt = false;
-        button.classList.add("wrong");
+function liftBloodPack(pack, rect = pack.getBoundingClientRect()) {
+    pack._homeRect = pack._homeRect || rect;
+    Object.assign(pack.style, {
+        position: "fixed",
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`
+    });
+    pack.classList.add("dragging");
+}
+
+function clearFloatingPack(pack) {
+    pack.classList.remove("dragging", "returning", "wrong-pack");
+    for (const property of ["position", "left", "top", "width", "height", "opacity", "transform"]) {
+        pack.style[property] = "";
+    }
+    pack._homeRect = null;
+}
+
+function transitionFinished(element, timeout = 500) {
+    return new Promise((resolve) => {
+        let finished = false;
+        const done = () => {
+            if (finished) return;
+            finished = true;
+            element.removeEventListener("transitionend", done);
+            resolve();
+        };
+        element.addEventListener("transitionend", done, { once: true });
+        window.setTimeout(done, timeout);
+    });
+}
+
+async function returnBloodPack(pack, showWrongFeedback = false) {
+    if (!pack.classList.contains("dragging")) liftBloodPack(pack);
+    const home = pack._homeRect;
+    pack.classList.add("returning");
+    requestAnimationFrame(() => {
+        pack.style.left = `${home.left}px`;
+        pack.style.top = `${home.top}px`;
+        pack.style.transform = "scale(1)";
+    });
+    await transitionFinished(pack);
+    clearFloatingPack(pack);
+    if (showWrongFeedback) {
+        state.bloodChoiceBusy = false;
         showFeedback({
             correct: false,
             title: "Keep Nicky safe",
-            message: "Nicky's group is still unknown. Look for O-negative red cells—the safest emergency choice here.",
+            message: "Nicky's blood group is not yet known. O-negative red cells are the safest emergency choice.",
             button: "Try again"
         });
+    }
+}
+
+function isOverReceivingArea(x, y) {
+    const target = document.querySelector(".receive-target");
+    if (!target) return false;
+    const rect = target.getBoundingClientRect();
+    return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+}
+
+function updateReceivingHighlight(x, y) {
+    const zone = document.querySelector(".nurse-receiving-zone");
+    if (zone) zone.classList.toggle("drag-over", isOverReceivingArea(x, y));
+}
+
+async function handBloodToNurse(pack) {
+    if (!pack || state.bloodChoiceBusy) return;
+    state.bloodChoiceBusy = true;
+    document.querySelector(".nurse-receiving-zone")?.classList.remove("drag-over");
+
+    if (pack.dataset.blood !== "O−") {
+        state.firstAttempt = false;
+        pack.classList.add("wrong-pack");
+        if (!pack.classList.contains("dragging")) {
+            liftBloodPack(pack);
+            requestAnimationFrame(() => {
+                pack.style.left = `${pack._homeRect.left + Math.max(22, pack._homeRect.width * .35)}px`;
+                pack.style.transform = "rotate(5deg)";
+            });
+            await new Promise((resolve) => window.setTimeout(resolve, 170));
+        }
+        await returnBloodPack(pack, true);
         return;
     }
 
     markFirstTry();
-    button.classList.add("correct");
+    if (!pack.classList.contains("dragging")) liftBloodPack(pack);
+    const target = document.querySelector(".receive-target").getBoundingClientRect();
+    const packRect = pack.getBoundingClientRect();
+    pack.classList.add("handover");
+    requestAnimationFrame(() => {
+        pack.style.left = `${target.left + (target.width - packRect.width) / 2}px`;
+        pack.style.top = `${target.top + (target.height - packRect.height) / 2}px`;
+        pack.style.transform = "scale(.74) rotate(-5deg)";
+        pack.style.opacity = ".12";
+    });
+    await transitionFinished(pack, 650);
+    pack.hidden = true;
+    const nurseZone = document.querySelector(".nurse-receiving-zone");
+    const nurse = nurseZone.querySelector(".blood-bank-nurse");
+    nurse.src = "assets/screen-2/nurse-received.png";
+    nurse.alt = "Nurse smiling after receiving the O-negative emergency red-cell pack";
+    nurseZone.classList.add("received");
+    nurseZone.disabled = true;
+    state.selectedBloodPack = null;
     showFeedback({
         correct: true,
         title: "Emergency unit released!",
-        message: "O-negative red cells buy the laboratory time to confirm Nicky's blood group safely.",
+        message: "O-negative red cells give the laboratory time to confirm Nicky's blood group safely.",
         action: () => moveTo(3)
     });
 }
@@ -614,3 +797,4 @@ fullscreenButton.addEventListener("click", attemptFullscreen);
 
 updateChrome();
 renderStart();
+
