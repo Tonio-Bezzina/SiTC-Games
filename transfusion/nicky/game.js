@@ -587,11 +587,21 @@ function mismatchNote() {
 }
 
 function tubeLabelMarkup(sample) {
+    const initials = sample.name
+        .trim()
+        .split(/\s+/)
+        .map((namePart) => namePart.charAt(0))
+        .join("")
+        .toUpperCase();
+
     return `
         <span class="tube-label-copy">
-            <span data-sample-field="name"><b>${sample.name}</b>${mismatchNote()}</span>
-            <span data-sample-field="mrn">${sample.id}${mismatchNote()}</span>
-            <span data-sample-field="dob">${sample.dob}${mismatchNote()}</span>
+            <span class="tube-label-initials" aria-hidden="true">${initials}</span>
+            <span class="tube-label-details">
+                <span data-sample-field="name"><b>${sample.name}</b>${mismatchNote()}</span>
+                <span data-sample-field="mrn">${sample.id}${mismatchNote()}</span>
+                <span data-sample-field="dob">${sample.dob}${mismatchNote()}</span>
+            </span>
         </span>
     `;
 }
