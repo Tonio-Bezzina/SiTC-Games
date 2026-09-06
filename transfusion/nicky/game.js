@@ -593,7 +593,6 @@ function tubeLabelMarkup(sample) {
             <span data-sample-field="mrn">${sample.id}${mismatchNote()}</span>
             <span data-sample-field="dob">${sample.dob}${mismatchNote()}</span>
         </span>
-        <span class="sample-barcode" aria-hidden="true"></span>
     `;
 }
 
@@ -611,7 +610,7 @@ function paperRequestMarkup(sample, scenario) {
                 ${paperRow("Name", sample.name, "name")}
                 ${paperRow("MRN", sample.id, "mrn")}
                 ${paperRow("DOB", sample.dob, "dob")}
-                ${paperRow("Location", "Emergency Department")}
+                ${paperRow("Location", "Emergency Dept.")}
             </span>
             <span class="paper-details-section paper-sample-request">
                 <em>Sample request</em>
@@ -645,7 +644,7 @@ function sampleStationMarkup(sample, index, scenario) {
                     <span class="tube-label-overlay">${tubeLabelMarkup(sample)}</span>
                 </span>
                 <span class="paper-asset-wrap">
-                    <img src="assets/screen-3/paper-request.png" alt="Paper blood-request form">
+                    <img src="assets/screen-3/paper-request.png?v=3" alt="Paper blood-request form">
                     ${paperRequestMarkup(sample, scenario)}
                 </span>
                 <span class="inspect-prompt">Tap to inspect</span>
