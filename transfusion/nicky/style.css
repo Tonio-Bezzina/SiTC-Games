@@ -759,7 +759,6 @@ a:focus-visible {
 }
 
 .request-monitor-ui header strong { font-size: 1.08em; }
-.request-monitor-ui header span { color: #ffce54; font-weight: 800; white-space: nowrap; }
 .request-monitor-ui dl { margin: 0; }
 
 .request-monitor-ui dl {
@@ -767,6 +766,21 @@ a:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 7px;
 }
+
+.monitor-section h3 {
+    margin: 2px 3px 1px;
+    padding: 1px 3px;
+    border-left: 3px solid #48cde5;
+    color: #a7ecf8;
+    background: rgba(42, 142, 165, .18);
+    font-size: .91em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+.monitor-sample-section { margin-top: 1px; }
+.monitor-priority dd { color: #ffd351; }
 
 .monitor-request-field {
     min-width: 0;
@@ -776,7 +790,7 @@ a:focus-visible {
 
 .monitor-request-field dt { color: #8ec8d5; font-size: .87em; }
 .monitor-request-field dd { margin: 0; overflow-wrap: anywhere; font-weight: 700; }
-.monitor-request-field.blood-group-status { grid-column: 1 / -1; color: #ffd351; }
+.monitor-request-field.blood-group-status { color: #ffd351; }
 
 .warning-triangle {
     display: inline-grid;
@@ -885,7 +899,7 @@ a:focus-visible {
 .paper-request-copy {
     position: absolute;
     z-index: 2;
-    inset: 11% 10% 10% 11%;
+    inset: 11% 12% 10% 17%;
     overflow: hidden;
     color: #162b35;
     font-family: Arial, sans-serif;
@@ -904,11 +918,35 @@ a:focus-visible {
     text-align: center;
 }
 
-.paper-request-list { display: block; }
+.paper-details-section {
+    position: absolute;
+    right: 0;
+    left: 0;
+    display: block;
+    overflow: hidden;
+}
+
+.paper-details-section > em {
+    display: block;
+    padding: 1px 3px;
+    color: #18495e;
+    background: rgba(208, 235, 247, .68);
+    font-size: .93em;
+    font-style: normal;
+    font-weight: 800;
+    line-height: 1.05;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.paper-patient-details { top: 7%; height: 21%; }
+.paper-sample-request { top: 30%; height: 23%; }
+.paper-clinical-details { top: 56%; height: 17%; }
+.paper-collection-details { top: 76%; height: 17%; }
 
 .paper-request-row {
     display: grid;
-    grid-template-columns: 42% minmax(0, 1fr);
+    grid-template-columns: 34% minmax(0, 1fr);
     gap: 2px;
     padding: 1px 2px;
     border-bottom: 1px solid rgba(69, 92, 103, .24);
@@ -958,7 +996,7 @@ a:focus-visible {
 .sample-station.expanded .tube-asset-wrap { left: -2%; width: 43%; height: 87%; }
 .sample-station.expanded .paper-asset-wrap { right: 4%; width: 67%; height: 88%; }
 .sample-station.expanded .tube-label-overlay { left: 40%; width: 20%; font-size: clamp(.38rem, .64vw, .62rem); }
-.sample-station.expanded .paper-request-copy { inset: 11% 27% 10% 26%; font-size: clamp(.48rem, .82vw, .76rem); }
+.sample-station.expanded .paper-request-copy { inset: 11% 28% 10% 28%; font-size: clamp(.48rem, .82vw, .76rem); }
 .sample-station.expanded .station-review-actions { display: flex; }
 .sample-station.expanded .inspect-prompt { display: none; }
 .sample-check-screen.reviewing-sample .sample-station:not(.expanded) { opacity: .32; }

@@ -554,20 +554,29 @@ function requestMonitorMarkup(scenario) {
         <div class="request-monitor" aria-label="Transfusion Laboratory Request reference">
             <img src="assets/screen-3/request-monitor.png" alt="Laboratory request monitor">
             <div class="request-monitor-ui">
-                <header><strong>Transfusion Laboratory Request</strong><span>Priority: Emergency</span></header>
-                <dl>
-                    ${monitorField("Patient name", patient.name, "name")}
-                    ${monitorField("MRN", patient.id, "mrn")}
-                    ${monitorField("Date of birth", patient.dob, "dob")}
-                    ${monitorField("Location", "Emergency Department")}
-                    ${monitorField("Component required", "Red cell concentrate")}
-                    ${monitorField("Quantity", "1 unit")}
-                    ${monitorField("Tests required", "ABO/RhD grouping and compatibility")}
-                    ${monitorField("Specimen required", "EDTA whole blood")}
-                    ${monitorField("Request date/time", scenario.requestDateTime)}
-                    ${monitorField("Specimen status", "Awaiting valid sample")}
-                    ${monitorField("Blood group", '<span class="warning-triangle" aria-hidden="true">!</span> Unknown — awaiting testing', "", "blood-group-status")}
-                </dl>
+                <header><strong>Transfusion Laboratory Request</strong></header>
+                <section class="monitor-section monitor-patient-section" aria-labelledby="monitorPatientHeading">
+                    <h3 id="monitorPatientHeading">Patient details</h3>
+                    <dl>
+                        ${monitorField("Patient name", patient.name, "name")}
+                        ${monitorField("MRN", patient.id, "mrn")}
+                        ${monitorField("Date of birth", patient.dob, "dob")}
+                        ${monitorField("Location", "Emergency Department")}
+                    </dl>
+                </section>
+                <section class="monitor-section monitor-sample-section" aria-labelledby="monitorSampleHeading">
+                    <h3 id="monitorSampleHeading">Sample request</h3>
+                    <dl>
+                        ${monitorField("Priority", "Emergency", "", "monitor-priority")}
+                        ${monitorField("Component", "Red cell concentrate")}
+                        ${monitorField("Quantity", "1 unit")}
+                        ${monitorField("Specimen", "EDTA whole blood")}
+                        ${monitorField("Tests", "ABO/RhD grouping and compatibility")}
+                        ${monitorField("Request date/time", scenario.requestDateTime)}
+                        ${monitorField("Specimen status", "Awaiting valid sample")}
+                        ${monitorField("Blood group", '<span class="warning-triangle" aria-hidden="true">!</span> Unknown — awaiting testing', "", "blood-group-status")}
+                    </dl>
+                </section>
             </div>
         </div>
     `;
@@ -597,18 +606,28 @@ function paperRequestMarkup(sample, scenario) {
     return `
         <span class="paper-request-copy">
             <strong>Blood Transfusion Request</strong>
-            <span class="paper-request-list">
-                ${paperRow("Patient name", sample.name, "name")}
+            <span class="paper-details-section paper-patient-details">
+                <em>Patient details</em>
+                ${paperRow("Name", sample.name, "name")}
                 ${paperRow("MRN", sample.id, "mrn")}
-                ${paperRow("Date of birth", sample.dob, "dob")}
+                ${paperRow("DOB", sample.dob, "dob")}
+                ${paperRow("Location", "Emergency Department")}
+            </span>
+            <span class="paper-details-section paper-sample-request">
+                <em>Sample request</em>
                 ${paperRow("Priority", "Emergency")}
                 ${paperRow("Component", "Red cell concentrate")}
                 ${paperRow("Quantity", "1 unit")}
-                ${paperRow("Clinical reason", "Emergency blood loss")}
-                ${paperRow("Location", "Emergency Department")}
-                ${paperRow("Collection date/time", scenario.requestDateTime)}
-                ${paperRow("Collector", sample.collector)}
                 ${paperRow("Specimen", "EDTA whole blood")}
+            </span>
+            <span class="paper-details-section paper-clinical-details">
+                <em>Clinical details</em>
+                ${paperRow("Reason", "Emergency blood loss")}
+            </span>
+            <span class="paper-details-section paper-collection-details">
+                <em>Collection</em>
+                ${paperRow("Collected", scenario.requestDateTime)}
+                ${paperRow("Collector", sample.collector)}
             </span>
         </span>
     `;
