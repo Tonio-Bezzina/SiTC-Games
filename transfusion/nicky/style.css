@@ -737,7 +737,7 @@ a:focus-visible {
 .request-monitor-ui {
     position: absolute;
     inset: 12.5% 16.5% 33.5% 16%;
-    overflow: hidden;
+    overflow: auto;
     padding: clamp(5px, .7vw, 10px);
     border-radius: 5px;
     color: #e9fbff;
@@ -881,13 +881,13 @@ a:focus-visible {
 .tube-label-overlay {
     position: absolute;
     z-index: 2;
-    top: 39%;
-    left: 38%;
-    width: 24%;
+    top: 40%;
+    left: 33%;
+    width: 29%;
     height: 29%;
     display: block;
     overflow: hidden;
-    padding: 2px;
+    padding: 10px;
     color: #18272d;
     background: transparent;
     font-family: Arial, sans-serif;
