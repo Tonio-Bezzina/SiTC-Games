@@ -39,6 +39,7 @@ a:focus-visible {
 #gameShell {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     display: grid;
     place-items: center;
     overflow: hidden;
@@ -50,6 +51,8 @@ a:focus-visible {
     position: relative;
     width: min(100vw, calc(100vh * 16 / 9));
     height: min(100vh, calc(100vw * 9 / 16));
+    width: min(100vw, calc(100dvh * 16 / 9));
+    height: min(100dvh, calc(100vw * 9 / 16));
     aspect-ratio: 16 / 9;
     display: grid;
     grid-template-rows: auto 1fr auto;
@@ -1231,6 +1234,105 @@ a:focus-visible {
     .sample-station.expanded .station-inspect { bottom: 14%; }
     .station-review-actions .primary-button,
     .close-sample-button { min-height: 34px; padding: 5px 10px; font-size: .7rem; }
+}
+
+/* Phones such as the Galaxy S24 expose roughly 350 CSS pixels of height in
+   landscape. Keep the chrome compact and reserve a real heading row so the
+   level cards and sample sets cannot slide underneath adjacent panels. */
+@media (orientation: landscape) and (max-height: 430px) {
+    .game-bar {
+        min-height: 42px;
+        padding: 4px 8px;
+        grid-template-columns: auto minmax(150px, 1fr) minmax(155px, 1fr) auto auto;
+        gap: 6px;
+    }
+
+    .exit-link,
+    .icon-button {
+        min-width: 36px;
+        min-height: 36px;
+        border-radius: 10px;
+    }
+
+    .exit-link { padding: 0 9px; }
+    .mission-name { gap: 6px; }
+    .mission-name strong { font-size: .82rem; }
+    .mission-name small { margin-top: 0; font-size: .68rem; }
+    .drop-icon { font-size: 1.25rem; }
+    .progress-wrap > span { font-size: .68rem; }
+    .progress-dots { margin-top: 3px; gap: 3px; }
+    .progress-dot { width: 16px; height: 6px; }
+
+    .game-footer {
+        min-height: 42px;
+        padding: 4px 10px;
+        border-top-width: 2px;
+    }
+
+    .guide { gap: 7px; }
+    .guide-avatar { width: 32px; border-width: 2px; font-size: 1.05rem; }
+    .guide p { font-size: .68rem; line-height: 1.15; }
+
+    .start-panel {
+        padding: 10px 14px;
+        justify-content: center;
+    }
+
+    .mission-kicker { margin-bottom: 2px; font-size: .6rem; }
+    .start-panel h1 { font-size: clamp(1.45rem, 4vw, 1.9rem); line-height: .96; }
+    .start-panel > p:not(.mission-kicker) {
+        margin: 5px 0 7px;
+        font-size: .7rem;
+        line-height: 1.18;
+    }
+
+    .level-grid { gap: 5px; }
+    .level-card {
+        min-height: 52px;
+        padding: 5px 4px;
+        border-width: 2px;
+        border-radius: 12px;
+    }
+    .level-card strong { font-size: .7rem; }
+    .level-card span { margin-top: 1px; font-size: .58rem; line-height: 1.12; }
+
+    .sample-check-heading {
+        top: 4px;
+        width: 92%;
+        padding: 4px 9px;
+        border-radius: 10px;
+    }
+
+    .sample-check-heading .screen-title { font-size: .8rem; }
+    .sample-check-heading .screen-instruction { margin-top: 2px; font-size: .58rem; }
+
+    .request-monitor {
+        top: 50px;
+        left: 1%;
+        width: 37%;
+    }
+
+    .sample-station {
+        top: 48px;
+        bottom: 4px;
+        height: auto;
+    }
+
+    .sample-station.expanded {
+        top: 48px;
+        bottom: 4px;
+        height: auto;
+    }
+
+    .station-number,
+    .inspect-prompt { font-size: .52rem; }
+    .station-review-actions { bottom: 3px; }
+    .station-review-actions .primary-button,
+    .close-sample-button {
+        min-height: 30px;
+        padding: 4px 9px;
+        font-size: .62rem;
+    }
 }
 
 @media (max-width: 900px) and (orientation: landscape) {
