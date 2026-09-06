@@ -644,8 +644,10 @@ function sampleStationMarkup(sample, index, scenario) {
                     <span class="tube-label-overlay">${tubeLabelMarkup(sample)}</span>
                 </span>
                 <span class="paper-asset-wrap">
-                    <img src="assets/screen-3/paper-request.png?v=3" alt="Paper blood-request form">
-                    ${paperRequestMarkup(sample, scenario)}
+                    <span class="paper-scroll-content">
+                        <img src="assets/screen-3/paper-request.png?v=3" alt="Paper blood-request form">
+                        ${paperRequestMarkup(sample, scenario)}
+                    </span>
                 </span>
                 <span class="inspect-prompt">Tap to inspect</span>
             </button>
@@ -683,7 +685,10 @@ function renderSampleCheck() {
     setGuide(clue);
 
     document.querySelectorAll(".station-inspect").forEach((button) => {
-        button.addEventListener("click", () => openSampleStation(button.closest(".sample-station")));
+        button.addEventListener("click", () => {
+            const station = button.closest(".sample-station");
+            if (!station.classList.contains("expanded")) openSampleStation(station);
+        });
     });
     document.querySelectorAll(".close-sample-button").forEach((button) => {
         button.addEventListener("click", () => closeSampleStation(button.closest(".sample-station")));

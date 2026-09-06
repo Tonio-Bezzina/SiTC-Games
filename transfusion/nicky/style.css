@@ -730,7 +730,7 @@ a:focus-visible {
 
 .request-monitor > img,
 .tube-asset-wrap > img,
-.paper-asset-wrap > img {
+.paper-scroll-content > img {
     width: 100%;
     height: 100%;
     display: block;
@@ -879,6 +879,13 @@ a:focus-visible {
     width: auto;
     height: 77%;
     aspect-ratio: 2 / 3;
+}
+
+.paper-scroll-content {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .tube-label-overlay {
@@ -1371,6 +1378,85 @@ a:focus-visible {
     .paper-request-copy { font-size: clamp(.27rem, .58vw, .45rem); }
     .sample-station.expanded .tube-label-overlay { font-size: clamp(.39rem, .83vw, .59rem); }
     .sample-station.expanded .paper-request-copy { font-size: clamp(.4rem, .8vw, .58rem); }
+}
+
+/* On short landscape phones, stack the physical sample above a larger request
+   form. Only the form scrolls, so the action buttons and reference monitor stay
+   fixed while the player checks every request section. */
+@media (max-width: 900px) and (max-height: 430px) and (orientation: landscape) {
+    .sample-station.expanded .station-inspect {
+        bottom: 36px;
+        overflow: hidden;
+    }
+
+    .sample-station.expanded .station-number {
+        top: 4px;
+        left: 9px;
+        transform: none;
+    }
+
+    .sample-station.expanded .tube-asset-wrap {
+        top: -14px;
+        bottom: auto;
+        left: calc(50% - 40px);
+        width: 80px;
+        height: 120px;
+        transform: rotate(90deg);
+        transform-origin: center;
+    }
+
+    .sample-station.expanded .tube-label-overlay {
+        top: 42%;
+        left: 23%;
+        width: 54%;
+        height: 21%;
+        padding: 1px;
+        font-size: .42rem;
+        line-height: 1;
+        transform: rotate(-91deg);
+    }
+
+    .sample-station.expanded .tube-label-copy { gap: 0; }
+
+    .sample-station.expanded .paper-asset-wrap {
+        top: 76px;
+        right: 7%;
+        bottom: 0;
+        left: 7%;
+        width: auto;
+        height: auto;
+        aspect-ratio: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
+        border: 2px solid rgba(139, 227, 242, .8);
+        border-radius: 8px;
+        background: #eaf6fb;
+        box-shadow: inset 0 -12px 16px rgba(5, 55, 75, .12);
+        scrollbar-color: #2997b6 rgba(255, 255, 255, .6);
+        scrollbar-width: thin;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sample-station.expanded .paper-scroll-content {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2 / 3;
+    }
+
+    .sample-station.expanded .paper-scroll-content > img {
+        position: absolute;
+        inset: 0;
+    }
+
+    .sample-station.expanded .paper-request-copy {
+        font-size: clamp(.68rem, 1.35vw, .8rem);
+    }
+
+    .sample-station.expanded .station-review-actions {
+        bottom: 3px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
