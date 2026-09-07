@@ -946,7 +946,7 @@ a:focus-visible {
 }
 
 .tube-label-details > span {
-    white-space: nowrap;
+    white-space: normal;
 }
 
 .sample-station.expanded .tube-label-initials { display: none !important; }
@@ -955,6 +955,9 @@ a:focus-visible {
     flex-direction: column;
     justify-content: center;
     gap: 1px;
+    top: -30%;
+    left: 10%;
+    width: 80%;
     height: 100%;
 }
 
