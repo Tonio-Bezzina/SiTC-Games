@@ -2,13 +2,13 @@
    NICKY'S BLOOD BANK RESCUE
 
    The mission deliberately varies labels, answer positions and short dialogue on every run.
-   Nicky's AB-positive result and the safe A-positive issue decision stay scientifically fixed.
+   Nicky's patient details, blood group, answer positions and short dialogue vary on every run.
 */
 
 const STORAGE_KEY = "sitcGameProgressV2";
 const LAB_ID = "transfusion";
 const CASE_ID = "nicky";
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 6;
 
 const screenHost = document.getElementById("screenHost");
 const guideText = document.getElementById("guideText");
@@ -50,9 +50,15 @@ const state = {
     firstAttempt: true,
     firstTryWins: 0,
     taskCount: 0,
-    placedReagents: new Set(),
-    mixedWells: new Set(),
-    selectedReagent: null,
+    bloodGroup: null,
+    groupingWells: null,
+    groupingTool: null,
+    pipetteLoaded: false,
+    groupingBusy: false,
+    groupingTaskCounted: false,
+    usedStickCount: 0,
+    interpretationAttempts: 0,
+    suppressGroupingClickUntil: 0,
     selectedBloodPack: null,
     bloodChoiceBusy: false,
     missionStartedAt: null,
@@ -197,8 +203,15 @@ function startMission(mode) {
     state.sampleScenario = createSampleScenario(state.patient, mode, state.missionStartedAt);
     state.firstTryWins = 0;
     state.taskCount = 0;
-    state.placedReagents = new Set();
-    state.mixedWells = new Set();
+    state.bloodGroup = randomItem(BLOOD_GROUPS);
+    state.groupingWells = createGroupingWells(state.bloodGroup);
+    state.groupingTool = null;
+    state.pipetteLoaded = false;
+    state.groupingBusy = false;
+    state.groupingTaskCounted = false;
+    state.usedStickCount = 0;
+    state.interpretationAttempts = 0;
+    state.suppressGroupingClickUntil = 0;
     state.selectedBloodPack = null;
     state.bloodChoiceBusy = false;
     state.step = 2;
@@ -483,53 +496,31 @@ function alterMrnSubtly(id) {
     return `${prefix}${digits.join("")}`;
 }
 
-function alterDobByOneDigit(dob) {
-    const pieces = dob.split("");
-    const lastIndex = pieces.length - 1;
-    pieces[lastIndex] = pieces[lastIndex] === "9" ? "8" : String(Number(pieces[lastIndex]) + 1);
-    return pieces.join("");
-}
-
 function alterDobClearly(dob) {
     const [day, month, year] = dob.split("/");
     return `${day}/${month}/${Number(year) - 3}`;
 }
 
-function transposeDob(dob) {
-    const [day, month, year] = dob.split("/");
-    return `${month}/${day}/${year}`;
-}
-
-function closePatientName(name) {
-    const closeSurnames = {
-        Borg: "Borgg",
-        Galea: "Galia",
-        Vella: "Vela",
-        Camilleri: "Camileri"
-    };
-    const surname = name.split(" ").slice(1).join(" ");
-    return `Nicky ${closeSurnames[surname] || `${surname}i`}`;
-}
-
 function createWrongSample(patient, mode) {
     if (mode === "junior") {
-        return { ...patient, name: randomItem(["Maya Zammit", "Luca Farrugia", "Sara Mifsud"]), mismatchField: "name" };
+        return {
+            ...patient,
+            name: randomItem(["Maya Zammit", "Luca Farrugia", "Sara Mifsud"]),
+            id: `MRN ${randomItem(["950124", "173806", "564290"])}`,
+            dob: alterDobClearly(patient.dob),
+            mismatchFields: ["name", "mrn", "dob"]
+        };
     }
 
     if (mode === "explorer") {
-        return randomItem([
-            { ...patient, name: randomItem(["Daniel Grech", "Maya Attard", "Leah Spiteri"]), mismatchField: "name" },
-            { ...patient, id: `MRN ${randomItem(["950124", "173806", "564290"])}`, mismatchField: "mrn" },
-            { ...patient, dob: alterDobClearly(patient.dob), mismatchField: "dob" }
-        ]);
+        return {
+            ...patient,
+            id: `MRN ${randomItem(["950124", "173806", "564290"])}`,
+            mismatchFields: ["mrn"]
+        };
     }
 
-    return randomItem([
-        { ...patient, id: alterMrnSubtly(patient.id), mismatchField: "mrn" },
-        { ...patient, name: closePatientName(patient.name), mismatchField: "name" },
-        { ...patient, dob: alterDobByOneDigit(patient.dob), mismatchField: "dob" },
-        { ...patient, dob: transposeDob(patient.dob), mismatchField: "dob" }
-    ]);
+    return { ...patient, id: alterMrnSubtly(patient.id), mismatchFields: ["mrn"] };
 }
 
 function createSampleScenario(patient, mode, missionStartedAt) {
@@ -636,7 +627,7 @@ function sampleStationMarkup(sample, index, scenario) {
     const number = index + 1;
     const word = number === 1 ? "one" : "two";
     return `
-        <article class="sample-station station-${number}" data-sample-station data-correct="${sample.correct}" data-mismatch-field="${sample.mismatchField || ""}">
+        <article class="sample-station station-${number}" data-sample-station data-correct="${sample.correct}" data-mismatch-fields="${(sample.mismatchFields || []).join(",")}">
             <button class="station-inspect" type="button" aria-label="Select sample set ${word} to inspect details" aria-expanded="false">
                 <span class="station-number">Sample set ${number}</span>
                 <span class="tube-asset-wrap">
@@ -718,15 +709,19 @@ function chooseSample(station) {
     if (station.dataset.correct !== "true") {
         state.firstAttempt = false;
         clearSampleMismatchHighlights();
-        const field = station.dataset.mismatchField;
-        station.querySelectorAll(`[data-sample-field="${field}"]`).forEach((item) => item.classList.add("sample-field-mismatch"));
-        document.querySelector(`[data-reference-field="${field}"]`)?.classList.add("reference-field-mismatch");
+        const fields = station.dataset.mismatchFields.split(",").filter(Boolean);
+        fields.forEach((field) => {
+            station.querySelectorAll(`[data-sample-field="${field}"]`).forEach((item) => item.classList.add("sample-field-mismatch"));
+            document.querySelector(`[data-reference-field="${field}"]`)?.classList.add("reference-field-mismatch");
+        });
         const messages = {
             name: "Check the patient name. It does not match the request.",
             mrn: "Check the MRN. One or more digits do not match the request.",
             dob: "Check the date of birth. It does not match the request."
         };
-        const message = messages[field];
+        const message = fields.length > 1
+            ? "Check the patient details. The name, MRN and date of birth do not match the request."
+            : messages[fields[0]];
         document.querySelector(".sample-check-live").textContent = message;
         showFeedback({ correct: false, title: "Sample details do not match", message, button: "Check again" });
         return;
@@ -744,203 +739,503 @@ function chooseSample(station) {
     });
 }
 
-const reagents = [
-    { id: "a", label: "Anti-A", color: "#62aee8", text: "A" },
-    { id: "b", label: "Anti-B", color: "#f2d34e", text: "B" },
-    { id: "d", label: "Anti-D", color: "#e7eef2", text: "D" },
-    { id: "control", label: "Control", color: "#f4f7f9", text: "C" }
+const BLOOD_GROUPS = ["A+", "A−", "B+", "B−", "AB+", "AB−", "O+", "O−"];
+const GROUPING_REAGENTS = [
+    { id: "a", bottle: "Anti-A", well: "A", asset: "reagent-anti-a.png" },
+    { id: "b", bottle: "Anti-B", well: "B", asset: "reagent-anti-b.png" },
+    { id: "d", bottle: "Anti-D", well: "RhD", asset: "reagent-anti-d.png" },
+    { id: "control", bottle: "Control", well: "Control", asset: "reagent-control.png" }
 ];
+const REACTION_PATTERNS = {
+    "A+":  { a: true,  b: false, d: true,  control: false },
+    "A−":  { a: true,  b: false, d: false, control: false },
+    "B+":  { a: false, b: true,  d: true,  control: false },
+    "B−":  { a: false, b: true,  d: false, control: false },
+    "AB+": { a: true,  b: true,  d: true,  control: false },
+    "AB−": { a: true,  b: true,  d: false, control: false },
+    "O+":  { a: false, b: false, d: true,  control: false },
+    "O−":  { a: false, b: false, d: false, control: false }
+};
+
+function createGroupingWells(group) {
+    return Object.fromEntries(GROUPING_REAGENTS.map(({ id }) => [id, {
+        reagent: false,
+        blood: false,
+        mixed: false,
+        reaction: REACTION_PATTERNS[group][id] ? "reaction" : "no-reaction",
+        complete: false
+    }]));
+}
+
+function groupingReagent(id) {
+    return GROUPING_REAGENTS.find((item) => item.id === id);
+}
+
+function motionDelay(milliseconds) {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 10 : milliseconds;
+}
+
+function groupingWellMarkup(reagent) {
+    const well = state.groupingWells[reagent.id];
+    return `
+        <button class="typing-well well-${reagent.id}" type="button" data-grouping-well="${reagent.id}"
+                aria-label="${reagent.well} well. Empty.">
+            <span class="typing-well-label">${reagent.well}</span>
+            <span class="well-liquid" aria-hidden="true">
+                <span class="deposited-reagent"></span>
+                <span class="deposited-blood"></span>
+                <img class="well-reaction-image" src="assets/screen-4/${well.reaction === "reaction" ? "reaction-agglutinated.png" : "reaction-smooth.png"}" alt="" draggable="false" hidden>
+            </span>
+            <span class="well-result-text" hidden>${well.reaction === "reaction" ? "Reaction" : "No reaction"}</span>
+            <span class="target-cue" aria-hidden="true">Target</span>
+        </button>
+    `;
+}
+
+function interpretationTableMarkup() {
+    return BLOOD_GROUPS.map((group) => {
+        const pattern = REACTION_PATTERNS[group];
+        const cell = (id) => pattern[id] ? "Reaction" : "No reaction";
+        return `<tr><th scope="row">${group}</th><td>${cell("a")}</td><td>${cell("b")}</td><td>${cell("d")}</td><td>No reaction</td></tr>`;
+    }).join("");
+}
 
 function renderGroupingSetup() {
-    state.placedReagents = new Set();
-    state.selectedReagent = null;
+    if (!state.groupingWells) state.groupingWells = createGroupingWells(state.bloodGroup);
+    if (!state.groupingTaskCounted) {
+        beginTask();
+        state.groupingTaskCounted = true;
+    }
+
     screenHost.innerHTML = `
-        <section class="screen">
-            <h1 class="screen-title">Set up Nicky's blood group</h1>
-            <p class="screen-instruction">Tap a reagent, then tap its matching labelled well.</p>
-            <div class="lab-bench">
-                <div class="reagent-tray">
-                    ${shuffle(reagents).map((reagent) => `
-                        <button class="reagent" type="button" data-reagent="${reagent.id}">
-                            <span class="reagent-drop" style="background:${reagent.color}" aria-hidden="true"><span>${reagent.text}</span></span>
-                            ${reagent.label}
+        <section class="screen grouping-workbench-screen" aria-labelledby="groupingTitle">
+            <img class="grouping-room" src="assets/screen-4/workbench-background.png" alt="">
+            <div class="grouping-heading">
+                <h1 id="groupingTitle" class="screen-title">Test Nicky's red cells</h1>
+                <p class="screen-instruction">Add each reagent and a drop of Nicky's blood to the matching well. Mix each well with a clean stick and observe the reaction.</p>
+                <p class="grouping-science-note">A reaction means that the matching antigen is present on Nicky's red blood cells.</p>
+            </div>
+
+            <div class="grouping-scene">
+                <button class="sample-tube-target" type="button" data-grouping-target="tube" aria-label="Nicky's EDTA blood sample">
+                    <img src="assets/screen-3/edta-tube.png" alt="Purple-top EDTA blood tube" draggable="false">
+                    <span class="grouping-tube-name">${state.patient.name}</span>
+                    <span class="target-cue" aria-hidden="true">Collect here</span>
+                </button>
+
+                <button class="grouping-tool pipette-tool" type="button" data-grouping-tool="pipette" aria-label="${state.pipetteLoaded ? "Loaded blood pipette" : "Empty pipette"}">
+                    <img src="assets/screen-4/${state.pipetteLoaded ? "pipette-loaded.png" : "pipette-empty.png"}" alt="" draggable="false">
+                    <span>${state.pipetteLoaded ? "Blood pipette" : "Empty pipette"}</span>
+                </button>
+
+                <div class="reagent-rack" aria-label="Blood grouping reagents">
+                    ${GROUPING_REAGENTS.map((reagent) => `
+                        <button class="grouping-tool reagent-bottle reagent-${reagent.id}" type="button"
+                                data-grouping-tool="reagent" data-tool-id="${reagent.id}" aria-label="${reagent.bottle} reagent bottle">
+                            <img src="assets/screen-4/${reagent.asset}" alt="${reagent.bottle}" draggable="false">
+                            <span class="tool-status"></span>
                         </button>
                     `).join("")}
                 </div>
-                <div class="well-grid">
-                    ${reagents.map((reagent) => `
-                        <button class="well-station" type="button" data-target="${reagent.id}">
-                            <span class="well empty" aria-hidden="true"></span>
-                            <span class="well-label">${reagent.label}</span>
-                        </button>
-                    `).join("")}
+
+                <div class="typing-tile" data-typing-tile>
+                    <img src="assets/screen-4/typing-tile.png" alt="Four-well blood typing tile" draggable="false">
+                    <span class="typing-tile-name">${state.patient.name}</span>
+                    ${GROUPING_REAGENTS.map(groupingWellMarkup).join("")}
                 </div>
+
+                <button class="grouping-tool stick-supply" type="button" data-grouping-tool="stick" aria-label="Take a clean mixing stick">
+                    <img src="assets/screen-4/mixing-stick.png" alt="Clean mixing stick" draggable="false">
+                    <span>Clean sticks</span>
+                </button>
+                <div class="used-stick-bin" aria-label="Used-stick container">
+                    <img src="assets/screen-4/used-stick-container.png" alt="Used-stick container" draggable="false">
+                    <span><b data-used-stick-count>${state.usedStickCount}</b> used</span>
+                </div>
+
+                <button class="grouping-help-button" type="button" aria-label="Open blood-group reaction guide">?</button>
+                <div class="grouping-pattern-help hidden" role="dialog" aria-modal="false" aria-labelledby="patternHelpTitle">
+                    <div class="pattern-help-card">
+                        <button class="pattern-help-close" type="button" aria-label="Close reaction guide">×</button>
+                        <h2 id="patternHelpTitle">Blood-group reaction guide</h2>
+                        <div class="pattern-table-wrap">
+                            <table><thead><tr><th>Group</th><th>A</th><th>B</th><th>RhD</th><th>Control</th></tr></thead><tbody>${interpretationTableMarkup()}</tbody></table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grouping-interpretation" hidden>
+                    <p><strong>Based on the reaction pattern, what is Nicky's blood group?</strong></p>
+                    <div class="group-answer-grid">
+                        ${shuffle(BLOOD_GROUPS).map((group) => `<button class="group-answer" type="button" data-group-answer="${group}">${group}</button>`).join("")}
+                    </div>
+                </div>
+                <p class="grouping-live" aria-live="polite"></p>
             </div>
         </section>
     `;
 
-    setGuide("Anti-A, Anti-B and Anti-D test for blood-group markers. The control checks that the test behaves properly.");
-    document.querySelectorAll("[data-reagent]").forEach((button) => button.addEventListener("click", () => selectReagent(button)));
-    document.querySelectorAll("[data-target]").forEach((button) => button.addEventListener("click", () => placeReagent(button)));
+    document.querySelectorAll("[data-grouping-tool]").forEach((button) => {
+        button.addEventListener("click", () => selectGroupingTool(button));
+        installGroupingDrag(button);
+    });
+    document.querySelector("[data-grouping-target='tube']").addEventListener("click", (event) => useGroupingToolOnTarget(event.currentTarget));
+    document.querySelectorAll("[data-grouping-well]").forEach((button) => button.addEventListener("click", () => useGroupingToolOnTarget(button)));
+    document.querySelectorAll("[data-group-answer]").forEach((button) => button.addEventListener("click", () => chooseGroup(button)));
+    document.querySelector(".grouping-help-button").addEventListener("click", openGroupingHelp);
+    document.querySelector(".pattern-help-close").addEventListener("click", closeGroupingHelp);
+    updateGroupingScene();
 }
 
-function selectReagent(button) {
-    if (button.classList.contains("used")) return;
-    state.selectedReagent = button.dataset.reagent;
-    document.querySelectorAll("[data-reagent]").forEach((item) => item.style.borderColor = "");
-    button.style.borderColor = "#ffc83d";
-    setGuide(`Now tap the ${reagents.find((item) => item.id === state.selectedReagent).label} well.`);
+function selectGroupingTool(button) {
+    if (performance.now() < state.suppressGroupingClickUntil || state.groupingBusy || button.disabled) return;
+    const kind = button.dataset.groupingTool;
+    const id = button.dataset.toolId || "";
+    state.groupingTool = { kind, id };
+    updateGroupingScene();
+
+    if (kind === "reagent") setGuide(`${groupingReagent(id).bottle} selected. Add it to the ${groupingReagent(id).well} well.`);
+    if (kind === "pipette") setGuide(state.pipetteLoaded ? "Blood pipette selected. Add one drop to an unfinished well." : "Empty pipette selected. Collect blood from Nicky's tube.");
+    if (kind === "stick") setGuide("Clean stick selected. Choose a well containing both reagent and blood.");
 }
 
-function placeReagent(button) {
-    if (!state.selectedReagent || state.placedReagents.has(button.dataset.target)) return;
+function useGroupingToolOnTarget(target) {
+    if (!state.groupingTool || state.groupingBusy) return;
+    applyGroupingDrop(state.groupingTool, target);
+}
 
-    if (button.dataset.target !== state.selectedReagent) {
-        playTone("try");
-        button.classList.add("wrong");
-        setTimeout(() => button.classList.remove("wrong"), 350);
-        setGuide("That label does not match the selected reagent. Try the same reagent again.");
+async function applyGroupingDrop(tool, target) {
+    const wellId = target.dataset.groupingWell;
+    if (target.dataset.groupingTarget === "tube") {
+        if (tool.kind !== "pipette" || state.pipetteLoaded) return;
+        await collectBloodWithPipette();
+        return;
+    }
+    if (!wellId) return;
+    if (tool.kind === "reagent") await dispenseReagent(tool.id, wellId);
+    if (tool.kind === "pipette") await dispenseBlood(wellId);
+    if (tool.kind === "stick") await mixGroupingWell(wellId);
+}
+
+async function collectBloodWithPipette() {
+    state.groupingBusy = true;
+    const pipette = document.querySelector(".pipette-tool");
+    const tube = document.querySelector(".sample-tube-target");
+    pipette.classList.add("collecting");
+    tube.classList.add("receiving-tool");
+    await new Promise((resolve) => window.setTimeout(resolve, motionDelay(420)));
+    state.pipetteLoaded = true;
+    state.groupingTool = null;
+    state.groupingBusy = false;
+    pipette.classList.remove("collecting");
+    tube.classList.remove("receiving-tool");
+    pipette.querySelector("img").src = "assets/screen-4/pipette-loaded.png";
+    pipette.setAttribute("aria-label", "Loaded blood pipette");
+    pipette.querySelector("span").textContent = "Blood pipette";
+    setGuide("Pipette loaded. Add one drop of Nicky's blood to each well.");
+    updateGroupingScene();
+}
+
+async function dispenseReagent(reagentId, wellId) {
+    const reagent = groupingReagent(reagentId);
+    const well = state.groupingWells[wellId];
+    if (reagentId !== wellId) {
+        state.firstAttempt = false;
+        const properWell = document.querySelector(`[data-grouping-well="${reagentId}"]`);
+        properWell.classList.add("proper-target");
+        window.setTimeout(() => properWell.classList.remove("proper-target"), motionDelay(900));
+        showFeedback({ correct: false, title: "Check the labels", message: `${reagent.bottle} belongs in the ${reagent.well} well. Check the bottle and well labels.`, button: "Try again" });
+        return;
+    }
+    if (well.reagent || well.complete) return;
+    state.groupingBusy = true;
+    const wellButton = document.querySelector(`[data-grouping-well="${wellId}"]`);
+    const bottle = document.querySelector(`[data-grouping-tool="reagent"][data-tool-id="${reagentId}"]`);
+    bottle.classList.add("pouring");
+    wellButton.classList.add("receiving-drop");
+    await new Promise((resolve) => window.setTimeout(resolve, motionDelay(360)));
+    well.reagent = true;
+    state.groupingTool = null;
+    state.groupingBusy = false;
+    bottle.classList.remove("pouring");
+    wellButton.classList.remove("receiving-drop");
+    playTone("success");
+    updateGroupingScene();
+}
+
+async function dispenseBlood(wellId) {
+    const well = state.groupingWells[wellId];
+    if (!state.pipetteLoaded) {
+        setGuide("Collect Nicky's blood with the pipette first.");
+        return;
+    }
+    if (well.blood || well.complete) return;
+    state.groupingBusy = true;
+    const wellButton = document.querySelector(`[data-grouping-well="${wellId}"]`);
+    const pipette = document.querySelector(".pipette-tool");
+    pipette.classList.add("dispensing");
+    wellButton.classList.add("receiving-blood");
+    await new Promise((resolve) => window.setTimeout(resolve, motionDelay(320)));
+    well.blood = true;
+    state.groupingTool = null;
+    state.groupingBusy = false;
+    pipette.classList.remove("dispensing");
+    wellButton.classList.remove("receiving-blood");
+    playTone("success");
+    updateGroupingScene();
+}
+
+async function mixGroupingWell(wellId) {
+    const well = state.groupingWells[wellId];
+    if (well.complete) return;
+    if (!well.reagent || !well.blood) {
+        showFeedback({ correct: false, title: "The well is not ready", message: "Add the reagent and Nicky's blood before mixing this well.", button: "Continue testing" });
+        return;
+    }
+    state.groupingBusy = true;
+    const wellButton = document.querySelector(`[data-grouping-well="${wellId}"]`);
+    const stick = document.querySelector(".stick-supply");
+    stick.classList.add("stirring");
+    wellButton.classList.add("stirring-well");
+    await new Promise((resolve) => window.setTimeout(resolve, motionDelay(480)));
+    well.mixed = true;
+    well.complete = true;
+    state.usedStickCount += 1;
+    state.groupingTool = null;
+    state.groupingBusy = false;
+    stick.classList.remove("stirring");
+    wellButton.classList.remove("stirring-well");
+    document.querySelector(".used-stick-bin").classList.add("receiving-stick");
+    window.setTimeout(() => document.querySelector(".used-stick-bin")?.classList.remove("receiving-stick"), motionDelay(420));
+    playTone("success");
+    updateGroupingScene();
+}
+
+function updateGroupingScene() {
+    if (!document.querySelector(".grouping-workbench-screen")) return;
+    document.querySelectorAll(".junior-guide-target").forEach((item) => item.classList.remove("junior-guide-target"));
+    GROUPING_REAGENTS.forEach((reagent) => {
+        const well = state.groupingWells[reagent.id];
+        const wellButton = document.querySelector(`[data-grouping-well="${reagent.id}"]`);
+        const bottle = document.querySelector(`[data-grouping-tool="reagent"][data-tool-id="${reagent.id}"]`);
+        wellButton.classList.toggle("has-reagent", well.reagent);
+        wellButton.classList.toggle("has-blood", well.blood);
+        wellButton.classList.toggle("complete", well.complete);
+        wellButton.querySelector(".well-reaction-image").hidden = !well.mixed;
+        wellButton.setAttribute("aria-label", `${reagent.well} well. ${well.reagent ? "Reagent added. " : ""}${well.blood ? "Blood added. " : ""}${well.complete ? (well.reaction === "reaction" ? "Reaction." : "No reaction.") : "Not mixed."}`);
+        bottle.disabled = well.reagent;
+        bottle.classList.toggle("used", well.reagent);
+    });
+
+    document.querySelectorAll("[data-grouping-tool]").forEach((button) => {
+        const matches = state.groupingTool
+            && button.dataset.groupingTool === state.groupingTool.kind
+            && (button.dataset.toolId || "") === state.groupingTool.id;
+        button.classList.toggle("selected", Boolean(matches));
+        button.setAttribute("aria-pressed", String(Boolean(matches)));
+    });
+    document.querySelector("[data-used-stick-count]").textContent = state.usedStickCount;
+
+    const allComplete = GROUPING_REAGENTS.every(({ id }) => state.groupingWells[id].complete);
+    document.querySelectorAll(".well-result-text").forEach((label) => { label.hidden = !allComplete; });
+    document.querySelector(".grouping-interpretation").hidden = !allComplete;
+    if (allComplete) setGuide("Compare the A, B and RhD reactions, then choose Nicky's blood group. The smooth control shows the test worked correctly.");
+    else updateJuniorGroupingGuidance();
+}
+
+function updateJuniorGroupingGuidance() {
+    if (state.mode !== "junior") {
+        setGuide("Prepare each well with its matching reagent and Nicky's blood, then mix it with a fresh stick.");
         return;
     }
 
-    const reagent = reagents.find((item) => item.id === state.selectedReagent);
-    state.placedReagents.add(reagent.id);
-    button.querySelector(".well").classList.remove("empty");
-    button.querySelector(".well").classList.add("ready");
-    document.querySelector(`[data-reagent="${reagent.id}"]`).classList.add("used");
-    state.selectedReagent = null;
-    playTone("success");
+    if (state.groupingTool) {
+        if (state.groupingTool.kind === "reagent") document.querySelector(`[data-grouping-well="${state.groupingTool.id}"]`)?.classList.add("junior-guide-target");
+        if (state.groupingTool.kind === "pipette" && !state.pipetteLoaded) document.querySelector(".sample-tube-target")?.classList.add("junior-guide-target");
+        if (state.groupingTool.kind === "pipette" && state.pipetteLoaded) document.querySelectorAll("[data-grouping-well]").forEach((item) => { if (!state.groupingWells[item.dataset.groupingWell].blood) item.classList.add("junior-guide-target"); });
+        if (state.groupingTool.kind === "stick") document.querySelectorAll("[data-grouping-well]").forEach((item) => { const well = state.groupingWells[item.dataset.groupingWell]; if (well.reagent && well.blood && !well.complete) item.classList.add("junior-guide-target"); });
+        return;
+    }
 
-    if (state.placedReagents.size === reagents.length) {
-        showFeedback({
-            correct: true,
-            title: "Grouping tray ready",
-            message: "All four wells contain the correct reagent and Nicky's red cells.",
-            action: () => moveTo(5)
-        });
+    if (!state.pipetteLoaded) {
+        document.querySelector(".pipette-tool")?.classList.add("junior-guide-target");
+        document.querySelector(".sample-tube-target")?.classList.add("junior-guide-target");
+        setGuide("Collect Nicky's blood with the pipette.");
+        return;
+    }
+
+    const next = GROUPING_REAGENTS.find(({ id }) => !state.groupingWells[id].complete);
+    if (!next) return;
+    const well = state.groupingWells[next.id];
+    if (!well.reagent) {
+        document.querySelector(`[data-grouping-tool="reagent"][data-tool-id="${next.id}"]`)?.classList.add("junior-guide-target");
+        setGuide(`Add ${next.bottle} to the ${next.well} well.`);
+    } else if (!well.blood) {
+        document.querySelector(".pipette-tool")?.classList.add("junior-guide-target");
+        setGuide("Add one drop of Nicky's blood.");
     } else {
-        setGuide(`${reagents.length - state.placedReagents.size} reagent${reagents.length - state.placedReagents.size === 1 ? "" : "s"} still to place.`);
+        document.querySelector(".stick-supply")?.classList.add("junior-guide-target");
+        document.querySelector(`[data-grouping-well="${next.id}"]`)?.classList.add("junior-guide-target");
+        setGuide("Use a clean stick to mix the well.");
     }
 }
 
-function renderMixing() {
-    state.mixedWells = new Set();
-    screenHost.innerHTML = `
-        <section class="screen">
-            <h1 class="screen-title">Mix and watch the reaction</h1>
-            <p class="screen-instruction">Tap each well to mix it. Clumps mean a positive reaction.</p>
-            <div class="lab-bench" style="grid-template-columns:1fr">
-                <div class="well-grid">
-                    ${reagents.map((reagent) => `
-                        <button class="well-station" type="button" data-mix="${reagent.id}">
-                            <span class="well mix-well ${reagent.id === "control" ? "control" : ""}" aria-hidden="true"></span>
-                            <span class="well-label">${reagent.label}</span>
-                        </button>
-                    `).join("")}
-                </div>
-            </div>
-        </section>
-    `;
+function installGroupingDrag(button) {
+    button.addEventListener("pointerdown", (event) => {
+        if (button.disabled || state.groupingBusy || (event.pointerType === "mouse" && event.button !== 0)) return;
+        const origin = button.getBoundingClientRect();
+        const start = { x: event.clientX, y: event.clientY };
+        let dragging = false;
+        let hoverTarget = null;
+        button.setPointerCapture(event.pointerId);
 
-    setGuide("Mix every well. Look closely for clumps in Anti-A, Anti-B and Anti-D.");
-    document.querySelectorAll("[data-mix]").forEach((button) => button.addEventListener("click", () => mixWell(button)));
+        const clearHover = () => {
+            hoverTarget?.classList.remove("drag-over");
+            hoverTarget = null;
+        };
+        const move = (moveEvent) => {
+            if (!dragging && Math.hypot(moveEvent.clientX - start.x, moveEvent.clientY - start.y) < 6) return;
+            if (!dragging) {
+                dragging = true;
+                button.classList.add("dragging");
+                document.body.classList.add("grouping-drag-active");
+                Object.assign(button.style, { position: "fixed", width: `${origin.width}px`, height: `${origin.height}px`, margin: "0", zIndex: "1000", pointerEvents: "none" });
+            }
+            moveEvent.preventDefault();
+            button.style.left = `${moveEvent.clientX - origin.width / 2}px`;
+            button.style.top = `${moveEvent.clientY - origin.height / 2}px`;
+            const found = document.elementFromPoint(moveEvent.clientX, moveEvent.clientY)?.closest("[data-grouping-well], [data-grouping-target='tube']");
+            if (found !== hoverTarget) {
+                clearHover();
+                hoverTarget = found;
+                hoverTarget?.classList.add("drag-over");
+            }
+            button.classList.toggle("over-well", Boolean(found?.dataset.groupingWell));
+        };
+        const finish = (finishEvent, cancelled = false) => {
+            button.removeEventListener("pointermove", move);
+            button.removeEventListener("pointerup", up);
+            button.removeEventListener("pointercancel", cancel);
+            const target = hoverTarget;
+            clearHover();
+            if (!dragging) return;
+            finishEvent.preventDefault();
+            state.suppressGroupingClickUntil = performance.now() + 350;
+            button.classList.remove("dragging", "over-well");
+            button.classList.add("returning");
+            document.body.classList.remove("grouping-drag-active");
+            button.style.left = `${origin.left}px`;
+            button.style.top = `${origin.top}px`;
+            window.setTimeout(() => {
+                button.classList.remove("returning");
+                button.removeAttribute("style");
+                if (!cancelled && target) {
+                    const tool = { kind: button.dataset.groupingTool, id: button.dataset.toolId || "" };
+                    state.groupingTool = tool;
+                    applyGroupingDrop(tool, target);
+                }
+            }, motionDelay(180));
+        };
+        const up = (upEvent) => finish(upEvent, false);
+        const cancel = (cancelEvent) => finish(cancelEvent, true);
+        button.addEventListener("pointermove", move);
+        button.addEventListener("pointerup", up);
+        button.addEventListener("pointercancel", cancel);
+    });
 }
 
-function mixWell(button) {
-    const id = button.dataset.mix;
-    if (state.mixedWells.has(id)) return;
-    state.mixedWells.add(id);
-    button.querySelector(".well").classList.add("mixed");
-    playTone("success");
-
-    if (state.mixedWells.size === reagents.length) {
-        showFeedback({
-            correct: true,
-            title: "Reactions complete",
-            message: "Anti-A, Anti-B and Anti-D formed visible clumps. The control stayed smooth.",
-            action: () => moveTo(6)
-        });
-    } else {
-        setGuide(`${reagents.length - state.mixedWells.size} well${reagents.length - state.mixedWells.size === 1 ? "" : "s"} still to mix.`);
-    }
+function openGroupingHelp() {
+    document.querySelector(".grouping-pattern-help").classList.remove("hidden");
+    document.querySelector(".pattern-help-close").focus();
 }
 
-function resultStrip() {
-    return `
-        <div class="results-strip">
-            ${reagents.map((reagent) => `
-                <div class="mini-result">
-                    <strong>${reagent.label}</strong>
-                    <div class="reaction ${reagent.id === "control" ? "" : "clumps"}" aria-hidden="true"></div>
-                    <span>${reagent.id === "control" ? "No reaction" : "Clumps"}</span>
-                </div>
-            `).join("")}
-        </div>
-    `;
+function closeGroupingHelp() {
+    document.querySelector(".grouping-pattern-help").classList.add("hidden");
+    document.querySelector(".grouping-help-button").focus();
 }
 
-function renderInterpretation() {
-    beginTask();
-    const options = shuffle(["A positive", "B positive", "AB positive", "O negative"]);
-    screenHost.innerHTML = `
-        <section class="screen">
-            <h1 class="screen-title">What is Nicky's blood group?</h1>
-            ${resultStrip()}
-            <div class="result-grid">
-                ${options.map((option) => `<button class="result-choice" type="button" data-group="${option}">${option}</button>`).join("")}
-            </div>
-        </section>
-    `;
+function bloodGroupName(group) {
+    return `${group.replace(/[+−]/, "")} ${group.endsWith("+") ? "positive" : "negative"}`;
+}
 
-    setGuide(state.mode === "junior" ? "Clumps with Anti-A and Anti-B mean AB. Clumps with Anti-D mean positive." : "Use the three positive reactions and the smooth control to identify the group.");
-    document.querySelectorAll("[data-group]").forEach((button) => button.addEventListener("click", () => chooseGroup(button)));
+function interpretationConflictMessage(id, actualReaction) {
+    const reagent = groupingReagent(id);
+    if (id === "d") return actualReaction
+        ? "Look again at the RhD well. It reacted, showing that Nicky is RhD positive."
+        : "Look again at the RhD well. It did not react, showing that Nicky is RhD negative.";
+    return actualReaction
+        ? `Look again at the ${reagent.well} well. It reacted, showing that the ${reagent.well} antigen is present.`
+        : `Look again at the ${reagent.well} well. There was no reaction, so the ${reagent.well} antigen was not detected.`;
+}
+
+function correctGroupingMessage() {
+    const pattern = REACTION_PATTERNS[state.bloodGroup];
+    const reacted = [pattern.a && "A", pattern.b && "B", pattern.d && "RhD"].filter(Boolean);
+    const reactionText = reacted.length
+        ? `${reacted.join(reacted.length > 1 ? ", " : "")} ${reacted.length === 1 ? "well reacted" : "wells reacted"}`
+        : "the A, B and RhD wells showed no reaction";
+    return `Correct — ${reactionText}. Nicky's blood group is ${bloodGroupName(state.bloodGroup)}. The control did not react, confirming that the test behaved as expected.`;
 }
 
 function chooseGroup(button) {
-    if (button.dataset.group !== "AB positive") {
+    document.querySelectorAll(".interpretation-conflict").forEach((well) => well.classList.remove("interpretation-conflict"));
+    document.querySelectorAll(".group-answer.wrong").forEach((answer) => answer.classList.remove("wrong"));
+    const selected = button.dataset.groupAnswer;
+    if (selected !== state.bloodGroup) {
         state.firstAttempt = false;
+        state.interpretationAttempts += 1;
         button.classList.add("wrong");
-        showFeedback({ correct: false, title: "Read every reaction", message: "Anti-A and Anti-B both clumped, and Anti-D also clumped. Use all three clues together.", button: "Try again" });
+        const expected = REACTION_PATTERNS[selected];
+        const actual = REACTION_PATTERNS[state.bloodGroup];
+        const conflicts = ["a", "b", "d"].filter((id) => expected[id] !== actual[id]);
+        const shown = state.interpretationAttempts === 1 ? conflicts.slice(0, 1) : conflicts;
+        shown.forEach((id) => document.querySelector(`[data-grouping-well="${id}"]`)?.classList.add("interpretation-conflict"));
+        const message = interpretationConflictMessage(shown[0], actual[shown[0]]);
+        document.querySelector(".grouping-live").textContent = message;
+        showFeedback({ correct: false, title: "Read the reaction pattern again", message, button: "Try another group" });
         return;
     }
 
     markFirstTry();
     button.classList.add("correct");
+    document.querySelector("[data-typing-tile]").classList.add("typing-success");
+    document.querySelector(".grouping-live").textContent = correctGroupingMessage();
     showFeedback({
         correct: true,
-        title: "Nicky is AB positive",
-        message: "Nicky's red cells carry A, B and D markers, so all three test wells clumped.",
-        action: () => moveTo(7)
+        title: `${state.patient.name} is ${bloodGroupName(state.bloodGroup)}`,
+        message: correctGroupingMessage(),
+        action: () => moveTo(5)
     });
 }
 
 function renderCompatibility() {
     beginTask();
-    const units = shuffle(["A+", "B−", "O+", "AB−"]);
+    const requestedUnit = state.bloodGroup;
+    const units = shuffle([requestedUnit, ...shuffle(BLOOD_GROUPS.filter((group) => group !== requestedUnit)).slice(0, 3)]);
     screenHost.innerHTML = `
         <section class="screen">
             <h1 class="screen-title">Issue the planned red-cell unit</h1>
-            <p class="screen-instruction">Nicky is AB positive. Select the labelled compatible unit requested for issue.</p>
+            <p class="screen-instruction">${state.patient.name} is ${bloodGroupName(state.bloodGroup)}. Select the labelled group-identical unit requested for issue.</p>
             <div class="task-layout" style="--columns:4">
                 ${units.map((type) => `
                     <button class="choice-card blood-choice" type="button" data-unit="${type}">
                         <span class="blood-bag" aria-hidden="true"><span class="blood-type">${type}</span></span>
-                        <strong>${type === "A+" ? "Requested unit" : "Available unit"}</strong>
+                        <strong>${type === requestedUnit ? "Requested unit" : "Available unit"}</strong>
                     </button>
                 `).join("")}
             </div>
         </section>
     `;
 
-    setGuide(state.mode === "challenge" ? "Confirm both ABO and RhD compatibility before issue." : "An AB-positive patient can safely receive compatible A-positive red cells.");
+    setGuide(state.mode === "challenge" ? "Confirm both ABO and RhD before issue." : `Match the unit label to ${state.patient.name}'s ${state.bloodGroup} result.`);
     document.querySelectorAll("[data-unit]").forEach((button) => button.addEventListener("click", () => chooseCompatibleUnit(button)));
 }
 
 function chooseCompatibleUnit(button) {
-    if (button.dataset.unit !== "A+") {
+    if (button.dataset.unit !== state.bloodGroup) {
         state.firstAttempt = false;
         button.classList.add("wrong");
-        showFeedback({ correct: false, title: "Check the issue request", message: "The selected unit is not the planned A-positive unit. Match the unit label and confirm compatibility.", button: "Try again" });
+        showFeedback({ correct: false, title: "Check the issue request", message: `The requested unit is ${state.bloodGroup}. Match both the ABO and RhD label.`, button: "Try again" });
         return;
     }
 
@@ -949,8 +1244,8 @@ function chooseCompatibleUnit(button) {
     showFeedback({
         correct: true,
         title: "Safe unit selected",
-        message: "A-positive red cells are compatible with an AB-positive patient. The unit can be issued for Nicky.",
-        action: () => moveTo(8)
+        message: `${state.bloodGroup} red cells are group-identical for ${state.patient.name}. The unit can be issued safely.`,
+        action: () => moveTo(6)
     });
 }
 
@@ -982,7 +1277,7 @@ function renderCompletion() {
             <div class="confetti" aria-hidden="true">${confetti}</div>
             <div class="badge-reveal" aria-label="Transfusion Laboratory badge">🩸</div>
             <h1>Transfusion Badge Earned!</h1>
-            <p>You helped identify Nicky's AB-positive group and issue compatible red cells.</p>
+            <p>You identified ${state.patient.name}'s ${bloodGroupName(state.bloodGroup)} group and issued compatible red cells.</p>
             <div class="completion-actions">
                 <button id="playAgainButton" class="primary-button" type="button">Play a new version</button>
                 <a class="secondary-button" href="../">Return to Transfusion Lab</a>
@@ -1007,10 +1302,8 @@ function renderCurrentScreen() {
         2: renderBloodChoice,
         3: renderSampleCheck,
         4: renderGroupingSetup,
-        5: renderMixing,
-        6: renderInterpretation,
-        7: renderCompatibility,
-        8: renderCompletion
+        5: renderCompatibility,
+        6: renderCompletion
     };
     renderers[state.step]();
 }
