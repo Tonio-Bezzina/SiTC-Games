@@ -11,6 +11,7 @@ const guide = document.getElementById("guide");
 const guideText = document.getElementById("guideText");
 const chapterLabel = document.getElementById("chapterLabel");
 const caseSummary = document.getElementById("caseSummary");
+const gameBar = document.querySelector(".game-bar");
 const levelLabel = document.getElementById("levelLabel");
 const levelButton = document.getElementById("levelButton");
 const levelDialog = document.getElementById("levelDialog");
@@ -111,7 +112,7 @@ function createScenario(level, patient) {
 }
 
 function isValidCheckpoint(value) {
-    const stages = ["opening", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "complete"];
+    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "complete"];
     return value && value.version === 1 && LEVELS[value.level]
         && value.caseData && typeof value.caseData.name === "string"
         && typeof value.caseData.id === "string" && typeof value.caseData.dob === "string"
@@ -159,7 +160,9 @@ function setGuide(message, callout = false) {
 function updateChrome() {
     levelLabel.textContent = state.level ? LEVELS[state.level].label : "Choose";
     chapterLabel.textContent = state.level ? "Chapter 1 · Check the sample" : "Opening";
-    caseSummary.textContent = state.caseData ? `${state.caseData.name} · ${state.caseData.id} · Glucose` : "Ian's glucose sample";
+    caseSummary.textContent = state.caseData ? "Ian · Glucose" : "";
+    caseSummary.classList.toggle("hidden", !state.caseData);
+    gameBar.classList.toggle("has-case", Boolean(state.caseData));
     soundButton.textContent = state.soundOn ? "🔊" : "🔇";
     soundButton.setAttribute("aria-pressed", String(state.soundOn));
     soundButton.setAttribute("aria-label", state.soundOn ? "Turn sound off" : "Turn sound on");
@@ -219,6 +222,7 @@ function render() {
     cancelPhaseTimer();
     updateChrome();
     if (state.stage === "opening") renderOpening();
+    if (state.stage === "story") renderStory();
     if (state.stage === "clue") renderClueIntro();
     if (state.stage === "arrival") renderArrival();
     if (state.stage === "carrier") renderCarrier(false);
@@ -232,17 +236,13 @@ function renderOpening() {
     screenHost.innerHTML = `
         <section class="screen opening-screen" aria-labelledby="openingTitle">
             <div class="clinic-scene" role="img" aria-label="Ian sitting calmly on a chair in a clinic room">
-                <div class="clinic-decor" aria-hidden="true"></div>
+                <div class="clinic-window" aria-hidden="true"><img src="assets/malta-window-townscape-v2.png" alt=""></div>
                 <img class="ian-opening" src="assets/ian-seated-v2.png" alt="" draggable="false">
             </div>
             <div class="opening-panel">
                 <p class="kicker">CLINICAL CHEMISTRY · MAIN MISSION</p>
                 <h1 id="openingTitle">Help Ian's doctor find the clues.</h1>
-                <div class="story-copy">
-                    <p><strong>Doctor:</strong> “Ian has been feeling tired. A blood test can give us useful clues. Please help the laboratory measure his glucose.”</p>
-                    <p><strong>Scientist:</strong> “Glucose is a sugar our bodies use for energy. Let's follow Ian's sample!”</p>
-                </div>
-                <div class="topic-pills" aria-label="Chemistry can investigate"><span>Glucose & energy</span><span>Salts & fluid balance</span><span>Kidney clues</span></div>
+                <p class="opening-lede">Choose how much guidance you would like during the mission.</p>
                 <div class="level-grid" aria-label="Choose a mission level">
                     ${Object.entries(LEVELS).map(([id, level]) => `<button type="button" data-opening-level="${id}"><strong>${level.label}</strong><span>${id === "junior" ? "More guidance" : id === "explorer" ? "Some clues" : "Fewer clues"}</span></button>`).join("")}
                 </div>
@@ -260,7 +260,7 @@ function startFresh(level) {
         level,
         caseData: createCase(level),
         scenario: null,
-        stage: "clue",
+        stage: "story",
         clueSeen: false,
         inspectionIndex: null,
         mismatchFields: [],
@@ -270,8 +270,33 @@ function startFresh(level) {
     };
     state.scenario = createScenario(level, state.caseData);
     saveCheckpoint();
-    attemptFullscreen();
     render();
+}
+
+function renderStory() {
+    screenHost.innerHTML = `
+        <section class="screen opening-screen story-screen" aria-labelledby="storyTitle">
+            <div class="clinic-scene" role="img" aria-label="Ian sitting calmly on a chair in a clinic room">
+                <div class="clinic-window" aria-hidden="true"><img src="assets/malta-window-townscape-v2.png" alt=""></div>
+                <img class="ian-opening" src="assets/ian-seated-v2.png" alt="" draggable="false">
+            </div>
+            <div class="opening-panel">
+                <p class="kicker">IAN'S CASE</p>
+                <h1 id="storyTitle">A blood test can help find the clues.</h1>
+                <div class="story-copy">
+                    <p><strong>Doctor:</strong> “Ian has been feeling tired. Please help the laboratory measure his glucose.”</p>
+                    <p><strong>Scientist:</strong> “Glucose is a sugar our bodies use for energy. Let's follow Ian's sample!”</p>
+                </div>
+                <div class="topic-pills" aria-label="Chemistry can investigate"><span>Glucose & energy</span><span>Salts & fluid balance</span><span>Kidney clues</span></div>
+                <button class="primary-button story-next" type="button">Follow Ian's sample →</button>
+            </div>
+        </section>`;
+    setGuide("Ian's blood test is ready to travel to the laboratory.");
+    document.querySelector(".story-next").addEventListener("click", () => {
+        state.stage = "clue";
+        saveCheckpoint();
+        render();
+    });
 }
 
 function renderClueIntro() {
@@ -613,7 +638,7 @@ function changeLevel(level) {
     cancelBottleDrag();
     state.level = level;
     state.scenario = createScenario(level, state.caseData);
-    state.stage = state.clueSeen ? "arrival" : "clue";
+    state.stage = state.stage === "story" ? "story" : state.clueSeen ? "arrival" : "clue";
     state.inspectionIndex = null;
     state.mismatchFields = [];
     state.acceptedIndex = null;
