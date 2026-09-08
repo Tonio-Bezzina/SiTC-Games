@@ -317,27 +317,28 @@ function renderClueIntro() {
 
 function receiverMarkup(arriving = false) {
     return `<div class="receiver-wrap ${arriving ? "arriving" : ""}">
+        ${arriving ? '<div class="carrier-transit" aria-hidden="true"><img src="assets/pts-carrier-closed-v1.png" alt=""></div>' : ""}
         <img class="receiver-art" src="assets/pts-receiver-clean-v3.png" alt="PTS receiving terminal">
         <span class="arrival-light ${arriving ? "on" : ""}" role="status" aria-label="${arriving ? "Carrier arrival light on" : "Carrier arrival light off"}"></span>
-        ${arriving ? '<img class="vertical-carrier" src="assets/pts-carrier-closed-v1.png" alt="Carrier approaching the receiving station">' : ""}
+        ${arriving ? "" : '<button class="carrier-button" type="button" aria-label="Open the canister inside the PTS receiver"><img src="assets/pts-carrier-closed-v1.png" alt="Canister stopped inside the PTS receiver"><span class="bay-lip" aria-hidden="true"></span></button>'}
     </div>`;
 }
 
 function renderArrival() {
     screenHost.innerHTML = `
-        <section class="screen reception-screen" aria-labelledby="arrivalTitle">
+        <section class="screen reception-screen arrival-screen" aria-labelledby="arrivalTitle">
             <img class="reception-bg" src="assets/reception-background-v1.png" alt="Clinical chemistry reception bench">
             <div class="scene-shade"></div>
-            <div class="scene-heading"><h1 id="arrivalTitle">A sample is arriving</h1><p>The light and movement show the carrier entering the receiving station.</p></div>
+            <div class="scene-heading"><h1 id="arrivalTitle">A sample is arriving</h1><p>Watch the canister travel down the duct and into the receiving station.</p></div>
             ${receiverMarkup(true)}
         </section>`;
-    setGuide("Watch the PTS carrier arrive at the receiving station.");
+    setGuide("Watch the PTS canister travel through the duct and stop inside the receiver.");
     playTone("arrival");
     schedulePhase(() => {
         state.stage = "carrier";
         saveCheckpoint();
         render();
-    }, reducedMotionEnabled() ? 500 : 1900);
+    }, reducedMotionEnabled() ? 500 : 2450);
 }
 
 function renderCarrier(open) {
@@ -346,9 +347,9 @@ function renderCarrier(open) {
             <img class="reception-bg" src="assets/reception-background-v1.png" alt="Clinical chemistry reception bench">
             <div class="scene-shade"></div>
             <div class="scene-heading"><h1 id="carrierTitle">${open ? "The carrier is open" : "Ian's sample has arrived"}</h1><p>${open ? "The carrier moves to the horizontal bench view for inspection." : "It has settled safely in the receiving station."}</p></div>
-            ${open ? `<img class="bench-carrier" src="assets/pts-carrier-open-v2.png" alt="Open carrier on the bench with two grey-top samples and paper requests">` : `${receiverMarkup(false)}<button class="carrier-button" type="button" aria-label="Open the settled PTS carrier"><img src="assets/pts-carrier-closed-v1.png" alt="Closed PTS carrier settled in the receiving station"></button>`}
+            ${open ? `<img class="bench-carrier" src="assets/pts-carrier-open-v2.png" alt="Open carrier on the bench with two grey-top samples and paper requests">` : receiverMarkup(false)}
         </section>`;
-    setGuide(open ? "Two grey-top sample bottles and their requests are ready to compare." : "Ian's sample has arrived through the tube system. Tap the carrier to open it.");
+    setGuide(open ? "Two grey-top sample bottles and their requests are ready to compare." : "Ian's sample has arrived through the tube system. Tap the canister to open it.");
     if (!open) {
         document.querySelector(".carrier-button").addEventListener("click", () => {
             state.stage = "carrier-open";
