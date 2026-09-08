@@ -783,6 +783,7 @@ a:focus-visible {
 }
 
 .monitor-sample-section { margin-top: 1px; }
+.monitor-obscured-section { margin-top: 1px; }
 .monitor-priority dd { color: #ffd351; }
 
 .monitor-request-field {
@@ -1046,6 +1047,51 @@ a:focus-visible {
     overflow-wrap: normal;
     word-break: normal;
 }
+
+.request-scribble {
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+    padding: 2px 4px;
+    flex-direction: column;
+    justify-content: space-evenly;
+    gap: 2px;
+    overflow: hidden;
+    color: rgba(58, 105, 124, .48);
+}
+
+.request-scribble-line {
+    display: block;
+    width: 88%;
+    height: max(1px, .16em);
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: currentColor;
+    transform: rotate(-1deg);
+}
+
+.request-scribble-line:nth-child(2) { width: 68%; transform: rotate(.7deg); }
+.request-scribble-line:nth-child(3) { width: 79%; transform: rotate(-.4deg); }
+.request-monitor-ui .request-scribble {
+    min-height: 11px;
+    padding: 3px 6px;
+    gap: 3px;
+    color: rgba(155, 207, 219, .5);
+}
+
+.request-monitor-ui .monitor-section:not(.monitor-patient-section) {
+    margin-top: 3px;
+    overflow: hidden;
+    border: 1px solid rgba(72, 205, 229, .38);
+    border-radius: 3px;
+}
+
+.request-monitor-ui .monitor-section:not(.monitor-patient-section) h3 {
+    margin: 0;
+    border-bottom: 1px solid rgba(72, 205, 229, .25);
+}
+
+.request-monitor-ui .request-scribble-line:nth-child(3) { display: none; }
 
 .station-review-actions {
     position: absolute;

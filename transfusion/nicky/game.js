@@ -539,7 +539,17 @@ function monitorField(label, value, field = "", extraClass = "") {
     return `<div class="monitor-request-field ${extraClass}"${attribute}><dt>${label}</dt><dd>${value}<span class="reference-marker">Reference</span></dd></div>`;
 }
 
-function requestMonitorMarkup(scenario) {
+function obscuredRequestDetails() {
+    return `
+        <span class="request-scribble" role="img" aria-label="Details intentionally obscured">
+            <span class="request-scribble-line" aria-hidden="true"></span>
+            <span class="request-scribble-line" aria-hidden="true"></span>
+            <span class="request-scribble-line" aria-hidden="true"></span>
+        </span>
+    `;
+}
+
+function requestMonitorMarkup() {
     const patient = state.patient;
     return `
         <div class="request-monitor" aria-label="Transfusion Laboratory Request reference">
@@ -557,16 +567,15 @@ function requestMonitorMarkup(scenario) {
                 </section>
                 <section class="monitor-section monitor-sample-section" aria-labelledby="monitorSampleHeading">
                     <h3 id="monitorSampleHeading">Sample request</h3>
-                    <dl>
-                        ${monitorField("Priority", "Emergency", "", "monitor-priority")}
-                        ${monitorField("Component", "Red cell concentrate")}
-                        ${monitorField("Quantity", "1 unit")}
-                        ${monitorField("Specimen", "EDTA whole blood")}
-                        ${monitorField("Tests", "ABO/RhD grouping and compatibility")}
-                        ${monitorField("Request date/time", scenario.requestDateTime)}
-                        ${monitorField("Specimen status", "Awaiting valid sample")}
-                        ${monitorField("Blood group", '<span class="warning-triangle" aria-hidden="true">!</span> Unknown — awaiting testing', "", "blood-group-status")}
-                    </dl>
+                    ${obscuredRequestDetails()}
+                </section>
+                <section class="monitor-section monitor-obscured-section" aria-labelledby="monitorClinicalHeading">
+                    <h3 id="monitorClinicalHeading">Clinical details</h3>
+                    ${obscuredRequestDetails()}
+                </section>
+                <section class="monitor-section monitor-obscured-section" aria-labelledby="monitorCollectionHeading">
+                    <h3 id="monitorCollectionHeading">Collection</h3>
+                    ${obscuredRequestDetails()}
                 </section>
             </div>
         </div>
@@ -602,7 +611,7 @@ function paperRow(label, value, field = "") {
     return `<span class="paper-request-row"${attribute}><b>${label}</b><span>${value}${mismatchNote()}</span></span>`;
 }
 
-function paperRequestMarkup(sample, scenario) {
+function paperRequestMarkup(sample) {
     return `
         <span class="paper-request-copy">
             <strong>Blood Transfusion Request</strong>
@@ -615,25 +624,21 @@ function paperRequestMarkup(sample, scenario) {
             </span>
             <span class="paper-details-section paper-sample-request">
                 <em>Sample request</em>
-                ${paperRow("Priority", "Emergency")}
-                ${paperRow("Component", "Red cell concentrate")}
-                ${paperRow("Quantity", "1 unit")}
-                ${paperRow("Specimen", "EDTA whole blood")}
+                ${obscuredRequestDetails()}
             </span>
             <span class="paper-details-section paper-clinical-details">
                 <em>Clinical details</em>
-                ${paperRow("Reason", "Emergency blood loss")}
+                ${obscuredRequestDetails()}
             </span>
             <span class="paper-details-section paper-collection-details">
                 <em>Collection</em>
-                ${paperRow("Collected", scenario.requestDateTime)}
-                ${paperRow("Collector", sample.collector)}
+                ${obscuredRequestDetails()}
             </span>
         </span>
     `;
 }
 
-function sampleStationMarkup(sample, index, scenario) {
+function sampleStationMarkup(sample, index) {
     const number = index + 1;
     const word = number === 1 ? "one" : "two";
     return `
@@ -647,7 +652,7 @@ function sampleStationMarkup(sample, index, scenario) {
                 <span class="paper-asset-wrap">
                     <span class="paper-scroll-content">
                         <img src="assets/screen-3/paper-request.png?v=3" alt="Paper blood-request form">
-                        ${paperRequestMarkup(sample, scenario)}
+                        ${paperRequestMarkup(sample)}
                     </span>
                 </span>
                 <span class="inspect-prompt">Tap to inspect</span>
@@ -672,9 +677,9 @@ function renderSampleCheck() {
                 <h1 id="sampleCheckTitle" class="screen-title">First we check and confirm the sample details</h1>
                 <p class="screen-instruction"><span class="wide-instruction">Compare the monitor request with both sample labels and request forms. Select the exact match.</span><span class="compact-instruction">Compare the monitor with both samples. Select the exact match.</span></p>
             </div>
-            ${requestMonitorMarkup(scenario)}
+            ${requestMonitorMarkup()}
             <div class="sample-stations" data-correct-side="${scenario.correctSide}">
-                ${scenario.samples.map((sample, index) => sampleStationMarkup(sample, index, scenario)).join("")}
+                ${scenario.samples.map((sample, index) => sampleStationMarkup(sample, index)).join("")}
             </div>
             <p class="sample-check-live" aria-live="polite"></p>
         </section>
