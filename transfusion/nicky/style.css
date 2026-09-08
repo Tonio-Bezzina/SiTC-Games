@@ -1073,7 +1073,7 @@ a:focus-visible {
 .request-scribble-line:nth-child(2) { width: 68%; transform: rotate(.7deg); }
 .request-scribble-line:nth-child(3) { width: 79%; transform: rotate(-.4deg); }
 .request-monitor-ui .request-scribble {
-    min-height: 11px;
+    min-height: 31px;
     padding: 3px 6px;
     gap: 3px;
     color: rgba(155, 207, 219, .5);
