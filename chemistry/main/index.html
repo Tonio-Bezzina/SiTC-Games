@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#073c63">
+    <title>Chemistry Detectives: The Mystery Sample | SiTC Games</title>
+    <link rel="stylesheet" href="style.css?v=opening-chapter-v1">
+</head>
+<body>
+    <aside id="rotateScreen" role="dialog" aria-modal="true" aria-labelledby="rotateTitle" aria-describedby="rotateCopy">
+        <div class="rotate-card">
+            <span class="rotate-phone" aria-hidden="true">📱↻</span>
+            <h1 id="rotateTitle">Rotate your screen to play</h1>
+            <p id="rotateCopy">Ian's sample will wait here. Turn your device to landscape to continue in the same place.</p>
+        </div>
+    </aside>
+
+    <main id="gameShell">
+        <section id="gameStage" aria-label="Chemistry Detectives game">
+            <header class="game-bar">
+                <a class="exit-link" href="../" aria-label="Return to the Clinical Chemistry Laboratory">← Lab</a>
+                <div class="mission-name">
+                    <span class="flask-icon" aria-hidden="true">🧪</span>
+                    <div><strong>Chemistry Detectives</strong><small id="chapterLabel">Opening</small></div>
+                </div>
+                <div class="case-summary" id="caseSummary" aria-live="polite">Ian's glucose sample</div>
+                <button id="levelButton" class="bar-button" type="button" aria-haspopup="dialog">Level: <span id="levelLabel">Choose</span></button>
+                <button id="helpButton" class="icon-button" type="button" aria-label="Open help">?</button>
+                <button id="soundButton" class="icon-button" type="button" aria-pressed="true" aria-label="Turn sound off">🔊</button>
+                <button id="fullscreenButton" class="icon-button" type="button" aria-label="Enter full screen">⛶</button>
+            </header>
+
+            <div id="screenHost" class="screen-host" aria-live="polite"></div>
+
+            <footer id="guide" class="game-footer">
+                <div class="guide">
+                    <span class="guide-avatar" aria-hidden="true">🔬</span>
+                    <p id="guideText">Choose a level to begin.</p>
+                </div>
+            </footer>
+        </section>
+    </main>
+
+    <dialog id="levelDialog" aria-labelledby="levelTitle">
+        <form method="dialog" class="dialog-card">
+            <button class="dialog-close" value="cancel" aria-label="Close level picker">×</button>
+            <p class="dialog-kicker">MISSION LEVEL</p>
+            <h2 id="levelTitle">Choose your clues</h2>
+            <p>Changing level restarts only this unfinished sample-checking chapter. Ian's identity and any earlier progress stay the same.</p>
+            <div class="level-grid">
+                <button type="button" data-level="junior"><strong>Junior</strong><span>More guidance</span></button>
+                <button type="button" data-level="explorer"><strong>Explorer</strong><span>Some clues</span></button>
+                <button type="button" data-level="challenge"><strong>Challenge</strong><span>Fewer clues</span></button>
+            </div>
+            <p class="same-badge">Every level will earn the same badge when the full mission is available.</p>
+        </form>
+    </dialog>
+
+    <dialog id="helpDialog" aria-labelledby="helpTitle">
+        <div class="dialog-card help-card">
+            <button class="dialog-close" type="button" data-close-help aria-label="Close help">×</button>
+            <p class="dialog-kicker">HELP</p>
+            <h2 id="helpTitle">How to play</h2>
+            <ul>
+                <li>Look in the bottom guide strip for your next clue.</li>
+                <li>Tap a sample station to compare the monitor, bottle and paper request.</li>
+                <li>For moving a bottle, drag it to the highlighted rack. You can also select it, then select the rack.</li>
+                <li>Keyboard: use Tab to move, then Enter or Space to choose.</li>
+            </ul>
+            <button class="primary-button" type="button" data-close-help>Back to the mission</button>
+        </div>
+    </dialog>
+
+    <script src="game.js?v=opening-chapter-v1"></script>
+</body>
+</html>

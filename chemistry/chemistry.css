@@ -1,0 +1,23 @@
+:root { color-scheme: light; --navy:#073c63; --blue:#087fc1; --cyan:#19c8db; --gold:#ffc83d; --ink:#143042; }
+* { box-sizing:border-box; }
+body { margin:0; min-height:100vh; color:var(--ink); background:linear-gradient(145deg,#e8f8fc,#fff 55%,#dff1f8); font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
+.lab-header { min-height:260px; padding:clamp(24px,5vw,70px); display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:clamp(20px,4vw,54px); color:#fff; background:linear-gradient(110deg,#073c63,#087fc1 72%,#14a9ca); }
+.back-link { align-self:start; min-height:48px; padding:13px 17px; border:1px solid #ffffff55; border-radius:14px; color:#fff; text-decoration:none; font-weight:800; background:#ffffff1c; }
+.eyebrow { margin:0 0 8px; color:#0b709d; font-size:.78rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+.lab-header .eyebrow { color:#aeeffc; }
+h1,h2,p { margin-top:0; }
+h1 { margin-bottom:10px; font-size:clamp(2rem,5vw,4rem); line-height:1; }
+.lab-header p:last-child { max-width:720px; margin-bottom:0; font-size:clamp(1rem,2vw,1.25rem); }
+.lab-icon { font-size:clamp(4rem,10vw,8rem); filter:drop-shadow(0 12px 13px #00324c66); }
+main { width:min(1100px,92%); margin:clamp(28px,5vw,60px) auto; }
+.mission-card { display:grid; grid-template-columns:minmax(270px,.85fr) 1.2fr; overflow:hidden; border:1px solid #b8dbe7; border-radius:28px; background:#fff; box-shadow:0 20px 55px #0a496522; }
+.mission-art { min-height:360px; display:grid; place-items:center; position:relative; color:#fff; background:radial-gradient(circle at 50% 36%,#37d8e8,#0784b9 55%,#073c63); }
+.mission-art > span { position:absolute; top:30px; font-weight:900; letter-spacing:.18em; }
+.sample-tube { width:84px; height:230px; border:7px solid #d7edf4; border-top:34px solid #929da3; border-radius:10px 10px 28px 28px; background:linear-gradient(to top,#e6f2c2 0 42%,#ffffffd9 43%); box-shadow:0 19px 30px #003d5c66; transform:rotate(7deg); }
+.mission-copy { padding:clamp(28px,5vw,62px); align-self:center; }
+h2 { color:var(--navy); font-size:clamp(1.65rem,3vw,2.7rem); line-height:1.06; }
+.mission-copy p { font-size:1.06rem; line-height:1.6; }
+.availability { padding:12px 15px; border-radius:12px; background:#e8f8fc; }
+.play-button { display:inline-flex; min-height:52px; align-items:center; margin-top:8px; padding:0 22px; border-radius:999px; color:#082b3d; background:var(--gold); text-decoration:none; font-weight:900; box-shadow:0 8px 18px #946d0044; }
+.coming-next { margin-top:20px; padding:18px 22px; display:flex; gap:8px; flex-wrap:wrap; border:1px solid #bedce7; border-radius:16px; background:#f5fcfe; }
+@media (max-width:700px) { .lab-header { grid-template-columns:1fr auto; } .back-link { grid-column:1/-1; justify-self:start; } .mission-card { grid-template-columns:1fr; } .mission-art { min-height:240px; } }

@@ -103,7 +103,7 @@ const labs = [
 
         href: "chemistry/",
 
-        available: false,
+        available: true,
 
         mainCase: "main",
 
