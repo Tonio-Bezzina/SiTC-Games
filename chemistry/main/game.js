@@ -25,10 +25,11 @@ const reducedMotionOverride = new URLSearchParams(window.location.search).get("r
 let storageAvailable = true;
 let phaseTimer = null;
 let drag = null;
+let centrifugeDrag = null;
 let lastFocus = null;
 
 let state = {
-    version: 1,
+    version: 2,
     level: null,
     caseData: null,
     scenario: null,
@@ -38,6 +39,8 @@ let state = {
     mismatchFields: [],
     acceptedIndex: null,
     bottleSelected: false,
+    chapter1Complete: false,
+    centrifuge: null,
     soundOn: true
 };
 
@@ -74,7 +77,8 @@ function createCase(level) {
         name: `Ian ${randomItem(SURNAMES)}`,
         id: randomPatientId(),
         dob: createBirthday(level),
-        test: "Glucose"
+        test: "Glucose",
+        accession: `CC-${randomDigits(6)}`
     };
 }
 
@@ -115,21 +119,78 @@ function createScenario(level, patient) {
     return Math.random() < .5 ? [correct, wrong] : [wrong, correct];
 }
 
+function isCentrifugeStage(stage) {
+    return ["centrifuge-load", "centrifuge-spinning", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "centrifuge-complete"].includes(stage);
+}
+
+function centrifugeSlotCount(level) {
+    return level === "challenge" ? 8 : 4;
+}
+
+function createBatch(patient) {
+    return [
+        { key:"ian", name:patient.name, id:patient.id, dob:patient.dob, accession:patient.accession, cap:"grey", kind:"patient", asset:"grey-bottle-v1.png" },
+        { key:"aisha", name:"Aisha Borg", id:`${randomDigits(5)}H`, dob:"18/04/2013", accession:`CC-${randomDigits(6)}`, cap:"yellow", kind:"patient", asset:"yellow-bottle-v1.png" },
+        { key:"leo", name:"Leo Vella", id:`${randomDigits(5)}L`, dob:"07/11/2011", accession:`CC-${randomDigits(6)}`, cap:"grey", kind:"patient", asset:"grey-bottle-v1.png" },
+        { key:"balance", name:"BALANCE", id:"", dob:"", accession:"", cap:"blue", kind:"balance", asset:"balance-tube-v1.png" }
+    ];
+}
+
+function createCentrifugeState(level, patient, batch = null) {
+    return {
+        batch: batch || createBatch(patient),
+        rack: ["ian", "aisha", "leo", "balance"],
+        slots: Array(centrifugeSlotCount(level)).fill(null),
+        selected: null,
+        selectedFrom: null,
+        lidClosed: false,
+        cycle: "idle",
+        hint: null,
+        feedback: "",
+        retrieved: false,
+        plasmaChoice: null,
+        balancedOnce: false
+    };
+}
+
+function normaliseCheckpoint(value) {
+    if (!value || !LEVELS[value.level]) return value;
+    if (value.version === 1) {
+        value.version = 2;
+        value.caseData.accession ||= `CC-${randomDigits(6)}`;
+        value.chapter1Complete = value.stage === "complete";
+        value.stage = value.stage === "complete" ? "centrifuge-load" : value.stage;
+        value.centrifuge = value.chapter1Complete ? createCentrifugeState(value.level, value.caseData) : null;
+    }
+    if (value.version === 2 && value.centrifuge?.cycle === "spinning") {
+        value.centrifuge.cycle = "idle";
+        value.centrifuge.lidClosed = true;
+        value.centrifuge.feedback = "The interrupted demonstration is ready to start safely again.";
+        value.stage = "centrifuge-load";
+    }
+    return value;
+}
+
 function isValidCheckpoint(value) {
-    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "complete"];
-    return value && value.version === 1 && LEVELS[value.level]
+    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "centrifuge-complete"];
+    const c = value?.centrifuge;
+    const centrifugeOkay = !isCentrifugeStage(value?.stage) || (c && Array.isArray(c.batch) && c.batch.length === 4
+        && Array.isArray(c.slots) && c.slots.length === centrifugeSlotCount(value.level)
+        && Array.isArray(c.rack));
+    return value && value.version === 2 && LEVELS[value.level]
         && value.caseData && typeof value.caseData.name === "string"
         && typeof value.caseData.id === "string" && /^\d{5}[HL]$/.test(value.caseData.id) && typeof value.caseData.dob === "string"
+        && typeof value.caseData.accession === "string"
         && Array.isArray(value.scenario) && value.scenario.length === 2
         && value.scenario.filter(sample => sample && sample.correct === true).length === 1
-        && stages.includes(value.stage);
+        && stages.includes(value.stage) && centrifugeOkay;
 }
 
 function readCheckpoint() {
     try {
         const raw = localStorage.getItem(CHECKPOINT_KEY);
         if (!raw) return null;
-        const value = JSON.parse(raw);
+        const value = normaliseCheckpoint(JSON.parse(raw));
         return isValidCheckpoint(value) ? value : null;
     } catch (error) {
         storageAvailable = false;
@@ -163,10 +224,10 @@ function setGuide(message, callout = false) {
 
 function updateChrome() {
     levelLabel.textContent = state.level ? LEVELS[state.level].label : "Choose";
-    chapterLabel.textContent = state.level ? "Chapter 1 · Check the sample" : "Opening";
-    caseSummary.textContent = state.caseData ? "Ian · Glucose" : "";
-    caseSummary.classList.toggle("hidden", !state.caseData);
-    gameBar.classList.toggle("has-case", Boolean(state.caseData));
+    chapterLabel.textContent = state.level ? (state.chapter1Complete || isCentrifugeStage(state.stage) ? "Chapter 2 · Balance & separate" : "Chapter 1 · Check the sample") : "Opening";
+    caseSummary.textContent = "";
+    caseSummary.classList.add("hidden");
+    gameBar.classList.remove("has-case");
     soundButton.textContent = state.soundOn ? "🔊" : "🔇";
     soundButton.setAttribute("aria-pressed", String(state.soundOn));
     soundButton.setAttribute("aria-label", state.soundOn ? "Turn sound off" : "Turn sound on");
@@ -233,7 +294,9 @@ function render() {
     if (state.stage === "carrier-open") renderCarrier(true);
     if (state.stage === "inspection") renderInspection();
     if (state.stage === "transfer") renderTransfer();
-    if (state.stage === "complete") renderComplete();
+    if (["centrifuge-load", "centrifuge-spinning", "centrifuge-stopped", "centrifuge-retrieve"].includes(state.stage)) renderCentrifuge();
+    if (state.stage === "plasma") renderPlasmaChoice();
+    if (state.stage === "centrifuge-complete") renderComplete();
 }
 
 function renderOpening() {
@@ -260,7 +323,7 @@ function renderOpening() {
 function startFresh(level) {
     clearCheckpoint();
     state = {
-        version: 1,
+        version: 2,
         level,
         caseData: createCase(level),
         scenario: null,
@@ -270,6 +333,8 @@ function startFresh(level) {
         mismatchFields: [],
         acceptedIndex: null,
         bottleSelected: false,
+        chapter1Complete: false,
+        centrifuge: null,
         soundOn: state.soundOn
     };
     state.scenario = createScenario(level, state.caseData);
@@ -624,10 +689,432 @@ function cleanupDrag() {
 
 function completeTransfer() {
     cleanupDrag();
-    state.stage = "complete";
+    state.chapter1Complete = true;
+    state.centrifuge = createCentrifugeState(state.level, state.caseData);
+    state.stage = "centrifuge-load";
     state.bottleSelected = false;
     saveCheckpoint();
     playTone("success");
+    render();
+}
+
+function batchTube(key) {
+    return state.centrifuge.batch.find(tube => tube.key === key);
+}
+
+function tubeCardMarkup(key, location, index = null) {
+    const tube = batchTube(key);
+    const selected = state.centrifuge.selected === key && state.centrifuge.selectedFrom === location;
+    const identity = tube.kind === "balance"
+        ? `<span class="batch-label balance-label"><b>BALANCE</b></span>`
+        : `<span class="batch-label"><b>${tube.name}</b><span>${tube.id}</span><span>${tube.dob}</span><span>${tube.accession}</span></span>`;
+    return `<button class="batch-tube ${tube.cap}-top ${selected ? "selected" : ""}" type="button" data-tube="${key}" data-location="${location}" ${index === null ? "" : `data-slot-index="${index}"`} aria-pressed="${selected}" aria-label="${tube.kind === "balance" ? "Balance tube" : `${tube.name}, ${tube.id}`}—select to move">
+        <img src="assets/${tube.asset}" alt="" draggable="false">${identity}
+    </button>`;
+}
+
+function oppositeIndex(index, count = state.centrifuge.slots.length) {
+    return (index + count / 2) % count;
+}
+
+function unpairedSlots(slots) {
+    return slots.map((key, index) => key && !slots[oppositeIndex(index, slots.length)] ? index : -1).filter(index => index >= 0);
+}
+
+function isBalancedSlots(slots) {
+    const occupied = slots.filter(Boolean);
+    return occupied.length > 0 && unpairedSlots(slots).length === 0;
+}
+
+function firstOpenOpposite(slots = state.centrifuge.slots) {
+    const source = unpairedSlots(slots).find(index => !slots[oppositeIndex(index, slots.length)]);
+    return source === undefined ? null : { source, target: oppositeIndex(source, slots.length) };
+}
+
+function slotPosition(index, count) {
+    const angle = -90 + (360 / count) * index;
+    const radians = angle * Math.PI / 180;
+    return { angle, x:50 + Math.cos(radians) * 34, y:50 + Math.sin(radians) * 34 };
+}
+
+function rotorMarkup() {
+    const c = state.centrifuge;
+    const hint = c.hint;
+    const selectedKey = c.selected;
+    const selectedFromSlot = c.selectedFrom === "slot";
+    return `<div class="rotor rotor-${c.slots.length}" aria-label="${c.slots.length}-position centrifuge rotor">
+        ${hint ? `<span class="opposite-line" style="--line-angle:${slotPosition(hint.source, c.slots.length).angle}deg" aria-hidden="true"></span>` : ""}
+        <span class="rotor-hub" aria-hidden="true"></span>
+        ${c.slots.map((key, index) => {
+            const p = slotPosition(index, c.slots.length);
+            const ghost = hint?.target === index;
+            const juniorTarget = state.level === "junior" && !hint && firstOpenOpposite()?.target === index;
+            const tag = key ? "div" : "button";
+            return `<${tag} class="rotor-slot ${key ? "occupied" : ""} ${ghost ? "hint-target" : ""} ${juniorTarget ? "junior-target" : ""}" ${key ? "" : 'type="button"'} data-slot="${index}" style="--slot-x:${p.x}%;--slot-y:${p.y}%" aria-label="Rotor position ${index + 1}${key ? `, ${batchTube(key).name}` : ", empty"}">
+                <span class="slot-number">${index + 1}</span>
+                ${key ? tubeCardMarkup(key, "slot", index) : ""}
+                ${ghost ? '<span class="ghost-tube" aria-hidden="true">↓</span>' : ""}
+            </${tag}>`;
+        }).join("")}
+    </div>`;
+}
+
+function setCentrifugeFeedback(message, hint = false) {
+    state.centrifuge.feedback = message;
+    if (hint) state.centrifuge.hint = firstOpenOpposite();
+    saveCheckpoint();
+    render();
+}
+
+function renderCentrifuge() {
+    const c = state.centrifuge;
+    const running = c.cycle === "spinning";
+    const finished = c.cycle === "finished";
+    const retrieve = state.stage === "centrifuge-retrieve";
+    const machineClosed = c.lidClosed || running;
+    const loaded = c.slots.filter(Boolean).length;
+    const status = running ? "Spinning…" : finished ? "Finished!" : machineClosed ? "Lid closed" : "Stopped · lid open";
+    screenHost.innerHTML = `
+        <section class="screen centrifuge-screen ${running ? "cycle-running" : ""} ${retrieve ? "retrieve-mode" : ""}" aria-labelledby="centrifugeTitle">
+            <img class="centrifuge-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry centrifuge bench">
+            <div class="centrifuge-copy">
+                <p class="kicker">CHAPTER 2 · PREPARE THE SAMPLE</p>
+                <h1 id="centrifugeTitle">${retrieve ? "Retrieve Ian's sample" : "Balance the centrifuge"}</h1>
+                <p>${retrieve ? `Find <strong>${state.caseData.name}</strong>, ID <strong>${state.caseData.id}</strong>, and move it to the holder.` : "These tubes all weigh the same. Place them so every tube has another directly opposite it."}</p>
+                <span class="reception-continuity">✓ Rejected sample stayed at reception</span>
+            </div>
+            <aside class="batch-rack ${c.selectedFrom === "slot" ? "return-target" : ""}" data-rack-target aria-label="Checked sample rack">
+                <h2>${retrieve ? "Tubes remaining" : "Checked batch"}</h2>
+                <div class="rack-tubes">${c.rack.map(key => tubeCardMarkup(key, "rack")).join("")}</div>
+                <span class="rack-caption">${retrieve ? "Leave the other tubes here" : `${4 - loaded} ready to load`}</span>
+            </aside>
+            <div class="machine-stage">
+                <div class="machine-shadow" aria-hidden="true"></div>
+                <div class="centrifuge-machine ${running ? "spinning" : ""}">
+                    <img src="assets/${machineClosed ? "centrifuge-closed-v1.png" : "centrifuge-open-v1.png"}" alt="Centrifuge ${machineClosed ? "with lid closed" : "with lid open"}">
+                    ${machineClosed ? "" : rotorMarkup()}
+                </div>
+                <div class="machine-status ${running ? "running" : finished ? "finished" : ""}" role="status" aria-live="polite"><strong>${status}</strong><span>${running ? "Short illustrative cycle" : `${loaded} of 4 tubes loaded`}</span>${running ? '<span class="spin-progress" aria-hidden="true"><i></i></span>' : ""}</div>
+            </div>
+            ${retrieve ? `<button class="inspection-drop ${c.selected ? "active" : ""}" type="button" data-holder aria-label="Inspection holder—move Ian's sample here"><span>Inspection holder</span><img src="assets/inspection-holder-v1.png" alt="Empty inspection holder"></button>` : ""}
+            <div class="centrifuge-controls">
+                ${!retrieve && !running && !finished ? `<button class="secondary-button" type="button" data-lid>${c.lidClosed ? "Open lid" : "Close lid"}</button><button class="primary-button" type="button" data-spin>Spin</button>` : ""}
+                ${finished && c.lidClosed ? '<button class="primary-button" type="button" data-open-after>Open lid</button>' : ""}
+            </div>
+            <div class="centrifuge-feedback ${c.feedback ? "" : "hidden"}" role="alert">${c.feedback || ""}</div>
+        </section>`;
+    if (retrieve) setGuide(`Move ${state.caseData.name}, ${state.caseData.id}, to the inspection holder. The other tubes stay at the station.`);
+    else if (running) setGuide("Spinning… The closed machine is running a short illustrative cycle.");
+    else if (finished) setGuide("Finished! The rotor has stopped completely. Open the lid.");
+    else if (c.hint) setGuide("Place the balancing tube here, directly opposite this tube.");
+    else setGuide("These tubes all weigh the same. Place them so every tube has another directly opposite it.");
+    wireCentrifugeInteractions();
+    if (running) schedulePhase(finishSpin, reducedMotionEnabled() ? 2200 : 3200);
+}
+
+function wireCentrifugeInteractions() {
+    const c = state.centrifuge;
+    if (c.cycle === "spinning") return;
+    document.querySelectorAll(".batch-tube").forEach(button => {
+        button.addEventListener("click", event => {
+            event.stopPropagation();
+            if (Date.now() < (state.suppressClickUntil || 0)) return;
+            selectCentrifugeTube(button.dataset.tube, button.dataset.location, Number.isFinite(Number(button.dataset.slotIndex)) ? Number(button.dataset.slotIndex) : null);
+        });
+        button.addEventListener("pointerdown", beginCentrifugeDrag);
+    });
+    document.querySelectorAll(".rotor-slot").forEach(slot => slot.addEventListener("click", () => moveSelectedToSlot(Number(slot.dataset.slot))));
+    document.querySelector("[data-rack-target]")?.addEventListener("click", () => returnSelectedToRack());
+    document.querySelector("[data-holder]")?.addEventListener("click", moveSelectedToHolder);
+    document.querySelector("[data-lid]")?.addEventListener("click", toggleLid);
+    document.querySelector("[data-spin]")?.addEventListener("click", attemptSpin);
+    document.querySelector("[data-open-after]")?.addEventListener("click", openAfterSpin);
+}
+
+function selectCentrifugeTube(key, location, slotIndex = null) {
+    const c = state.centrifuge;
+    if (c.lidClosed || c.cycle === "spinning") return;
+    if (c.selected === key && c.selectedFrom === location) {
+        c.selected = null;
+        c.selectedFrom = null;
+        c.selectedSlot = null;
+    } else {
+        c.selected = key;
+        c.selectedFrom = location;
+        c.selectedSlot = slotIndex;
+    }
+    saveCheckpoint();
+    render();
+}
+
+function moveSelectedToSlot(index) {
+    const c = state.centrifuge;
+    if (!c.selected || c.lidClosed) return;
+    if (c.slots[index]) {
+        c.selected = null;
+        c.selectedFrom = null;
+        c.selectedSlot = null;
+        c.feedback = "That position is already in use. The tube returned safely.";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    const previousSlots = [...c.slots];
+    const previousUnpaired = firstOpenOpposite(previousSlots);
+    if (c.selectedFrom === "rack") c.rack = c.rack.filter(key => key !== c.selected);
+    else if (c.selectedFrom === "slot") c.slots[c.selectedSlot] = null;
+    c.slots[index] = c.selected;
+    const madeBalancingError = previousUnpaired && index !== previousUnpaired.target && c.selectedFrom === "rack";
+    c.selected = null;
+    c.selectedFrom = null;
+    c.selectedSlot = null;
+    c.hint = madeBalancingError || c.hint ? firstOpenOpposite(c.slots) : null;
+    c.feedback = madeBalancingError && c.hint ? "Place the balancing tube here, directly opposite this tube." : "";
+    if (isBalancedSlots(c.slots) && c.slots.filter(Boolean).length === 4) {
+        c.balancedOnce = true;
+        c.hint = null;
+        c.feedback = "Balanced! Every loaded tube has another directly opposite it.";
+        playTone("success");
+    }
+    saveCheckpoint();
+    render();
+}
+
+function returnSelectedToRack() {
+    const c = state.centrifuge;
+    if (!c.selected || c.selectedFrom !== "slot" || c.lidClosed) return;
+    c.slots[c.selectedSlot] = null;
+    if (!c.rack.includes(c.selected)) c.rack.push(c.selected);
+    c.selected = null;
+    c.selectedFrom = null;
+    c.selectedSlot = null;
+    c.hint = firstOpenOpposite(c.slots);
+    c.feedback = "The tube returned safely to the rack.";
+    saveCheckpoint();
+    render();
+}
+
+function toggleLid() {
+    const c = state.centrifuge;
+    if (c.cycle === "spinning" || c.cycle === "finished") return;
+    c.lidClosed = !c.lidClosed;
+    c.selected = null;
+    c.selectedFrom = null;
+    c.feedback = c.lidClosed ? "Lid closed. Check the load, then choose Spin." : "Lid open. Tube movement is available again.";
+    saveCheckpoint();
+    render();
+}
+
+function attemptSpin() {
+    const c = state.centrifuge;
+    if (c.slots.filter(Boolean).length !== 4) {
+        c.feedback = "Load all three patient samples and the balance tube before spinning.";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (!isBalancedSlots(c.slots)) {
+        c.hint = firstOpenOpposite(c.slots);
+        c.feedback = "Place the balancing tube here, directly opposite this tube.";
+        c.lidClosed = false;
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (!c.lidClosed) {
+        c.feedback = "Close the lid before starting the centrifuge.";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    c.balancedOnce = true;
+    c.cycle = "spinning";
+    c.feedback = "";
+    state.stage = "centrifuge-spinning";
+    saveCheckpoint();
+    playTone("arrival");
+    render();
+}
+
+function finishSpin() {
+    const c = state.centrifuge;
+    if (!c || c.cycle !== "spinning") return;
+    c.cycle = "finished";
+    c.feedback = "Finished! The rotor has stopped completely. Open the lid.";
+    state.stage = "centrifuge-stopped";
+    saveCheckpoint();
+    playTone("success");
+    render();
+}
+
+function openAfterSpin() {
+    const c = state.centrifuge;
+    if (c.cycle !== "finished") return;
+    c.lidClosed = false;
+    c.feedback = "Read the labels and retrieve Ian's grey-top sample.";
+    state.stage = "centrifuge-retrieve";
+    saveCheckpoint();
+    render();
+}
+
+function moveSelectedToHolder() {
+    const c = state.centrifuge;
+    if (state.stage !== "centrifuge-retrieve" || !c.selected) return;
+    const tube = batchTube(c.selected);
+    if (tube.key !== "ian") {
+        c.feedback = `That is ${tube.name}. Find ${state.caseData.name}, ID ${state.caseData.id}, on the grey-top bottle.`;
+        c.selected = null;
+        c.selectedFrom = null;
+        c.selectedSlot = null;
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (c.selectedFrom === "slot") c.slots[c.selectedSlot] = null;
+    else c.rack = c.rack.filter(key => key !== "ian");
+    c.selected = null;
+    c.selectedFrom = null;
+    c.retrieved = true;
+    c.feedback = "";
+    state.stage = "plasma";
+    saveCheckpoint();
+    playTone("success");
+    render();
+}
+
+function beginCentrifugeDrag(event) {
+    if (!event.isPrimary || event.button !== 0 || state.centrifuge.lidClosed || state.centrifuge.cycle === "spinning") return;
+    const button = event.currentTarget;
+    button.setPointerCapture(event.pointerId);
+    centrifugeDrag = { pointerId:event.pointerId, button, key:button.dataset.tube, location:button.dataset.location, slotIndex:button.dataset.slotIndex === undefined ? null : Number(button.dataset.slotIndex), startX:event.clientX, startY:event.clientY, moved:false };
+    button.addEventListener("pointermove", moveCentrifugeDrag);
+    button.addEventListener("pointerup", endCentrifugeDrag);
+    button.addEventListener("pointercancel", cancelCentrifugeDrag);
+}
+
+function moveCentrifugeDrag(event) {
+    if (!centrifugeDrag || event.pointerId !== centrifugeDrag.pointerId) return;
+    const dx = event.clientX - centrifugeDrag.startX;
+    const dy = event.clientY - centrifugeDrag.startY;
+    if (!centrifugeDrag.moved && Math.hypot(dx, dy) < 7) return;
+    centrifugeDrag.moved = true;
+    event.preventDefault();
+    centrifugeDrag.button.classList.add("dragging");
+    centrifugeDrag.button.style.setProperty("--drag-x", `${dx}px`);
+    centrifugeDrag.button.style.setProperty("--drag-y", `${dy - 42}px`);
+    document.querySelectorAll(".rotor-slot,.inspection-drop,.batch-rack").forEach(target => {
+        const rect = target.getBoundingClientRect();
+        target.classList.toggle("drag-over", event.clientX >= rect.left - 20 && event.clientX <= rect.right + 20 && event.clientY >= rect.top - 20 && event.clientY <= rect.bottom + 20);
+    });
+}
+
+function endCentrifugeDrag(event) {
+    if (!centrifugeDrag || event.pointerId !== centrifugeDrag.pointerId) return;
+    const current = { ...centrifugeDrag };
+    const target = [...document.querySelectorAll(".rotor-slot,.inspection-drop,.batch-rack")].find(element => {
+        const rect = element.getBoundingClientRect();
+        return event.clientX >= rect.left - 24 && event.clientX <= rect.right + 24 && event.clientY >= rect.top - 24 && event.clientY <= rect.bottom + 24;
+    });
+    cleanupCentrifugeDrag();
+    if (!current.moved) return;
+    state.suppressClickUntil = Date.now() + 450;
+    state.centrifuge.selected = current.key;
+    state.centrifuge.selectedFrom = current.location;
+    state.centrifuge.selectedSlot = current.slotIndex;
+    if (target?.classList.contains("rotor-slot")) moveSelectedToSlot(Number(target.dataset.slot));
+    else if (target?.classList.contains("inspection-drop")) moveSelectedToHolder();
+    else if (target?.classList.contains("batch-rack") && current.location === "slot") returnSelectedToRack();
+    else {
+        state.centrifuge.selected = null;
+        state.centrifuge.selectedFrom = null;
+        state.centrifuge.feedback = "The tube returned safely. Missed or cancelled drops do not count as errors.";
+        saveCheckpoint();
+        render();
+    }
+}
+
+function cancelCentrifugeDrag() {
+    if (!centrifugeDrag) return;
+    cleanupCentrifugeDrag();
+    if (state.centrifuge) {
+        state.centrifuge.feedback = "The tube returned safely. Select it again when you are ready.";
+        saveCheckpoint();
+        if (!portraitQuery.matches) render();
+    }
+}
+
+function cleanupCentrifugeDrag() {
+    if (!centrifugeDrag) return;
+    const { button } = centrifugeDrag;
+    button.classList.remove("dragging");
+    button.style.removeProperty("--drag-x");
+    button.style.removeProperty("--drag-y");
+    button.removeEventListener("pointermove", moveCentrifugeDrag);
+    button.removeEventListener("pointerup", endCentrifugeDrag);
+    button.removeEventListener("pointercancel", cancelCentrifugeDrag);
+    document.querySelectorAll(".drag-over").forEach(element => element.classList.remove("drag-over"));
+    centrifugeDrag = null;
+}
+
+function renderPlasmaChoice() {
+    const c = state.centrifuge;
+    screenHost.innerHTML = `
+        <section class="screen plasma-screen" aria-labelledby="plasmaTitle">
+            <img class="centrifuge-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry bench">
+            <div class="plasma-card">
+                <div class="separated-sample">
+                    <img src="assets/ian-separated-v1.png" alt="Ian's separated grey-top sample with pale upper liquid and red cells below">
+                    <span class="separated-label"><b>${state.caseData.name}</b><span>${state.caseData.id}</span><span>${state.caseData.dob}</span><span>${state.caseData.accession}</span></span>
+                    <button class="layer-target upper-layer ${c.plasmaChoice === "plasma" ? "correct" : ""}" type="button" data-layer="plasma" aria-label="Choose the upper pale liquid layer" ${c.plasmaChoice === "plasma" ? "disabled" : ""}><span>Choose upper layer</span></button>
+                    <button class="layer-target lower-layer" type="button" data-layer="cells" aria-label="Choose the lower red cell layer" ${c.plasmaChoice === "plasma" ? "disabled" : ""}><span>Choose lower layer</span></button>
+                </div>
+                <div class="plasma-question">
+                    <p class="kicker">INSPECT IAN'S SAMPLE</p>
+                    <h1 id="plasmaTitle">Which part will we use for Ian’s glucose test?</h1>
+                    <p class="identity-chip">${state.caseData.name} · ${state.caseData.id} · Grey top</p>
+                    <p class="plasma-feedback ${c.feedback ? "" : "hidden"}" role="alert">${c.feedback || ""}</p>
+                </div>
+                <img class="plasma-holder" src="assets/inspection-holder-v1.png" alt="Inspection holder">
+            </div>
+        </section>`;
+    setGuide("Which part will we use for Ian’s glucose test? Select a layer in his grey-top sample.");
+    document.querySelectorAll("[data-layer]").forEach(button => button.addEventListener("click", () => chooseLayer(button.dataset.layer)));
+    if (c.plasmaChoice === "plasma") {
+        setGuide("That’s the plasma—the liquid we’ll use to measure glucose.");
+        schedulePhase(completeCentrifugeChapter, reducedMotionEnabled() ? 850 : 1450);
+    }
+}
+
+function chooseLayer(layer) {
+    const c = state.centrifuge;
+    c.plasmaChoice = layer;
+    if (layer !== "plasma") {
+        c.feedback = "For this test, choose the liquid above the cells.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    c.feedback = "That’s the plasma—the liquid we’ll use to measure glucose.";
+    saveCheckpoint();
+    playTone("success");
+    render();
+}
+
+function completeCentrifugeChapter() {
+    if (state.stage !== "plasma" || state.centrifuge?.plasmaChoice !== "plasma") return;
+    state.stage = "centrifuge-complete";
+    saveCheckpoint();
+    render();
+}
+
+function replayCentrifuge() {
+    const batch = state.centrifuge?.batch || createBatch(state.caseData);
+    state.centrifuge = createCentrifugeState(state.level, state.caseData, batch);
+    state.stage = "centrifuge-load";
+    saveCheckpoint();
     render();
 }
 
@@ -636,28 +1123,38 @@ function renderComplete() {
         <section class="screen complete-screen" aria-labelledby="completeTitle">
             <div class="complete-card">
                 <div class="complete-icon" aria-hidden="true">✓</div>
-                <p class="kicker">CHAPTER 1 COMPLETE</p>
-                <h1 id="completeTitle">Sample checked!</h1>
-                <p class="success-line">Sample checked! Ian's glucose sample is ready for preparation.</p>
-                <p class="section-end"><strong>This is the end of the available first section.</strong><br>The centrifuge and later chapters are not included yet.</p>
+                <p class="kicker">CHAPTER 2 COMPLETE</p>
+                <h1 id="completeTitle">Sample prepared!</h1>
+                <p class="success-line">Ian’s sample is prepared. Next, we’ll check that the analyser is ready.</p>
+                <p class="section-end"><strong>This is the end of the available content.</strong><br>The analyser chapter is not available yet.</p>
                 <div class="complete-actions">
-                    <button class="primary-button" id="replayButton" type="button">Replay section</button>
+                    <button class="primary-button" id="replayButton" type="button">Replay centrifuge chapter</button>
                     <a class="secondary-button" href="../">Return to Chemistry Lab</a>
                 </div>
                 <p class="no-badge">No Chemistry badge has been awarded for this partial mission.${storageAvailable ? "" : " Progress could not be saved on this device."}</p>
             </div>
         </section>`;
-    setGuide("First section complete. Replay it or return to the Clinical Chemistry Laboratory.");
-    document.getElementById("replayButton").addEventListener("click", () => startFresh(state.level));
+    setGuide("Ian’s sample is prepared. Next, we’ll check that the analyser is ready.");
+    document.getElementById("replayButton").addEventListener("click", replayCentrifuge);
 }
 
 function changeLevel(level) {
     levelDialog.close();
-    if (!state.caseData || state.stage === "opening" || state.stage === "complete") {
+    if (!state.caseData || state.stage === "opening") {
         startFresh(level);
         return;
     }
     cancelBottleDrag();
+    cancelCentrifugeDrag();
+    if (state.chapter1Complete || isCentrifugeStage(state.stage)) {
+        const batch = state.centrifuge?.batch || createBatch(state.caseData);
+        state.level = level;
+        state.centrifuge = createCentrifugeState(level, state.caseData, batch);
+        state.stage = "centrifuge-load";
+        saveCheckpoint();
+        render();
+        return;
+    }
     state.level = level;
     state.scenario = createScenario(level, state.caseData);
     state.stage = state.stage === "story" ? "story" : state.clueSeen ? "arrival" : "clue";
@@ -678,6 +1175,9 @@ function attemptFullscreen() {
 
 function showDialog(dialog, invoker) {
     lastFocus = invoker || document.activeElement;
+    pausePhaseTimer();
+    cancelCentrifugeDrag();
+    document.body.classList.add("dialog-paused");
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
 }
@@ -687,6 +1187,11 @@ function closeHelp() {
     lastFocus?.focus?.();
 }
 
+function resumeAfterDialog() {
+    document.body.classList.remove("dialog-paused");
+    if (!portraitQuery.matches) startPhaseTimer();
+}
+
 function updateOrientation() {
     const portrait = portraitQuery.matches;
     gameShell.inert = portrait;
@@ -694,6 +1199,7 @@ function updateOrientation() {
     if (portrait) {
         pausePhaseTimer();
         cancelBottleDrag();
+        cancelCentrifugeDrag();
     } else {
         startPhaseTimer();
     }
@@ -706,17 +1212,19 @@ function reducedMotionEnabled() {
 function showResumeDialog(saved) {
     const dialog = document.createElement("dialog");
     dialog.setAttribute("aria-labelledby", "resumeTitle");
-    dialog.innerHTML = `<div class="dialog-card"><p class="dialog-kicker">SAVED CASE FOUND</p><h2 id="resumeTitle">Continue Ian's sample check?</h2><p>Your ${LEVELS[saved.level].label} case will resume with the same name, ID no., birthday and sample positions.</p><div class="dialog-actions"><button class="primary-button" type="button" data-continue>Continue case</button><button class="secondary-button" type="button" data-restart>Start again</button></div></div>`;
+    dialog.innerHTML = `<div class="dialog-card"><p class="dialog-kicker">SAVED CASE FOUND</p><h2 id="resumeTitle">Continue Ian's chemistry mission?</h2><p>Your ${LEVELS[saved.level].label} case will resume with the same name, ID no., birthday, accession and safe chapter checkpoint.</p><div class="dialog-actions"><button class="primary-button" type="button" data-continue>Continue case</button><button class="secondary-button" type="button" data-restart>Start again</button></div></div>`;
     document.body.appendChild(dialog);
     dialog.querySelector("[data-continue]").addEventListener("click", () => {
         state = { ...state, ...saved, soundOn: saved.soundOn !== false };
         dialog.close();
         dialog.remove();
+        resumeAfterDialog();
         render();
     });
     dialog.querySelector("[data-restart]").addEventListener("click", () => {
         dialog.close();
         dialog.remove();
+        resumeAfterDialog();
         state.stage = "opening";
         state.level = null;
         state.caseData = null;
@@ -724,10 +1232,21 @@ function showResumeDialog(saved) {
         clearCheckpoint();
         render();
     });
-    showDialog(dialog);
+    if (portraitQuery.matches) {
+        const showWhenLandscape = event => {
+            if (event.matches) return;
+            portraitQuery.removeEventListener?.("change", showWhenLandscape);
+            showDialog(dialog);
+        };
+        portraitQuery.addEventListener?.("change", showWhenLandscape);
+    } else {
+        showDialog(dialog);
+    }
 }
 
 levelButton.addEventListener("click", () => showDialog(levelDialog, levelButton));
+levelDialog.addEventListener("close", resumeAfterDialog);
+helpDialog.addEventListener("close", resumeAfterDialog);
 document.querySelectorAll("[data-level]").forEach(button => button.addEventListener("click", () => changeLevel(button.dataset.level)));
 document.getElementById("helpButton").addEventListener("click", event => showDialog(helpDialog, event.currentTarget));
 document.querySelectorAll("[data-close-help]").forEach(button => button.addEventListener("click", closeHelp));
@@ -743,16 +1262,43 @@ document.addEventListener("fullscreenchange", () => {
 });
 portraitQuery.addEventListener?.("change", updateOrientation);
 window.addEventListener("resize", updateOrientation);
-window.addEventListener("blur", () => { if (drag) cancelBottleDrag(); });
-
-updateOrientation();
-document.body.classList.toggle("reduced-motion", reducedMotionEnabled());
-render();
-const savedCheckpoint = readCheckpoint();
-if (savedCheckpoint) showResumeDialog(savedCheckpoint);
+window.addEventListener("blur", () => {
+    if (drag) cancelBottleDrag();
+    if (centrifugeDrag) cancelCentrifugeDrag();
+});
 
 // Read-only hooks make browser verification possible without changing passport progress.
 window.__chemistryGame = {
     getState: () => JSON.parse(JSON.stringify(state)),
-    hasCheckpoint: () => Boolean(readCheckpoint())
+    hasCheckpoint: () => Boolean(readCheckpoint()),
+    testBalance: slots => ({ balanced:isBalancedSlots(slots), unpaired:unpairedSlots(slots) })
 };
+
+function runChallengeBalanceSelfTest() {
+    let testedPositionSets = 0;
+    let acceptedPositionSets = 0;
+    let acceptedTubeArrangements = 0;
+    for (let mask = 0; mask < 256; mask += 1) {
+        const occupied = Array.from({ length:8 }, (_, index) => Boolean(mask & (1 << index)));
+        if (occupied.filter(Boolean).length !== 4) continue;
+        testedPositionSets += 1;
+        const slots = occupied.map((filled, index) => filled ? `tube-${index}` : null);
+        if (isBalancedSlots(slots)) {
+            acceptedPositionSets += 1;
+            acceptedTubeArrangements += 24;
+        }
+    }
+    const passed = testedPositionSets === 70 && acceptedPositionSets === 6 && acceptedTubeArrangements === 144;
+    document.body.dataset.balanceSelfTest = passed ? "passed" : "failed";
+    document.body.dataset.challengeSetsTested = String(testedPositionSets);
+    document.body.dataset.challengeValidSets = String(acceptedPositionSets);
+    document.body.dataset.challengeTubeArrangements = String(acceptedTubeArrangements);
+    if (!passed) console.error("Challenge rotor balance self-test failed.");
+}
+
+updateOrientation();
+document.body.classList.toggle("reduced-motion", reducedMotionEnabled());
+runChallengeBalanceSelfTest();
+render();
+const savedCheckpoint = readCheckpoint();
+if (savedCheckpoint) showResumeDialog(savedCheckpoint);

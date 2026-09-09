@@ -1,0 +1,27 @@
+Generated with OpenAI built-in image generation for the Clinical Chemistry centrifuge chapter.
+
+centrifuge-bench-v1.png <- exec-ee4cefbc-f2c8-4f18-bcf6-606a78a12b36.png
+centrifuge-open-v1.png <- exec-c96c69f8-e657-4083-8ca0-18fa005ed560.png
+centrifuge-closed-v1.png <- exec-0783c214-a89f-4aff-aba2-4d326359c1b0.png
+yellow-bottle-v1.png <- exec-61684789-4106-4674-82c0-b9be019d1247.png
+balance-tube-v1.png <- exec-9b50d1c9-b198-459a-ba8c-0ad3e19a6edb.png
+ian-separated-v1.png <- exec-4a86fa71-f8aa-49ea-9220-8a578cecf378.png
+inspection-holder-v1.png <- exec-de8679dd-c9fe-4d1f-b449-52594c0c38b0.png
+
+Final prompt set (condensed only for line wrapping; wording otherwise preserved):
+
+1. Bench: 16:9 empty modern clinical chemistry bench background matching the established illustrated reception scene; pale-blue lab, clean foreground bench, cabinets and soft cyan light, large empty staging area; no equipment, tubes, people, text, UI or logos.
+
+2. Open centrifuge: isolated transparent, child-friendly white/navy benchtop clinical centrifuge in polished 3D-cartoon style, front three-quarter view from above; lid open, plain dark rotor bowl without baked slots, no tubes or text, soft contact shadow only.
+
+3. Closed centrifuge: isolated transparent compact benchtop centrifuge in the same white/navy/cyan style; securely closed navy lid, front cyan status button, no visible tubes, lettering, scenery or UI, soft contact shadow only.
+
+4. Yellow bottle: isolated transparent upright standard blood collection tube; rounded glass bottom, dark-red sample, warm yellow ribbed stopper and a large blank white label for editable HTML identity; no baked text or scenery.
+
+5. Balance tube: isolated transparent compatible standard tube; clear glass, rounded bottom, turquoise stopper, pale-blue liquid and a large blank white label for an editable BALANCE overlay; no baked text or measuring marks.
+
+6. Separated Ian bottle: isolated transparent upright standard grey-top tube after centrifugation; pale straw-gold upper liquid, deep-red packed cells below with a crisp horizontal boundary, large blank label for editable identity; no baked labels or callouts.
+
+7. Inspection holder: isolated transparent single-tube holder; rounded white base, navy trim and cyan opening, slightly elevated front three-quarter view, empty, no text or scenery, soft contact shadow only.
+
+All cutouts were requested with genuine alpha-0 pixels outside the object and no simulated checkerboard. The selected PNGs were visually inspected and their corner alpha/pixel formats verified. Rejected RGB/checkerboard attempts were not copied into the project.
