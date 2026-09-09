@@ -49,6 +49,10 @@ function randomDigits(count) {
     return Array.from({ length: count }, () => Math.floor(Math.random() * 10)).join("");
 }
 
+function randomPatientId() {
+    return `${randomDigits(5)}${randomItem(["H", "L"])}`;
+}
+
 function formatDate(date) {
     return [date.getDate(), date.getMonth() + 1, date.getFullYear()]
         .map((part, index) => index < 2 ? String(part).padStart(2, "0") : String(part))
@@ -68,7 +72,7 @@ function createBirthday(level) {
 function createCase(level) {
     return {
         name: `Ian ${randomItem(SURNAMES)}`,
-        id: `CH-${randomDigits(3)}-${randomDigits(3)}`,
+        id: randomPatientId(),
         dob: createBirthday(level),
         test: "Glucose"
     };
@@ -95,15 +99,15 @@ function createScenario(level, patient) {
     if (level === "junior") {
         wrong = {
             name: `Maya ${randomItem(SURNAMES.filter(name => !patient.name.endsWith(name)))}`,
-            id: `CH-${randomDigits(3)}-${randomDigits(3)}`,
+            id: randomPatientId(),
             dob: formatDate(new Date(2012, 2, 14)),
             test: "Glucose",
             correct: false,
             mismatchFields: ["name", "id", "dob"]
         };
     } else if (level === "explorer") {
-        let differentId = `CH-${randomDigits(3)}-${randomDigits(3)}`;
-        if (differentId === patient.id) differentId = "CH-804-271";
+        let differentId = randomPatientId();
+        if (differentId === patient.id) differentId = patient.id === "80427H" ? "80427L" : "80427H";
         wrong = { ...patient, id: differentId, correct: false, mismatchFields: ["id"] };
     } else {
         wrong = { ...patient, id: changeIdSubtly(patient.id), correct: false, mismatchFields: ["id"] };
@@ -115,7 +119,7 @@ function isValidCheckpoint(value) {
     const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "complete"];
     return value && value.version === 1 && LEVELS[value.level]
         && value.caseData && typeof value.caseData.name === "string"
-        && typeof value.caseData.id === "string" && typeof value.caseData.dob === "string"
+        && typeof value.caseData.id === "string" && /^\d{5}[HL]$/.test(value.caseData.id) && typeof value.caseData.dob === "string"
         && Array.isArray(value.scenario) && value.scenario.length === 2
         && value.scenario.filter(sample => sample && sample.correct === true).length === 1
         && stages.includes(value.stage);
@@ -369,18 +373,33 @@ function monitorField(label, value, field) {
     return `<div class="field" data-reference-field="${field}"><dt>${label}</dt><dd>${value}</dd></div>`;
 }
 
+function obscuredRequestDetails() {
+    return `<span class="request-scribble" role="img" aria-label="Details intentionally obscured">
+        <span class="request-scribble-line" aria-hidden="true"></span>
+        <span class="request-scribble-line" aria-hidden="true"></span>
+        <span class="request-scribble-line" aria-hidden="true"></span>
+    </span>`;
+}
+
 function monitorMarkup() {
     const patient = state.caseData;
     return `<div class="reference-monitor" aria-label="Laboratory request monitor reference">
         <img src="assets/request-monitor-v1.png" alt="Laboratory request monitor">
         <div class="monitor-ui">
             <header>Clinical Chemistry Request</header>
-            <dl>
-                ${monitorField("Patient name", patient.name, "name")}
-                ${monitorField("ID no.", patient.id, "id")}
-                ${monitorField("Date of birth", patient.dob, "dob")}
-            </dl>
-            <div class="request-test">Requested test: <b>Glucose</b></div>
+            <section class="monitor-section monitor-patient-section">
+                <h3>Patient details</h3>
+                <dl>
+                    ${monitorField("Patient name", patient.name, "name")}
+                    ${monitorField("ID no.", patient.id, "id")}
+                    ${monitorField("Date of birth", patient.dob, "dob")}
+                </dl>
+            </section>
+            <div class="monitor-secondary-grid">
+                <section class="monitor-section monitor-secondary-section"><h3>Sample request</h3>${obscuredRequestDetails()}</section>
+                <section class="monitor-section monitor-secondary-section"><h3>Clinical details</h3>${obscuredRequestDetails()}</section>
+                <section class="monitor-section monitor-secondary-section"><h3>Collection</h3>${obscuredRequestDetails()}</section>
+            </div>
         </div>
     </div>`;
 }
@@ -388,7 +407,7 @@ function monitorMarkup() {
 function tubeLabelMarkup(sample) {
     return `<span class="tube-label">
         <span data-sample-field="name"><b>${sample.name}</b></span>
-        <span data-sample-field="id">ID no. ${sample.id}</span>
+        <span data-sample-field="id">${sample.id}</span>
         <span data-sample-field="dob">${sample.dob}</span>
     </span>`;
 }
@@ -405,7 +424,9 @@ function paperMarkup(sample) {
             ${paperRow("ID no.", sample.id, "id")}
             ${paperRow("Date of birth", sample.dob, "dob")}
         </span>
-        <span class="paper-section"><em>Requested test</em>${paperRow("Test", "Glucose", "test")}</span>
+        <span class="paper-section paper-secondary-section"><em>Sample request</em>${obscuredRequestDetails()}</span>
+        <span class="paper-section paper-secondary-section"><em>Clinical details</em>${obscuredRequestDetails()}</span>
+        <span class="paper-section paper-secondary-section"><em>Collection</em>${obscuredRequestDetails()}</span>
     </span>`;
 }
 

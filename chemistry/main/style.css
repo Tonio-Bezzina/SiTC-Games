@@ -93,14 +93,24 @@ body.game-paused #gameStage *,body.game-paused #gameStage *::before,body.game-pa
 .inspection-screen::after,.transfer-screen::after { content:""; position:absolute; z-index:-1; inset:0; background:linear-gradient(#021a286b,transparent 30%,#021a2833); pointer-events:none; }
 .reference-monitor { position:absolute; z-index:3; left:1.2%; top:15%; width:34%; height:71%; filter:drop-shadow(0 12px 16px #001b2baa); }
 .reference-monitor > img { width:100%; height:100%; object-fit:contain; }
-.monitor-ui { position:absolute; inset:19% 16% 32% 16%; overflow:auto; padding:clamp(6px,.7vw,11px); border-radius:6px; color:#eaffff; background:#071f2bec; font-family:Arial,sans-serif; font-size:clamp(.62rem,.82vw,.83rem); }
+.monitor-ui { position:absolute; inset:24% 6.8% 36% 7%; overflow:auto; padding:clamp(6px,.7vw,11px); border-radius:6px; color:#eaffff; background:#071f2bec; font-family:Arial,sans-serif; font-size:clamp(.62rem,.82vw,.83rem); }
 .monitor-ui header { margin-bottom:6px; padding-bottom:4px; border-bottom:2px solid #28c9dd; font-weight:800; }
-.monitor-ui dl { margin:0; display:grid; gap:3px; }
+.monitor-ui dl { margin:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 6px; }
+.monitor-section h3 { margin:2px 0 1px; padding:1px 3px; border-left:3px solid #48cde5; color:#a7ecf8; background:#2a8ea52e; font-size:.76em; line-height:1.05; letter-spacing:.05em; text-transform:uppercase; }
+.monitor-secondary-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:2px; margin-top:2px; }
+.monitor-secondary-section { min-width:0; overflow:hidden; border:1px solid #48cde561; border-radius:4px; }
+.monitor-secondary-section h3 { margin:0; border-bottom:1px solid #48cde540; }
+.monitor-secondary-grid h3 { overflow:hidden; font-size:.62em; letter-spacing:.02em; white-space:nowrap; text-overflow:ellipsis; }
 .field { padding:4px 6px; border-radius:5px; }
+.monitor-ui .field { padding:1px 3px; }
 .field dt { color:#83dcec; font-size:.8em; }
 .field dd { margin:0; font-weight:800; overflow-wrap:anywhere; }
-.request-test { margin-top:6px; padding:6px; border:1px solid #36cde055; border-radius:6px; }
-.request-test b { color:#ffd867; }
+.request-scribble { display:flex; min-height:0; padding:3px 6px; flex-direction:column; justify-content:space-evenly; gap:3px; overflow:hidden; color:#9bcfdb80; }
+.request-scribble-line { display:block; width:88%; height:max(1px,.16em); flex:0 0 auto; border-radius:999px; background:currentColor; transform:rotate(-1deg); }
+.request-scribble-line:nth-child(2) { width:68%; transform:rotate(.7deg); }
+.request-scribble-line:nth-child(3) { width:79%; transform:rotate(-.4deg); }
+.monitor-ui .request-scribble { height:10px; padding:1px 5px; gap:1px; }
+.monitor-ui .request-scribble-line:nth-child(3) { display:none; }
 .sample-stations { position:absolute; inset:0; }
 .sample-station { position:absolute; z-index:4; top:17%; width:30.5%; height:78%; border:2px solid #a4dfeb66; border-radius:20px; background:#07324966; transition:opacity .18s,filter .18s,transform .18s,background .18s; }
 .sample-station.station-0 { left:36.5%; }
@@ -113,12 +123,13 @@ body.game-paused #gameStage *,body.game-paused #gameStage *::before,body.game-pa
 .tube-wrap { position:absolute; z-index:3; left:-7%; bottom:4%; width:54%; height:79%; }
 .tube-wrap > img,.paper-wrap > img { width:100%; height:100%; object-fit:contain; }
 .paper-wrap { position:absolute; z-index:2; right:2%; bottom:5%; width:58%; height:79%; }
-.tube-label { position:absolute; z-index:4; top:44%; left:37%; width:29%; height:31%; overflow:hidden; padding:3px 2px; display:flex; flex-direction:column; justify-content:center; gap:2px; color:#172a32; font-family:Arial,sans-serif; font-size:clamp(.31rem,.49vw,.48rem); line-height:1.05; text-align:left; transform:rotate(-1deg); }
+.tube-label { position:absolute; z-index:4; top:29%; left:40%; width:23%; height:31%; overflow:hidden; padding:3px 2px; display:flex; flex-direction:column; justify-content:center; gap:2px; color:#172a32; font-family:Arial,sans-serif; font-size:clamp(.31rem,.49vw,.48rem); line-height:1.05; text-align:left; transform:rotate(-1deg); }
 .tube-label span { display:block; padding:1px; overflow:hidden; }
-.paper-copy { position:absolute; z-index:4; inset:7% 8% 8%; display:flex; flex-direction:column; gap:2%; color:#17303d; font-family:Arial,sans-serif; font-size:clamp(.35rem,.5vw,.51rem); line-height:1.08; text-align:left; transform:rotate(-1deg); }
+.paper-copy { position:absolute; z-index:4; inset:7% 8% 8%; display:grid; grid-template-rows:8% 34% 17% 15% 15%; gap:1.5%; color:#17303d; font-family:Arial,sans-serif; font-size:clamp(.35rem,.5vw,.51rem); line-height:1.08; text-align:left; transform:rotate(-1deg); }
 .paper-copy > strong { padding:3px; border:1px solid #a7cede; background:#e1f3f8e6; text-align:center; }
-.paper-section { border:1px solid #a7cede; background:#fffaf1d9; }
+.paper-section { display:flex; min-height:0; flex-direction:column; overflow:hidden; border:1px solid #a7cede; background:#fffaf1d9; }
 .paper-section em { display:block; padding:2px 4px; color:#134a61; background:#d5edf4; font-style:normal; font-weight:800; text-transform:uppercase; }
+.paper-secondary-section .request-scribble { flex:1 1 auto; padding:2px 4px; color:#3a697c7a; }
 .paper-row { display:grid; grid-template-columns:37% 1fr; gap:3px; padding:3px; border-top:1px solid #b8d6df; }
 .paper-row b,.paper-row span { overflow:hidden; white-space:nowrap; }
 .station-actions { position:absolute; z-index:8; right:2%; bottom:1.5%; left:2%; display:none; justify-content:center; gap:8px; }
@@ -129,8 +140,8 @@ body.game-paused #gameStage *,body.game-paused #gameStage *::before,body.game-pa
 .sample-station.expanded .station-inspect { bottom:12%; }
 .sample-station.expanded .tube-wrap { left:-1%; width:43%; height:86%; }
 .sample-station.expanded .paper-wrap { right:4%; width:53%; height:87%; }
-.sample-station.expanded .tube-label { left:38%; width:27%; font-size:clamp(.58rem,.72vw,.72rem); }
-.sample-station.expanded .paper-copy { font-size:clamp(.58rem,.72vw,.72rem); }
+.sample-station.expanded .tube-label { left:43%; width:17%; font-size:clamp(.58rem,.72vw,.72rem); }
+.sample-station.expanded .paper-copy { top:5%; left:20%; width:60%; font-size:clamp(.58rem,.72vw,.72rem); transform:rotate(.3deg); }
 .sample-station.expanded .station-actions { display:flex; }
 .sample-station.expanded .inspect-prompt { display:none; }
 .inspection-screen.reviewing .sample-station:not(.expanded) { opacity:.25; }
