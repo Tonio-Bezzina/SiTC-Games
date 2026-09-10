@@ -26,10 +26,11 @@ let storageAvailable = true;
 let phaseTimer = null;
 let drag = null;
 let centrifugeDrag = null;
+let qcDrag = null;
 let lastFocus = null;
 
 let state = {
-    version: 2,
+    version: 3,
     level: null,
     caseData: null,
     scenario: null,
@@ -40,7 +41,9 @@ let state = {
     acceptedIndex: null,
     bottleSelected: false,
     chapter1Complete: false,
+    chapter2Complete: false,
     centrifuge: null,
+    qualityControl: null,
     soundOn: true
 };
 
@@ -123,6 +126,31 @@ function isCentrifugeStage(stage) {
     return ["centrifuge-load", "centrifuge-spinning", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "centrifuge-complete"].includes(stage);
 }
 
+function isQualityControlStage(stage) {
+    return ["qc-intro", "qc", "qc-complete"].includes(stage);
+}
+
+function chooseControlScenario(level) {
+    if (level === "junior") return "pass";
+    if (level === "challenge") return "fail";
+    return Math.random() < .5 ? "pass" : "fail";
+}
+
+function createQualityControlState(level, scenario = null) {
+    return {
+        scenario: scenario || chooseControlScenario(level),
+        round: 1,
+        phase: "load",
+        controlLocation: "rack",
+        selected: null,
+        result: null,
+        feedback: "",
+        investigated: false,
+        freshControl: false,
+        accepted: false
+    };
+}
+
 function centrifugeSlotCount(level) {
     return level === "challenge" ? 8 : 4;
 }
@@ -162,28 +190,42 @@ function normaliseCheckpoint(value) {
         value.stage = value.stage === "complete" ? "centrifuge-load" : value.stage;
         value.centrifuge = value.chapter1Complete ? createCentrifugeState(value.level, value.caseData) : null;
     }
-    if (value.version === 2 && value.centrifuge?.cycle === "spinning") {
+    if (value.version === 2) {
+        value.version = 3;
+        value.chapter2Complete = value.stage === "centrifuge-complete";
+        value.qualityControl = value.chapter2Complete ? createQualityControlState(value.level) : null;
+        if (value.chapter2Complete) value.stage = "qc-intro";
+    }
+    if (value.version === 3 && value.centrifuge?.cycle === "spinning") {
         value.centrifuge.cycle = "idle";
         value.centrifuge.lidClosed = true;
         value.centrifuge.feedback = "The interrupted demonstration is ready to start safely again.";
         value.stage = "centrifuge-load";
     }
+    if (value.version === 3 && value.qualityControl?.phase === "processing") {
+        value.qualityControl.phase = "loaded";
+        value.qualityControl.controlLocation = "loader";
+        value.qualityControl.result = null;
+        value.qualityControl.feedback = "The interrupted check is ready to run safely again.";
+    }
     return value;
 }
 
 function isValidCheckpoint(value) {
-    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "centrifuge-complete"];
+    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "qc-intro", "qc", "qc-complete"];
     const c = value?.centrifuge;
     const centrifugeOkay = !isCentrifugeStage(value?.stage) || (c && Array.isArray(c.batch) && c.batch.length === 4
         && Array.isArray(c.slots) && c.slots.length === centrifugeSlotCount(value.level)
         && Array.isArray(c.rack));
-    return value && value.version === 2 && LEVELS[value.level]
+    const q = value?.qualityControl;
+    const qualityOkay = !isQualityControlStage(value?.stage) || (q && ["pass", "fail"].includes(q.scenario) && [1, 2].includes(q.round));
+    return value && value.version === 3 && LEVELS[value.level]
         && value.caseData && typeof value.caseData.name === "string"
         && typeof value.caseData.id === "string" && /^\d{5}[HL]$/.test(value.caseData.id) && typeof value.caseData.dob === "string"
         && typeof value.caseData.accession === "string"
         && Array.isArray(value.scenario) && value.scenario.length === 2
         && value.scenario.filter(sample => sample && sample.correct === true).length === 1
-        && stages.includes(value.stage) && centrifugeOkay;
+        && stages.includes(value.stage) && centrifugeOkay && qualityOkay;
 }
 
 function readCheckpoint() {
@@ -224,7 +266,7 @@ function setGuide(message, callout = false) {
 
 function updateChrome() {
     levelLabel.textContent = state.level ? LEVELS[state.level].label : "Choose";
-    chapterLabel.textContent = state.level ? (state.chapter1Complete || isCentrifugeStage(state.stage) ? "Chapter 2 · Balance & separate" : "Chapter 1 · Check the sample") : "Opening";
+    chapterLabel.textContent = state.level ? (state.chapter2Complete || isQualityControlStage(state.stage) ? "Chapter 3 · Check the test" : state.chapter1Complete || isCentrifugeStage(state.stage) ? "Chapter 2 · Balance & separate" : "Chapter 1 · Check the sample") : "Opening";
     caseSummary.textContent = "";
     caseSummary.classList.add("hidden");
     gameBar.classList.remove("has-case");
@@ -296,7 +338,9 @@ function render() {
     if (state.stage === "transfer") renderTransfer();
     if (["centrifuge-load", "centrifuge-spinning", "centrifuge-stopped", "centrifuge-retrieve"].includes(state.stage)) renderCentrifuge();
     if (state.stage === "plasma") renderPlasmaChoice();
-    if (state.stage === "centrifuge-complete") renderComplete();
+    if (state.stage === "qc-intro") renderQualityControlIntro();
+    if (state.stage === "qc") renderQualityControl();
+    if (state.stage === "qc-complete") renderComplete();
 }
 
 function renderOpening() {
@@ -323,7 +367,7 @@ function renderOpening() {
 function startFresh(level) {
     clearCheckpoint();
     state = {
-        version: 2,
+        version: 3,
         level,
         caseData: createCase(level),
         scenario: null,
@@ -334,7 +378,9 @@ function startFresh(level) {
         acceptedIndex: null,
         bottleSelected: false,
         chapter1Complete: false,
+        chapter2Complete: false,
         centrifuge: null,
+        qualityControl: null,
         soundOn: state.soundOn
     };
     state.scenario = createScenario(level, state.caseData);
@@ -1105,7 +1151,9 @@ function chooseLayer(layer) {
 
 function completeCentrifugeChapter() {
     if (state.stage !== "plasma" || state.centrifuge?.plasmaChoice !== "plasma") return;
-    state.stage = "centrifuge-complete";
+    state.chapter2Complete = true;
+    state.qualityControl = createQualityControlState(state.level);
+    state.stage = "qc-intro";
     saveCheckpoint();
     render();
 }
@@ -1118,34 +1166,320 @@ function replayCentrifuge() {
     render();
 }
 
+function renderQualityControlIntro() {
+    screenHost.innerHTML = `
+        <section class="screen qc-screen qc-intro-screen" aria-labelledby="qcIntroTitle">
+            <img class="qc-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry analyser bench">
+            <div class="qc-intro-card">
+                <p class="kicker">CHAPTER 3 · QUALITY CONTROL</p>
+                <h1 id="qcIntroTitle">Check the glucose test first</h1>
+                <p>Before testing Ian’s sample, we check that the glucose test is working as expected.</p>
+                <button class="primary-button" type="button" data-start-qc>Meet the check sample →</button>
+            </div>
+            <img class="qc-intro-analyser" src="assets/analyser-exterior-v1.png" alt="Clinical chemistry analyser">
+        </section>`;
+    setGuide("Before testing Ian’s sample, we check that the glucose test is working as expected.");
+    document.querySelector("[data-start-qc]").addEventListener("click", () => {
+        state.stage = "qc";
+        saveCheckpoint();
+        render();
+    });
+}
+
+function qcResultScaleMarkup(result) {
+    if (!result) return "";
+    const pass = result === "pass";
+    return `<div class="control-result-scale ${pass ? "passing" : "failing"}" aria-label="Check result ${pass ? "inside" : "outside"} the expected range">
+        <div class="scale-track"><span class="expected-band"><b>Expected range</b></span><span class="check-marker" style="--marker:${pass ? 52 : 84}%"><b>Check result</b><i aria-hidden="true">${pass ? "✓" : "!"}</i></span></div>
+        <p>${pass ? "✓ Inside the expected range" : "! Outside the expected range"}</p>
+    </div>`;
+}
+
+function qcScreenMarkup() {
+    const q = state.qualityControl;
+    if (q.phase === "processing") return `<div class="analyser-display checking"><strong>Checking…</strong><span>Quality control in progress</span><i aria-hidden="true"></i></div>`;
+    if (["result", "accepted"].includes(q.phase)) return `<div class="analyser-display result-display"><strong>Quality control</strong>${qcResultScaleMarkup(q.result)}</div>`;
+    if (q.phase === "investigating") return `<div class="analyser-display maintenance"><strong>Scientist investigating</strong><span>Patient testing paused</span><i aria-hidden="true"></i></div>`;
+    return `<div class="analyser-display"><strong>Quality control</strong><span>${q.controlLocation === "loader" ? "Check sample ready" : "Waiting for check sample"}</span></div>`;
+}
+
+function controlVialMarkup(location = "rack") {
+    const q = state.qualityControl;
+    return `<button class="qc-vial ${q.selected === "control" ? "selected" : ""}" type="button" data-qc-object="control" data-location="${location}" aria-pressed="${q.selected === "control"}" aria-label="${q.freshControl ? "Fresh " : ""}Check sample vial—select to move">
+        <img src="assets/check-sample-vial-v1.png" alt="" draggable="false"><span><b>${q.freshControl ? "Fresh check" : "Check sample"}</b><small>Expected result known</small></span>
+    </button>`;
+}
+
+function ianWaitingMarkup() {
+    const q = state.qualityControl;
+    return `<button class="qc-ian ${q.selected === "ian" ? "selected" : ""}" type="button" data-qc-object="ian" aria-pressed="${q.selected === "ian"}" aria-label="Ian’s waiting grey-top sample, ${state.caseData.name}, ${state.caseData.id}">
+        <img src="assets/ian-separated-v1.png" alt="" draggable="false"><span><b>${state.caseData.name}</b><small>${state.caseData.id}</small><small>${state.caseData.dob}</small><small>${state.caseData.accession}</small></span>
+    </button>`;
+}
+
+function renderQualityControl() {
+    const q = state.qualityControl;
+    const resultPhase = ["result", "accepted"].includes(q.phase);
+    const processing = q.phase === "processing";
+    const investigating = q.phase === "investigating";
+    screenHost.innerHTML = `
+        <section class="screen qc-screen phase-${q.phase} ${q.feedback.startsWith("This check is outside") ? "failed-choice" : ""}" aria-labelledby="qcTitle">
+            <img class="qc-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry analyser bench">
+            <div class="qc-heading"><p class="kicker">CHAPTER 3 · QUALITY CONTROL</p><h1 id="qcTitle">Check the test is ready</h1><p>${q.round === 2 ? "Run the fresh check sample after the scientist’s investigation." : "This check sample has an expected result. Let’s see whether the analyser gets it right."}</p></div>
+            <aside class="qc-supply" aria-label="Check sample supply">${q.controlLocation === "rack" ? controlVialMarkup("rack") : ""}<span>${q.round === 2 ? "Fresh check sample" : "Check sample"}</span></aside>
+            <aside class="ian-waiting ${q.phase === "accepted" ? "next" : ""}" aria-label="Ian’s sample waiting separately"><h2>${q.phase === "accepted" ? "Ian’s sample is next" : "Ian’s sample waits here"}</h2>${ianWaitingMarkup()}<span>${q.phase === "accepted" ? "Ready for the next chapter" : "Patient sample—do not load yet"}</span></aside>
+            <div class="analyser-stage">
+                <img class="analyser-art" src="assets/analyser-exterior-v1.png" alt="Clinical chemistry analyser">
+                <span class="analyser-light ${processing ? "busy" : resultPhase && q.result === "pass" ? "pass" : resultPhase ? "hold" : "ready"}" role="status" aria-label="${processing ? "Status: checking" : resultPhase && q.result === "pass" ? "Status: check passed" : resultPhase ? "Status: testing paused" : "Status: ready"}"></span>
+                ${qcScreenMarkup()}
+                <button class="control-loader ${q.selected ? "active" : ""} ${q.controlLocation === "loader" ? "loaded" : ""} ${processing ? "inward" : ""}" type="button" data-control-loader aria-label="Highlighted control-loading position">
+                    <span class="tray-face" aria-hidden="true"></span>${q.controlLocation === "loader" ? controlVialMarkup("loader") : '<span class="loader-copy">Load check sample here</span>'}
+                </button>
+            </div>
+            <div class="qc-actions">
+                ${["load", "loaded"].includes(q.phase) ? `<button class="primary-button" type="button" data-run-check ${q.controlLocation !== "loader" ? "disabled" : ""}>Run check</button>` : ""}
+                ${resultPhase ? `<button class="primary-button" type="button" data-qc-choice="ready" ${q.phase === "accepted" ? "disabled" : ""}>Ready to test</button><button class="secondary-button" type="button" data-qc-choice="help" ${q.phase === "accepted" ? "disabled" : ""}>Ask the scientist for help</button>` : ""}
+            </div>
+            ${investigating ? '<div class="scientist-intervention"><span aria-hidden="true">🔬</span><div><strong>The scientist investigates and corrects the problem.</strong><p>Patient testing stays paused while the analyser is checked.</p><i aria-hidden="true"></i></div></div>' : ""}
+            <div class="qc-feedback ${q.feedback ? "" : "hidden"}" role="alert">${q.feedback || ""}</div>
+        </section>`;
+    if (q.phase === "load") setGuide(state.level === "challenge" ? "Load the Check sample, then run the check." : "This check sample has an expected result. Let’s see whether the analyser gets it right.");
+    else if (q.phase === "loaded") setGuide("The Check sample is loaded. Press Run check.");
+    else if (processing) setGuide("Checking… The analyser is processing the control.");
+    else if (investigating) setGuide("The scientist investigates and corrects the problem.");
+    else if (q.phase === "accepted") setGuide("The check passed! We’re ready to measure glucose in Ian’s sample.");
+    else setGuide("Is the Check result inside its Expected range?");
+    wireQualityControlInteractions();
+    if (processing) schedulePhase(revealControlResult, reducedMotionEnabled() ? 1100 : 2200);
+    if (investigating) schedulePhase(finishInvestigation, reducedMotionEnabled() ? 1100 : 2100);
+    if (q.phase === "accepted") schedulePhase(completeQualityControl, reducedMotionEnabled() ? 900 : 1500);
+}
+
+function wireQualityControlInteractions() {
+    const q = state.qualityControl;
+    if (["processing", "investigating", "accepted"].includes(q.phase)) return;
+    document.querySelectorAll("[data-qc-object]").forEach(button => {
+        button.addEventListener("click", () => selectQcObject(button.dataset.qcObject));
+        button.addEventListener("pointerdown", beginQcDrag);
+    });
+    document.querySelector("[data-control-loader]")?.addEventListener("click", loadSelectedQcObject);
+    document.querySelector("[data-run-check]")?.addEventListener("click", runQualityCheck);
+    document.querySelectorAll("[data-qc-choice]").forEach(button => button.addEventListener("click", () => chooseQcDecision(button.dataset.qcChoice)));
+}
+
+function selectQcObject(object) {
+    const q = state.qualityControl;
+    if (Date.now() < (state.suppressClickUntil || 0) || !["load", "loaded"].includes(q.phase)) return;
+    q.selected = q.selected === object ? null : object;
+    saveCheckpoint();
+    render();
+}
+
+function loadSelectedQcObject() {
+    const q = state.qualityControl;
+    if (!q.selected || !["load", "loaded"].includes(q.phase)) return;
+    if (q.selected === "ian") {
+        q.selected = null;
+        q.feedback = "First, finish the check sample.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    q.selected = null;
+    q.controlLocation = "loader";
+    q.phase = "loaded";
+    q.feedback = "The Check sample snapped into the control-loading position.";
+    saveCheckpoint();
+    render();
+}
+
+function runQualityCheck() {
+    const q = state.qualityControl;
+    if (q.phase !== "loaded" || q.controlLocation !== "loader") return;
+    q.phase = "processing";
+    q.feedback = "";
+    saveCheckpoint();
+    playTone("arrival");
+    render();
+}
+
+function revealControlResult() {
+    const q = state.qualityControl;
+    if (!q || q.phase !== "processing") return;
+    q.result = q.round === 2 ? "pass" : q.scenario;
+    q.phase = "result";
+    q.feedback = q.result === "pass" && state.level === "junior" ? "The check result is inside its expected range." : "";
+    saveCheckpoint();
+    playTone(q.result === "pass" ? "success" : "try");
+    render();
+}
+
+function chooseQcDecision(choice) {
+    const q = state.qualityControl;
+    if (q.phase !== "result") return;
+    if (choice === "ready" && q.result === "fail") {
+        q.feedback = "This check is outside its expected range. Ask the scientist to investigate before testing Ian’s sample.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (choice === "help" && q.result === "pass") {
+        q.feedback = "The scientist shows you that the Check result is inside the Expected range. Asking for help is always okay—now choose Ready to test.";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (choice === "help" && q.result === "fail") {
+        q.phase = "investigating";
+        q.investigated = true;
+        q.feedback = "";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    q.accepted = true;
+    q.phase = "accepted";
+    q.feedback = "The check result is inside its expected range.";
+    saveCheckpoint();
+    playTone("success");
+    render();
+}
+
+function finishInvestigation() {
+    const q = state.qualityControl;
+    if (!q || q.phase !== "investigating") return;
+    q.round = 2;
+    q.phase = "load";
+    q.controlLocation = "rack";
+    q.result = null;
+    q.freshControl = true;
+    q.feedback = "A fresh Check sample is ready. Load it and run a new check.";
+    saveCheckpoint();
+    render();
+}
+
+function completeQualityControl() {
+    const q = state.qualityControl;
+    if (!q?.accepted || q.result !== "pass") return;
+    state.stage = "qc-complete";
+    saveCheckpoint();
+    render();
+}
+
+function beginQcDrag(event) {
+    if (!event.isPrimary || event.button !== 0 || !["load", "loaded"].includes(state.qualityControl.phase)) return;
+    const button = event.currentTarget;
+    button.setPointerCapture(event.pointerId);
+    qcDrag = { pointerId:event.pointerId, button, object:button.dataset.qcObject, startX:event.clientX, startY:event.clientY, moved:false };
+    button.addEventListener("pointermove", moveQcDrag);
+    button.addEventListener("pointerup", endQcDrag);
+    button.addEventListener("pointercancel", cancelQcDrag);
+}
+
+function moveQcDrag(event) {
+    if (!qcDrag || event.pointerId !== qcDrag.pointerId) return;
+    const dx = event.clientX - qcDrag.startX;
+    const dy = event.clientY - qcDrag.startY;
+    if (!qcDrag.moved && Math.hypot(dx, dy) < 7) return;
+    qcDrag.moved = true;
+    event.preventDefault();
+    qcDrag.button.classList.add("dragging");
+    qcDrag.button.style.setProperty("--drag-x", `${dx}px`);
+    qcDrag.button.style.setProperty("--drag-y", `${dy - 42}px`);
+    const target = document.querySelector(".control-loader");
+    const rect = target.getBoundingClientRect();
+    target.classList.toggle("drag-over", event.clientX >= rect.left - 30 && event.clientX <= rect.right + 30 && event.clientY >= rect.top - 30 && event.clientY <= rect.bottom + 30);
+}
+
+function endQcDrag(event) {
+    if (!qcDrag || event.pointerId !== qcDrag.pointerId) return;
+    const current = { ...qcDrag };
+    const target = document.querySelector(".control-loader");
+    const rect = target.getBoundingClientRect();
+    const inside = current.moved && event.clientX >= rect.left - 30 && event.clientX <= rect.right + 30 && event.clientY >= rect.top - 30 && event.clientY <= rect.bottom + 30;
+    cleanupQcDrag();
+    if (!current.moved) return;
+    state.suppressClickUntil = Date.now() + 450;
+    state.qualityControl.selected = current.object;
+    if (inside) loadSelectedQcObject();
+    else {
+        state.qualityControl.selected = null;
+        state.qualityControl.feedback = current.object === "ian" ? "First, finish the check sample." : "The Check sample returned safely. Missed drops are not scientific errors.";
+        saveCheckpoint();
+        render();
+    }
+}
+
+function cancelQcDrag() {
+    if (!qcDrag) return;
+    cleanupQcDrag();
+    if (state.qualityControl) {
+        state.qualityControl.feedback = "The sample returned safely. Select it again when you are ready.";
+        saveCheckpoint();
+        if (!portraitQuery.matches) render();
+    }
+}
+
+function cleanupQcDrag() {
+    if (!qcDrag) return;
+    const { button } = qcDrag;
+    button.classList.remove("dragging");
+    button.style.removeProperty("--drag-x");
+    button.style.removeProperty("--drag-y");
+    button.removeEventListener("pointermove", moveQcDrag);
+    button.removeEventListener("pointerup", endQcDrag);
+    button.removeEventListener("pointercancel", cancelQcDrag);
+    document.querySelector(".control-loader")?.classList.remove("drag-over");
+    qcDrag = null;
+}
+
+function replayQualityControl() {
+    state.qualityControl = createQualityControlState(state.level);
+    state.stage = "qc-intro";
+    saveCheckpoint();
+    render();
+}
+
 function renderComplete() {
     screenHost.innerHTML = `
         <section class="screen complete-screen" aria-labelledby="completeTitle">
             <div class="complete-card">
                 <div class="complete-icon" aria-hidden="true">✓</div>
-                <p class="kicker">CHAPTER 2 COMPLETE</p>
-                <h1 id="completeTitle">Sample prepared!</h1>
-                <p class="success-line">Ian’s sample is prepared. Next, we’ll check that the analyser is ready.</p>
-                <p class="section-end"><strong>This is the end of the available content.</strong><br>The analyser chapter is not available yet.</p>
+                <p class="kicker">CHAPTER 3 COMPLETE</p>
+                <h1 id="completeTitle">The check passed!</h1>
+                <p class="success-line">The check passed! We’re ready to measure glucose in Ian’s sample.</p>
+                <p class="section-end"><strong>This is the end of the available content.</strong><br>The patient-analysis chapter is not available yet.</p>
                 <div class="complete-actions">
-                    <button class="primary-button" id="replayButton" type="button">Replay centrifuge chapter</button>
+                    <button class="primary-button" id="replayButton" type="button">Replay quality-control chapter</button>
                     <a class="secondary-button" href="../">Return to Chemistry Lab</a>
                 </div>
                 <p class="no-badge">No Chemistry badge has been awarded for this partial mission.${storageAvailable ? "" : " Progress could not be saved on this device."}</p>
             </div>
         </section>`;
-    setGuide("Ian’s sample is prepared. Next, we’ll check that the analyser is ready.");
-    document.getElementById("replayButton").addEventListener("click", replayCentrifuge);
+    setGuide("The check passed! We’re ready to measure glucose in Ian’s sample.");
+    document.getElementById("replayButton").addEventListener("click", replayQualityControl);
 }
 
 function changeLevel(level) {
     levelDialog.close();
+    if (level === state.level) return;
     if (!state.caseData || state.stage === "opening") {
         startFresh(level);
         return;
     }
     cancelBottleDrag();
     cancelCentrifugeDrag();
+    cancelQcDrag();
+    if (state.chapter2Complete || isQualityControlStage(state.stage)) {
+        state.level = level;
+        state.qualityControl = createQualityControlState(level);
+        state.stage = "qc-intro";
+        saveCheckpoint();
+        render();
+        return;
+    }
     if (state.chapter1Complete || isCentrifugeStage(state.stage)) {
         const batch = state.centrifuge?.batch || createBatch(state.caseData);
         state.level = level;
@@ -1177,6 +1511,7 @@ function showDialog(dialog, invoker) {
     lastFocus = invoker || document.activeElement;
     pausePhaseTimer();
     cancelCentrifugeDrag();
+    cancelQcDrag();
     document.body.classList.add("dialog-paused");
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
@@ -1200,6 +1535,7 @@ function updateOrientation() {
         pausePhaseTimer();
         cancelBottleDrag();
         cancelCentrifugeDrag();
+        cancelQcDrag();
     } else {
         startPhaseTimer();
     }
@@ -1212,7 +1548,7 @@ function reducedMotionEnabled() {
 function showResumeDialog(saved) {
     const dialog = document.createElement("dialog");
     dialog.setAttribute("aria-labelledby", "resumeTitle");
-    dialog.innerHTML = `<div class="dialog-card"><p class="dialog-kicker">SAVED CASE FOUND</p><h2 id="resumeTitle">Continue Ian's chemistry mission?</h2><p>Your ${LEVELS[saved.level].label} case will resume with the same name, ID no., birthday, accession and safe chapter checkpoint.</p><div class="dialog-actions"><button class="primary-button" type="button" data-continue>Continue case</button><button class="secondary-button" type="button" data-restart>Start again</button></div></div>`;
+    dialog.innerHTML = `<div class="dialog-card"><p class="dialog-kicker">SAVED CASE FOUND</p><h2 id="resumeTitle">Continue Ian's chemistry mission?</h2><p>Your ${LEVELS[saved.level].label} case will resume with the same name, ID no., birthday, accession and safe laboratory checkpoint.</p><div class="dialog-actions"><button class="primary-button" type="button" data-continue>Continue case</button><button class="secondary-button" type="button" data-restart>Start again</button></div></div>`;
     document.body.appendChild(dialog);
     dialog.querySelector("[data-continue]").addEventListener("click", () => {
         state = { ...state, ...saved, soundOn: saved.soundOn !== false };
@@ -1265,6 +1601,7 @@ window.addEventListener("resize", updateOrientation);
 window.addEventListener("blur", () => {
     if (drag) cancelBottleDrag();
     if (centrifugeDrag) cancelCentrifugeDrag();
+    if (qcDrag) cancelQcDrag();
 });
 
 // Read-only hooks make browser verification possible without changing passport progress.

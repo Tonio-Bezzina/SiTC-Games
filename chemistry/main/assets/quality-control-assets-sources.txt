@@ -1,0 +1,12 @@
+Generated with OpenAI built-in image generation for the Clinical Chemistry quality-control chapter.
+
+analyser-exterior-v1.png <- exec-e73e591d-9546-47b7-82d4-be66ed0f4a88.png
+check-sample-vial-v1.png <- exec-d879638c-bc80-4b9e-9d48-81cd634e404c.png
+
+Final prompt set:
+
+1. Analyser exterior — Use case: product-mockup. Transparent game asset for a child-friendly Clinical Chemistry analyser scene. Create a large modern benchtop analyser in the established polished 3D-cartoon white, deep-navy and cyan style. Rounded housing, large blank dark screen, cyan status-light bezel and a central empty loading bay for a separate interactive tray. Front three-quarter view from slightly above; no tubes, people, labels, symbols, logos, scenery, table or baked UI. Genuine alpha outside the object with a soft contact shadow only.
+
+2. Check sample vial — Use case: product-mockup. Transparent draggable game asset. Create one short, squat quality-control vial that is visually distinct from the tall grey-top patient bottle: clear glass, rounded shoulders, bright cyan ribbed cap, pale-aqua liquid and a large blank white label for editable HTML text. Straight front view; no baked text, logos, measuring marks, scenery, table or extra objects. Genuine alpha outside the vial.
+
+The loading tray’s open and closed/inward states are separate HTML/CSS layers so their position, animation and reduced-motion state remain controllable. The analyser screen, status light, expected band, result marker and every readable label are likewise separate interface elements. Both selected PNGs were visually inspected and verified as 32-bit RGBA with transparent corner pixels. No scripted image editing or API/CLI fallback was used.
