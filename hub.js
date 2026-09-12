@@ -123,18 +123,18 @@ const labs = [
 
 
     {
-        id: "microbiology",
+        id: "bacteriology",
 
-        name: "Microbiology",
+        name: "Bacteriology",
 
         icon: "🦠",
 
         description:
-            "Explore microorganisms and discover how scientists identify them.",
+            "Follow a patient sample through the laboratory and identify the bacterium causing an infection.",
 
-        href: "microbiology/",
+        href: "bacteriology/main/",
 
-        available: false,
+        available: true,
 
         mainCase: "main",
 
@@ -142,14 +142,14 @@ const labs = [
 
             {
                 id: "main",
-                name: "Main Microbiology Mission",
+                name: "Bacteriology Journey",
                 main: true
             }
 
         ],
 
         masterTitle:
-            "Microbiology Master"
+            "Bacteriology Master"
     },
 
 

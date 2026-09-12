@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071b36">
+  <meta name="description" content="A complete interactive laboratory journey for junior bacteriologists.">
+  <title>Bacteriology Journey</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23071b36'/%3E%3Ccircle cx='32' cy='32' r='22' fill='%235de3d1'/%3E%3Cg fill='%23071b36'%3E%3Ccircle cx='24' cy='25' r='5'/%3E%3Ccircle cx='35' cy='23' r='4'/%3E%3Ccircle cx='40' cy='35' r='5'/%3E%3Ccircle cx='27' cy='39' r='4'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preload" as="image" href="assets/mission-1/preparation-room-background.png">
+  <link rel="preload" as="image" href="assets/mission-1/ppe-countertop.png">
+  <link rel="preload" as="image" href="assets/mission-1/scientist-base.png">
+  <link rel="preload" as="image" href="assets/mission-1/scientist-lab-coat-overlay.png">
+  <link rel="preload" as="image" href="assets/mission-1/scientist-gloves-overlay.png">
+  <link rel="preload" as="image" href="assets/mission-1/lab-coat-on-hook.png">
+  <link rel="preload" as="image" href="assets/mission-1/gloves-box.png">
+  <link rel="preload" as="image" href="assets/mission-1/blue-gloves-draggable.png">
+  <link rel="preload" as="image" href="assets/mission-1/safety-glasses-container.png">
+  <link rel="preload" as="image" href="assets/mission-1/hard-hat-on-hook.png">
+  <link rel="preload" as="image" href="assets/mission-1/face-visor-container.png">
+  <script defer src="logic.js"></script>
+  <script defer src="game.js"></script>
+</head>
+<body>
+  <div id="rotate" role="status" aria-live="polite">
+    <div class="rotate-icon" aria-hidden="true">↻</div>
+    <h1>Turn your device sideways</h1>
+    <p>Your laboratory is ready in landscape view. Your progress is safe.</p>
+  </div>
+  <div id="app"></div>
+  <div id="announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+</body>
+</html>
