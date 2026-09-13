@@ -25,6 +25,7 @@
   }
   let state = load();
   if (!("selectedPpe" in state)) state.selectedPpe = null;
+  if (!("sampleSelected" in state.matching)) state.matching.sampleSelected = false;
   if (state.gram && state.gram.running) state.gram.running = false;
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
 
@@ -70,7 +71,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -106,22 +107,41 @@
     return shell(`<div class="mission-two-scene" aria-label="Inside the bacteriology laboratory"><img class="mission-two-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-two-title">${missionHeader(2,"What sample do we need?","Our patient has a sore throat. Which sample should the doctor take to look for bacteria that may be causing the infection?")}</div><div class="mission-two-feedback">${feedback()}${completion}</div><div class="mission-two-choices">${options.map(specimen).join("")}</div>${infoDialog}</div>`, "Think about where the patient's infection is. You can retry any choice.");
   }
 
-  function fieldRows(person, mismatch = []) {
-    const row = (key,label,value) => `<dt class="${mismatch.includes(key)?"mismatch":""}">${label}</dt><dd class="${mismatch.includes(key)?"mismatch":""}">${e(value)}</dd>`;
+  function fieldRows(person, mismatch = [], source = "") {
+    const attr = key => source ? ` data-${source}-field="${key}"` : "";
+    const row = (key,label,value) => `<dt${attr(key)} class="${mismatch.includes(key)?"mismatch":""}">${label}</dt><dd${attr(key)} class="${mismatch.includes(key)?"mismatch":""}">${e(value)}</dd>`;
     return `<dl class="fields">${row("name","Name",person.name)}${row("id","ID no.",person.id)}${row("dob","Date of birth",person.dob)}${person.test?row("test","Requested test",person.test):""}${person.specimen?row("specimen","Specimen",person.specimen):""}</dl>`;
+  }
+  function matchingRow(candidate, key, label, mismatch, source = "sample") {
+    return `<span class="m3-data-row ${mismatch.includes(key)?"mismatch":""}" data-${source}-field="${key}"><b>${label}</b><span>${e(candidate[key])}</span></span>`;
+  }
+  function sampleLabel(candidate, mismatch) {
+    return `<span class="m3-tube-label">${matchingRow(candidate,"name","Name",mismatch)}${matchingRow(candidate,"id","ID",mismatch)}${matchingRow(candidate,"dob","DOB",mismatch)}</span>`;
+  }
+  function requestPaper(candidate, mismatch) {
+    return `<span class="m3-paper-sheet"><strong>Bacteriology request</strong><span class="m3-paper-section"><em>Patient details</em>${matchingRow(candidate,"name","Name",mismatch)}${matchingRow(candidate,"id","ID no.",mismatch)}${matchingRow(candidate,"dob","Date of birth",mismatch)}</span><span class="m3-paper-section"><em>Investigation</em>${matchingRow(candidate,"test","Test",mismatch)}${matchingRow(candidate,"specimen","Specimen",mismatch)}</span><span class="m3-paper-scribbles" aria-hidden="true"><i></i><i></i><i></i></span></span>`;
   }
   function candidate(candidate, index) {
     const open = state.matching.expanded === index;
     const mismatch = open ? state.matching.mismatch : [];
-    return `<article class="sample-station ${open?"expanded":""}"><h3>Sample set ${index+1}</h3><button class="btn secondary" data-action="inspect" data-value="${index}" aria-expanded="${open}">${open?"Hide details":"Inspect complete set"}</button>${open?`<div class="sample-set"><div class="swab-tube"><strong>THROAT SWAB</strong>${fieldRows(candidate,mismatch)}</div><div class="paper"><strong>LABORATORY REQUEST</strong>${fieldRows(candidate,mismatch)}</div></div><div class="actions">${btn("Select this sample","select-candidate","")} ${btn("Compare other sample","compare-other","secondary")}</div>`:""}</article>`;
+    return `<article class="m3-sample-station station-${index} ${open?"expanded":""}" data-index="${index}"><button class="m3-station-inspect" data-action="inspect" data-value="${index}" aria-label="Inspect complete sample set ${index+1}" aria-expanded="${open}"><span class="m3-station-name">Sample set ${index+1}</span><span class="m3-tube-wrap"><img src="assets/mission-2/throat-swab.png" alt="Throat swab transport tube">${sampleLabel(candidate,mismatch)}</span><span class="m3-paper-wrap">${requestPaper(candidate,mismatch)}</span><span class="m3-inspect-prompt">${open?"Reviewing complete set":"Tap to inspect"}</span></button>${open?`<div class="m3-station-actions">${btn("Select this sample","select-candidate","")} ${btn("Compare other sample","compare-other","secondary")}</div>`:""}</article>`;
+  }
+  function mission3Transfer(c) {
+    const accepted = c.candidates[state.matching.accepted];
+    const rejectedIndex = c.candidates.findIndex((_,index)=>index!==state.matching.accepted);
+    const selected = state.matching.sampleSelected;
+    const complete = state.matching.racked;
+    return `<div class="m3-transfer" aria-label="Accepted sample transfer"><div class="m3-transfer-heading"><div class="mission-label">Mission 3 of 10</div><h1>Matched! This sample belongs to Amelia.</h1><p>Move the accepted throat swab to the receiving and scanning rack.</p></div><aside class="m3-rejected" aria-label="Rejected sample set ${rejectedIndex+1} remains at reception"><strong>Rejected set ${rejectedIndex+1}</strong><span>Remains at reception</span><div><img src="assets/mission-2/throat-swab.png" alt="Rejected throat swab"><span class="m3-mini-paper" aria-hidden="true"></span></div></aside><button class="m3-accepted-sample ${selected?"selected":""}" data-action="toggle-accepted-sample" data-value="accepted" draggable="true" data-drag="rack" data-drag-image="assets/mission-2/throat-swab.png" aria-pressed="${selected}" aria-label="Accepted throat swab for ${e(accepted.name)}. Select it, or drag it to the receiving rack."><img src="assets/mission-2/throat-swab.png" alt="">${sampleLabel(accepted,[])}</button><button class="m3-rack ${selected?"active":""} ${complete?"ready":""}" data-action="rack-sample" data-drop="rack" aria-label="Bacteriology receiving and scanning rack${complete?", accepted sample scanned":". Select after choosing the accepted swab, or drop it here."}"><span>${complete?"✓ Accepted sample scanned":"Receiving / scanning rack"}</span><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i></button>${complete?`<div class="m3-complete-card" role="status"><p>Patient matched and sample received safely.</p>${learning("Patient details must be checked carefully so that results are reported for the correct patient.")}<div class="actions">${state.completed.includes(3)?btn("Mission 4 →","continue"):btn("Finish Mission 3","complete-3","coral")}</div></div>`:""}</div>`;
   }
   function mission3() {
     const c = state.patientCase;
     const monitorMismatch = state.matching.mismatch;
-    if (!state.matching.carrierOpen) return shell(`${missionHeader(3,"Match the patient","A carrier has arrived at bacteriology reception.")}<div class="instruction">Look here for clues to help you complete your mission: compare every patient detail.</div><div class="lab-bench" style="display:grid;place-items:center"><button class="choice" data-action="open-carrier"><span class="big-icon">📦</span><strong>Open specimen carrier</strong><small>Reveal the request and complete sample sets</small></button></div>${feedback()}`, "At reception, every sample must be matched before it can enter the laboratory.");
+    const background = `<img class="mission-three-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside the bacteriology laboratory">`;
+    if (!state.matching.carrierOpen) return shell(`<div class="mission-three-scene">${background}<div class="m3-opening-title">${missionHeader(3,"Match the patient","A specimen carrier has arrived at bacteriology reception.")}<div class="instruction">Compare the patient details on the monitor, sample label and request form.</div></div><button class="m3-carrier" data-action="open-carrier" aria-label="Open specimen carrier and reveal two complete sample sets"><span aria-hidden="true">↗</span><strong>SPECIMEN CARRIER</strong><small>Open carrier</small></button></div>`, "At reception, every sample must be matched before it can enter the laboratory.");
+    if (state.matching.accepted != null) return shell(`<div class="mission-three-scene">${background}${mission3Transfer(c)}</div>`, state.matching.racked?"The accepted swab is safely linked to Amelia’s laboratory request.":"Drag the accepted sample to the rack, or select the sample and then select the rack.");
     const stations = c.candidates.map(candidate).join("");
-    const accepted = state.matching.accepted != null;
-    return shell(`${missionHeader(3,"Match the patient","Compare the monitor with each throat-swab label and paper request. Find Amelia’s matching sample set.")}<div class="patient-monitor"><h3>Laboratory request monitor</h3>${fieldRows(c.reference,monitorMismatch)}</div><div class="grid grid-2" style="margin-top:14px">${stations}</div>${accepted?`<div class="rack ${state.matching.racked?"ready":""}" data-drop="rack" tabindex="0" aria-label="Bacteriology receiving and scanning rack">${state.matching.racked?"✓ Accepted throat swab scanned into bacteriology receiving":"Move the accepted throat swab here — drag it or use the button"}</div>${!state.matching.racked?`<div class="actions">${btn("Move accepted swab to rack","rack-sample","coral")}</div>`:""}<p>Rejected set — remains at reception.</p>`:""}${feedback()}${state.matching.racked?learning("Patient details must be checked carefully so that results are reported for the correct patient.")+`<div class="actions">${state.completed.includes(3)?btn("Mission 4 →","continue"):btn("Finish Mission 3","complete-3","coral")}</div>`:""}`, "Check the name, ID no. and date of birth on all three surfaces. The bottle and paper in a set belong together.");
+    const reviewing = Number.isInteger(state.matching.expanded);
+    return shell(`<div class="mission-three-scene ${reviewing?"reviewing-sample":""}">${background}<div class="m3-match-heading"><div class="mission-label">Mission 3 of 10</div><h1>Match the patient</h1><p>Compare name, ID no. and date of birth on all three surfaces.</p></div><aside class="m3-reference-monitor" aria-label="Laboratory request monitor"><div class="m3-monitor-screen"><strong>Laboratory request monitor</strong>${fieldRows(c.reference,monitorMismatch,"reference")}</div></aside><div class="m3-sample-stations">${stations}</div>${monitorMismatch.length?`<div class="m3-match-alert" role="alert">${monitorMismatch.length===1?"This ID no. is different. Compare the highlighted numbers.":"These patient details conflict. Compare the highlighted fields."}</div>`:""}</div>`, "Check the name, ID no. and date of birth on the monitor, sample label and request form.");
   }
 
   function mission4() {
@@ -225,7 +245,7 @@
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample();});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -238,7 +258,7 @@
     };
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const target=[...document.querySelectorAll("[data-drop='ppe']")].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target)handlePpe(value);}
+      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -251,7 +271,11 @@
     if(["coat","gloves"].includes(value)){if(!state.ppe.includes(value))state.ppe.push(value);state.selectedPpe=null;setFeedback(value==="coat"?"Great choice! A lab coat helps protect our clothes and skin.":"Correct! Gloves help protect our hands from samples and microorganisms.","good");}
     else setFeedback("Not quite! We don’t need this item for this task. Try again!","try");
   }
-  function rackSample(){if(state.matching.accepted==null)return;state.matching.racked=true;setFeedback("Scanned! The existing patient label is now linked to the bacteriology accession record.","good");}
+  function rackSample(fromDrag = false){
+    if(state.matching.accepted==null)return;
+    if(!fromDrag&&!state.matching.sampleSelected){setFeedback("Select the accepted throat swab first, then select the receiving rack.");return;}
+    state.matching.sampleSelected=false;state.matching.racked=true;setFeedback("Scanned! The existing patient label is now linked to the bacteriology accession record.","good");
+  }
 
   app.addEventListener("click", function(ev){
     const target=ev.target.closest("[data-action]"); if(!target)return;
@@ -299,6 +323,7 @@
       else{state.matching.mismatch=[];state.matching.accepted=i;setFeedback("Matched! This sample belongs to Amelia. Now move the accepted throat swab to the receiving/scanning rack.","good");}
       return;
     }
+    if(action==="toggle-accepted-sample"){state.matching.sampleSelected=!state.matching.sampleSelected;setFeedback(state.matching.sampleSelected?"Accepted throat swab selected. Now choose the receiving and scanning rack.":"Accepted throat swab deselected.");return;}
     if(action==="rack-sample"){rackSample();return;}
     if(action==="complete-3"){if(state.matching.racked)completeMission(3,"Patient matched and sample received safely.");return;}
     if(action==="agar"){if(value==="blood")completeMission(4,"Excellent! You selected blood agar for this investigation.");else setFeedback("Not this one! This agar is designed for a different investigation. Try again.","try");return;}

@@ -108,7 +108,7 @@
       feedback: "", ppe: [], selectedPpe: null, mission5: { step: 0 }, mission6: { step: 0 },
       mission7: { step: 0 }, gram: { mode: null, step: 0, paused: false, complete: false },
       mission9: { placed: false }, mission10: { step: 0 }, selectedAnswers: {},
-      matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false }
+      matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false, sampleSelected: false }
     };
   }
 
