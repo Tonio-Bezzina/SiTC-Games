@@ -10,6 +10,12 @@
   let timerCounter = 0;
   let missionTransition = false;
   let missionTransitionTimer = null;
+  let openSampleInfo = null;
+  const SAMPLE_INFO = {
+    urine: { title:"Urine sample", file:"urine-sample.png", what:"Urine collected in a clean, sterile specimen cup.", use:"It can be cultured when a urinary tract infection is suspected, helping the laboratory look for bacteria from the urinary system." },
+    blood: { title:"Blood culture", file:"blood-culture.png", what:"A special bottle containing a blood sample and culture medium.", use:"It is used when a bloodstream infection is suspected, allowing the laboratory to check whether bacteria or other germs grow from the blood." },
+    swab: { title:"Throat swab", file:"throat-swab.png", what:"A sterile swab used to collect material from the back of the throat and tonsils.", use:"It can be tested or cultured when a bacterial throat infection such as group A strep is suspected." }
+  };
 
   function load() {
     try {
@@ -89,12 +95,15 @@
 
   function mission2() {
     const options = [
-      ["🫙","Urine sample","A sample from the urinary system","urine"],
-      ["🧴","Blood culture","A bottle used when bacteria may be in blood","blood"],
-      ["🧪","Throat swab","A swab collected from the throat","swab"]
+      ["urine","Urine sample","A sample from the urinary system","urine-sample.png"],
+      ["blood","Blood culture","A bottle used when bacteria may be in blood","blood-culture.png"],
+      ["swab","Throat swab","A swab collected from the throat","throat-swab.png"]
     ];
+    const specimen = ([value,title,sub,file]) => `<div class="specimen-option"><button class="choice specimen-choice" data-action="sample" data-value="${value}" aria-label="Choose ${title}"><img src="assets/mission-2/${file}" alt=""><strong>${title}</strong>${state.age==="junior"?"":`<small>${sub}</small>`}</button><button class="sample-info-button" data-action="sample-info" data-value="${value}" aria-label="Learn about ${title}">?</button></div>`;
+    const info = SAMPLE_INFO[openSampleInfo];
+    const infoDialog = info ? `<div class="sample-info-backdrop" data-action="close-sample-info"><section class="sample-info-dialog" role="dialog" aria-modal="true" aria-labelledby="sample-info-title"><button class="sample-info-close" data-action="close-sample-info" aria-label="Close sample information">×</button><img src="assets/mission-2/${info.file}" alt=""><div><div class="mission-label">Sample guide</div><h2 id="sample-info-title">${info.title}</h2><p><strong>What it is:</strong> ${info.what}</p><p><strong>Where it is used:</strong> ${info.use}</p></div></section></div>` : "";
     const completion = state.completed.includes(2) ? learning("Different infections require samples from different parts of the body.")+`<div class="actions">${btn("Mission 3 →","continue")}</div>` : "";
-    return shell(`<div class="mission-two-scene" aria-label="Inside the bacteriology laboratory"><img class="mission-two-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-two-title">${missionHeader(2,"What sample do we need?","Our patient has a sore throat. Which sample should the doctor take to look for bacteria that may be causing the infection?")}</div><div class="mission-two-feedback">${feedback()}${completion}</div><div class="mission-two-choices">${options.map(o=>choice(o[0],o[1],state.age==="junior"?"":o[2],"sample",o[3])).join("")}</div></div>`, "Think about where the patient's infection is. You can retry any choice.");
+    return shell(`<div class="mission-two-scene" aria-label="Inside the bacteriology laboratory"><img class="mission-two-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-two-title">${missionHeader(2,"What sample do we need?","Our patient has a sore throat. Which sample should the doctor take to look for bacteria that may be causing the infection?")}</div><div class="mission-two-feedback">${feedback()}${completion}</div><div class="mission-two-choices">${options.map(specimen).join("")}</div>${infoDialog}</div>`, "Think about where the patient's infection is. You can retry any choice.");
   }
 
   function fieldRows(person, mismatch = []) {
@@ -265,6 +274,21 @@
       }
       return;
     }
+    if(action==="sample-info"){
+      openSampleInfo=value;
+      render();
+      announce(`${SAMPLE_INFO[value].title} information opened.`);
+      document.querySelector(".sample-info-close")?.focus();
+      return;
+    }
+    if(action==="close-sample-info"){
+      if(target.classList.contains("sample-info-backdrop")&&ev.target!==target)return;
+      const valueToFocus=openSampleInfo;
+      openSampleInfo=null;
+      render();
+      document.querySelector(`[data-action="sample-info"][data-value="${valueToFocus}"]`)?.focus();
+      return;
+    }
     if(action==="sample"){if(value==="swab")completeMission(2,"Correct! A throat swab collects a sample from the throat so the laboratory can look for bacteria.");else setFeedback("Not this one! This sample comes from a different part of the body. Think about where the infection is.","try");return;}
     if(action==="open-carrier"){state.matching.carrierOpen=true;state.matching.clueSeen=true;setFeedback("Carrier open. Inspect a complete bottle-and-paper set before selecting it.","good");return;}
     if(action==="inspect"){state.matching.expanded=state.matching.expanded===Number(value)?null:Number(value);state.matching.mismatch=[];state.feedback="Opening a set is for inspection—it does not submit an answer.";state.feedbackType="";save();render();if(state.matching.expanded!=null)setTimeout(()=>document.querySelector('[data-action="select-candidate"]')?.focus(),0);return;}
@@ -300,7 +324,22 @@
     if(action==="new-case"){localStorage.removeItem(STORAGE);state=L.initialState();render();return;}
   });
 
-  window.addEventListener("keydown",ev=>{if((ev.key==="Enter"||ev.key===" ")&&document.activeElement?.dataset.drop==="rack"){ev.preventDefault();rackSample();}});
+  window.addEventListener("keydown",ev=>{
+    if(openSampleInfo&&ev.key==="Escape"){
+      ev.preventDefault();
+      const valueToFocus=openSampleInfo;
+      openSampleInfo=null;
+      render();
+      document.querySelector(`[data-action="sample-info"][data-value="${valueToFocus}"]`)?.focus();
+      return;
+    }
+    if(openSampleInfo&&ev.key==="Tab"){
+      ev.preventDefault();
+      document.querySelector(".sample-info-close")?.focus();
+      return;
+    }
+    if((ev.key==="Enter"||ev.key===" ")&&document.activeElement?.dataset.drop==="rack"){ev.preventDefault();rackSample();}
+  });
   const orientationQuery=matchMedia("(orientation: portrait) and (max-width: 900px)");
   orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);if(state.gram?.running){state.gram.running=false;save();}}else render();});
   render();
