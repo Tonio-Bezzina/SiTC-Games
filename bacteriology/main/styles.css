@@ -179,10 +179,10 @@ h2, h3 { line-height: 1.15; }
 
 /* Mission 1 layered preparation room ----------------------------------- */
 .mission-one-screen .screen-scroll { padding:0; overflow:hidden; scrollbar-gutter:auto; }
-.ppe-scene { position:absolute; inset:0; overflow:hidden; isolation:isolate; background:#d9edf3; }
+.ppe-scene { position:absolute; inset:0; overflow:hidden; background:#d9edf3; }
 .ppe-background { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; }
 .mission-one-title {
-  position:absolute; z-index:12; left:2%; top:2%; width:37%; padding:clamp(7px,1.2vw,15px);
+  position:absolute; z-index:12; right:2%; top:2%; width:37%; padding:clamp(7px,1.2vw,15px);
   color:#071b36; border-radius:clamp(10px,1.4vw,18px); background:rgba(246,252,255,.92); box-shadow:0 8px 24px rgba(4,25,43,.22);
 }
 .mission-one-title .mission-label { color:#076a73; }
@@ -204,16 +204,21 @@ h2, h3 { line-height: 1.15; }
 .ppe-item span { position:absolute; left:50%; bottom:-2px; transform:translate(-50%,100%); white-space:nowrap; padding:.2em .55em; border-radius:99px; background:rgba(5,35,49,.9); color:white; font-size:clamp(.58rem,.9vw,.8rem); font-weight:900; }
 .ppe-item.is-selected { outline:4px solid var(--yellow); outline-offset:2px; border-radius:12px; }
 .ppe-item.is-equipped { opacity:.46; }
-.ppe-coat { left:2.5%; top:17%; width:14%; height:47%; }
-.ppe-hat { right:3.2%; top:10%; width:12%; height:35%; }
+.ppe-coat { left:30.5%; top:17%; width:14%; height:47%; z-index:1; }
+.ppe-coat span { display:none; }
+.ppe-coat-select { position:absolute; z-index:9; left:29%; top:61%; min-width:44px; min-height:44px; padding:6px 12px; border:2px solid white; border-radius:999px; background:rgba(5,35,49,.94); color:white; font:inherit; font-size:clamp(.65rem,.9vw,.8rem); font-weight:900; cursor:grab; touch-action:none; box-shadow:0 6px 14px rgba(0,0,0,.3); }
+.ppe-coat-select.is-selected { outline:4px solid var(--yellow); outline-offset:2px; }
+.ppe-coat-select.is-equipped { opacity:.46; }
+.ppe-hat { left:23.2%; top:15%; width:12%; height:35%; }
 .ppe-gloves { left:17%; bottom:7%; width:15%; height:24%; }
 .ppe-glasses { right:20%; bottom:7%; width:15%; height:21%; }
 .ppe-visor { right:3%; bottom:7%; width:15%; height:27%; }
 .mission-one-result {
-  position:absolute; z-index:14; right:2%; top:2%; width:31%; padding:clamp(7px,1vw,13px); color:#082139;
-  border-radius:clamp(10px,1.4vw,18px); background:rgba(247,252,255,.94); box-shadow:0 8px 24px rgba(4,25,43,.22);
+  position:absolute; z-index:30; inset:0; display:grid; place-items:center; padding:clamp(12px,3vw,36px);
+  color:#082139; background:rgba(3,20,37,.58); backdrop-filter:blur(2px);
 }
-.mission-one-result p { margin:0; font-weight:800; }
+.mission-one-result-card { width:min(92%,620px); padding:clamp(18px,3vw,34px); border:2px solid rgba(255,255,255,.8); border-radius:clamp(14px,2vw,24px); background:rgba(247,252,255,.98); box-shadow:0 18px 48px rgba(4,25,43,.42); }
+.mission-one-result p { margin:0; font-weight:800; font-size:clamp(1rem,1.6vw,1.35rem); }
 .mission-one-result .learning { margin:0; color:#173b52; background:rgba(7,27,54,.06); }
 .mission-one-result .actions { justify-content:flex-end; }
 .native-drag-image { position:fixed; left:-1000px; top:-1000px; width:110px; height:110px; object-fit:contain; }
@@ -226,9 +231,10 @@ h2, h3 { line-height: 1.15; }
   .game-footer { display:grid; padding:4px 10px; }
   .game-footer .guide-avatar { width:34px; height:34px; font-size:1.3rem; }
   .screen-scroll { padding:10px; }
-  .mission-one-title { width:39%; top:1.5%; left:1.5%; padding:6px 8px; }
+  .mission-one-title { width:39%; top:1.5%; right:2%; padding:6px 8px; }
   .mission-one-title .instruction { display:none; }
-  .mission-one-result { top:1.5%; right:1.5%; padding:6px 8px; }
+  .mission-one-result { padding:8px; }
+  .mission-one-result-card { width:min(88%,560px); padding:10px 14px; }
   .scientist-stack { height:98%; bottom:-4%; }
   .ppe-countertop { height:39%; bottom:-9%; }
   .ppe-item span { font-size:.56rem; }
@@ -243,10 +249,8 @@ h2, h3 { line-height: 1.15; }
   .game-footer p { display:inline; }
   .mission-one-title .lede { font-size:.68rem; }
   .mission-one-title h1 { font-size:1.2rem; }
-  .ppe-coat { left:2%; }
 }
 @media (max-width:900px) and (orientation:landscape) {
   .brand span:last-child { display:none; }
   .mission-one-title { width:40%; }
-  .mission-one-result { width:34%; }
 }
