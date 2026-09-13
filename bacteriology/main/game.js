@@ -11,10 +11,17 @@
   let missionTransition = false;
   let missionTransitionTimer = null;
   let openSampleInfo = null;
+  let openAgarInfo = null;
   const SAMPLE_INFO = {
     urine: { title:"Urine sample", file:"urine-sample.png", what:"Urine collected in a clean, sterile specimen cup.", use:"It can be cultured when a urinary tract infection is suspected, helping the laboratory look for bacteria from the urinary system." },
     blood: { title:"Blood culture", file:"blood-culture.png", what:"A special bottle containing a blood sample and culture medium.", use:"It is used when a bloodstream infection is suspected, allowing the laboratory to check whether bacteria or other germs grow from the blood." },
     swab: { title:"Throat swab", file:"throat-swab.png", what:"A sterile swab used to collect material from the back of the throat and tonsils.", use:"It can be tested or cultured when a bacterial throat infection such as group A strep is suspected." }
+  };
+  const AGAR_INFO = {
+    blood: { title:"Blood agar", file:"blood-agar.png", what:"An enriched red culture medium containing blood.", use:"It supports many bacteria and lets scientists see haemolysis. For this throat swab, it can show the beta-haemolysis associated with Streptococcus pyogenes." },
+    chocolate: { title:"Chocolate agar", file:"chocolate-agar.png", what:"An enriched brown medium made using heated blood, which releases nutrients needed by fastidious bacteria.", use:"It is commonly used to grow demanding organisms such as Haemophilus and Neisseria. It is not the selected medium for this throat-culture mission." },
+    salmonella: { title:"Salmonella chromogenic agar", file:"salmonella-chromogenic-agar.png", what:"A selective and differential medium containing chromogens that can produce distinctive colony colours.", use:"It is used for the presumptive detection of Salmonella, especially from faecal, food or environmental samples." },
+    cled: { title:"CLED agar", file:"cled-agar.png", what:"Cystine–lactose–electrolyte-deficient agar, a pale blue-green differential medium.", use:"It is mainly used for urine cultures to isolate and count common urinary pathogens. Its low electrolyte content limits Proteus swarming." }
   };
 
   function load() {
@@ -71,7 +78,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -145,8 +152,17 @@
   }
 
   function mission4() {
-    const plates = [["🔴","Blood agar","blood"],["🟤","Chocolate agar","chocolate"],["🟣","Salmonella chromogenic agar","salmonella"],["🟢","CLED agar","cled"]];
-    return shell(`${missionHeader(4,"Choose the correct agar","Which agar plate should we use to grow bacteria from this throat swab?")}<div class="grid grid-4">${plates.map(p=>choice(p[0],p[1],"Culture medium","agar",p[2])).join("")}</div>${feedback()}${state.completed.includes(4)?learning("Different culture media are used for different organisms and specimens.")+`<div class="actions">${btn("Mission 5 →","continue")}</div>`:""}`, "The sample is a throat swab. Choose the medium specified for this investigation.");
+    const plates = [
+      ["blood","Blood agar","Shows haemolysis","blood-agar.png"],
+      ["chocolate","Chocolate agar","For fastidious bacteria","chocolate-agar.png"],
+      ["salmonella","Salmonella chromogenic agar","For Salmonella detection","salmonella-chromogenic-agar.png"],
+      ["cled","CLED agar","Commonly used for urine","cled-agar.png"]
+    ];
+    const plate = ([value,title,sub,file]) => `<div class="agar-option"><button class="choice agar-choice" data-action="agar" data-value="${value}" aria-label="Choose ${title}"><img src="assets/mission-4/${file}" alt=""><strong>${title}</strong>${state.age==="junior"?"":`<small>${sub}</small>`}</button><button class="agar-info-button" data-action="agar-info" data-value="${value}" aria-label="Learn about ${title}">?</button></div>`;
+    const info = AGAR_INFO[openAgarInfo];
+    const infoDialog = info ? `<div class="sample-info-backdrop" data-action="close-agar-info"><section class="sample-info-dialog" role="dialog" aria-modal="true" aria-labelledby="agar-info-title"><button class="sample-info-close" data-action="close-agar-info" aria-label="Close agar information">×</button><img src="assets/mission-4/${info.file}" alt=""><div><div class="mission-label">Agar guide</div><h2 id="agar-info-title">${info.title}</h2><p><strong>What it is:</strong> ${info.what}</p><p><strong>Where it is used:</strong> ${info.use}</p></div></section></div>` : "";
+    const completion = state.completed.includes(4) ? learning("Different culture media are used for different organisms and specimens.")+`<div class="actions">${btn("Mission 5 →","continue")}</div>` : "";
+    return shell(`<div class="mission-four-scene" aria-label="Agar selection inside the bacteriology laboratory"><img class="mission-four-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-four-title">${missionHeader(4,"Choose the correct agar","Which agar plate should we use to grow bacteria from this throat swab?")}</div><div class="mission-four-feedback">${feedback()}${completion}</div><div class="mission-four-choices">${plates.map(plate).join("")}</div>${infoDialog}</div>`, "The sample is a throat swab. Choose the medium specified for this investigation.");
   }
 
   function mission5() {
@@ -313,6 +329,21 @@
       document.querySelector(`[data-action="sample-info"][data-value="${valueToFocus}"]`)?.focus();
       return;
     }
+    if(action==="agar-info"){
+      openAgarInfo=value;
+      render();
+      announce(`${AGAR_INFO[value].title} information opened.`);
+      document.querySelector(".sample-info-close")?.focus();
+      return;
+    }
+    if(action==="close-agar-info"){
+      if(target.classList.contains("sample-info-backdrop")&&ev.target!==target)return;
+      const valueToFocus=openAgarInfo;
+      openAgarInfo=null;
+      render();
+      document.querySelector(`[data-action="agar-info"][data-value="${valueToFocus}"]`)?.focus();
+      return;
+    }
     if(action==="sample"){if(value==="swab")completeMission(2,"Correct! A throat swab collects a sample from the throat so the laboratory can look for bacteria.");else setFeedback("Not this one! This sample comes from a different part of the body. Think about where the infection is.","try");return;}
     if(action==="open-carrier"){state.matching.carrierOpen=true;state.matching.clueSeen=true;setFeedback("Carrier open. Inspect a complete bottle-and-paper set before selecting it.","good");return;}
     if(action==="inspect"){state.matching.expanded=state.matching.expanded===Number(value)?null:Number(value);state.matching.mismatch=[];state.feedback="Opening a set is for inspection—it does not submit an answer.";state.feedbackType="";save();render();if(state.matching.expanded!=null)setTimeout(()=>document.querySelector('[data-action="select-candidate"]')?.focus(),0);return;}
@@ -357,6 +388,19 @@
   });
 
   window.addEventListener("keydown",ev=>{
+    if(openAgarInfo&&ev.key==="Escape"){
+      ev.preventDefault();
+      const valueToFocus=openAgarInfo;
+      openAgarInfo=null;
+      render();
+      document.querySelector(`[data-action="agar-info"][data-value="${valueToFocus}"]`)?.focus();
+      return;
+    }
+    if(openAgarInfo&&ev.key==="Tab"){
+      ev.preventDefault();
+      document.querySelector(".sample-info-close")?.focus();
+      return;
+    }
     if(openSampleInfo&&ev.key==="Escape"){
       ev.preventDefault();
       const valueToFocus=openSampleInfo;

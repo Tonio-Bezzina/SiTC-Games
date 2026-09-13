@@ -319,12 +319,13 @@ h2, h3 { line-height: 1.15; }
 .specimen-choice { width:100%; height:clamp(104px,23vh,196px); padding:clamp(5px,.8vw,10px)!important; }
 .specimen-choice img { width:100%; height:clamp(62px,15vh,128px); object-fit:contain; pointer-events:none; filter:drop-shadow(0 7px 8px rgba(0,0,0,.28)); }
 .specimen-choice strong { margin-top:-.15em; }
-.sample-info-button {
+.sample-info-button,
+.agar-info-button {
   position:absolute; z-index:7; top:clamp(5px,.8vw,10px); right:clamp(5px,.8vw,10px); width:44px; height:44px;
   display:grid; place-items:center; padding:0; border:2px solid white; border-radius:50%; background:#ffd166; color:#071b36;
   font:900 clamp(1.15rem,2vw,1.5rem)/1 inherit; cursor:pointer; box-shadow:0 5px 12px rgba(4,25,43,.32);
 }
-.sample-info-button:hover { transform:scale(1.08); background:#ffe092; }
+.sample-info-button:hover,.agar-info-button:hover { transform:scale(1.08); background:#ffe092; }
 .sample-info-backdrop {
   position:absolute; inset:0; z-index:80; display:grid; place-items:center; padding:clamp(10px,2vw,24px);
   background:rgba(3,20,37,.72); backdrop-filter:blur(3px);
@@ -341,7 +342,41 @@ h2, h3 { line-height: 1.15; }
   position:absolute; z-index:2; top:8px; right:8px; width:44px; height:44px; padding:0; border:0; border-radius:50%;
   background:#173d63; color:white; font:900 1.75rem/1 inherit; cursor:pointer;
 }
-.sample-info-button:focus-visible,.sample-info-close:focus-visible { outline:4px solid #fff; outline-offset:3px; box-shadow:0 0 0 7px #076a73; }
+.sample-info-button:focus-visible,.agar-info-button:focus-visible,.sample-info-close:focus-visible { outline:4px solid #fff; outline-offset:3px; box-shadow:0 0 0 7px #076a73; }
+
+/* Mission 4 agar-media selection --------------------------------------- */
+.mission-four-screen .screen-scroll { padding:0; overflow:hidden; scrollbar-gutter:auto; }
+.mission-four-scene { position:absolute; inset:0; overflow:hidden; background:#dceef6; color:#071b36; }
+.mission-four-background { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; }
+.mission-four-title,
+.mission-four-feedback {
+  position:absolute; z-index:4; top:3%; padding:clamp(10px,1.5vw,18px); border:1px solid rgba(255,255,255,.8);
+  border-radius:clamp(12px,1.5vw,20px); background:rgba(247,252,255,.94); box-shadow:0 10px 28px rgba(4,25,43,.25);
+}
+.mission-four-title { left:3%; width:53%; }
+.mission-four-title .mission-label { color:#076a73; }
+.mission-four-title h1 { margin:.12em 0; color:#071b36; }
+.mission-four-title .lede { margin:0; color:#173b52; }
+.mission-four-feedback { right:3%; width:36%; }
+.mission-four-feedback .feedback { margin:0; color:white; background:rgba(7,27,54,.92); }
+.mission-four-feedback .learning { color:#173b52; background:rgba(7,27,54,.06); }
+.mission-four-choices {
+  position:absolute; z-index:5; left:3%; right:3%; bottom:3%; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:clamp(7px,1.15vw,15px);
+}
+.agar-option { position:relative; min-width:0; }
+.agar-choice {
+  width:100%; height:clamp(110px,24vh,205px); min-height:0!important; padding:clamp(5px,.75vw,10px)!important;
+  display:grid!important; grid-template-rows:minmax(0,1fr) auto auto; place-items:center; align-content:center; text-align:center;
+  background:linear-gradient(145deg,rgba(17,63,96,.96),rgba(7,35,63,.97)); box-shadow:0 10px 24px rgba(4,25,43,.3);
+}
+.agar-choice img { width:100%; height:100%; min-height:0; object-fit:contain; pointer-events:none; filter:drop-shadow(0 7px 8px rgba(0,0,0,.28)); }
+.agar-choice strong { font-size:clamp(.72rem,1.15vw,1rem); line-height:1.05; }
+.agar-choice small { font-size:clamp(.6rem,.82vw,.76rem); line-height:1.1; }
+.agar-info-button {
+  position:absolute; z-index:7; top:clamp(5px,.8vw,10px); right:clamp(5px,.8vw,10px); width:44px; height:44px;
+  display:grid; place-items:center; padding:0; border:2px solid white; border-radius:50%; background:#ffd166; color:#071b36;
+  font:900 clamp(1.15rem,2vw,1.5rem)/1 inherit; cursor:pointer; box-shadow:0 5px 12px rgba(4,25,43,.32);
+}
 
 @media (max-height:520px) and (orientation:landscape) {
   #gameStage { grid-template-rows:42px minmax(0,1fr) 52px; }
@@ -357,7 +392,7 @@ h2, h3 { line-height: 1.15; }
   .scientist-stack { height:98%; bottom:-4%; }
   .ppe-countertop { height:39%; bottom:-9%; }
   .ppe-item span { font-size:.56rem; }
-  .mission-two-title,.mission-two-feedback { top:2%; padding:7px 9px; }
+  .mission-two-title,.mission-two-feedback,.mission-four-title,.mission-four-feedback { top:2%; padding:7px 9px; }
   .mission-two-title { left:2%; width:49%; }
   .mission-two-feedback { right:2%; width:44%; }
   .mission-two-title h1 { font-size:1.2rem; }
@@ -372,6 +407,19 @@ h2, h3 { line-height: 1.15; }
   .specimen-choice { height:94px; }
   .specimen-choice img { height:58px; }
   .sample-info-button { top:3px; right:3px; width:44px; height:44px; min-width:44px; min-height:44px; }
+  .mission-four-title { left:2%; width:49%; }
+  .mission-four-feedback { right:2%; width:44%; }
+  .mission-four-title h1 { font-size:1.2rem; }
+  .mission-four-title .lede { font-size:.68rem; line-height:1.2; }
+  .mission-four-feedback .feedback { min-height:36px; padding:6px 8px; font-size:.7rem; }
+  .mission-four-feedback .learning { margin-top:5px; padding:6px 8px; font-size:.68rem; }
+  .mission-four-feedback .actions { margin-top:5px; }
+  .mission-four-feedback .btn { padding:7px 10px; }
+  .mission-four-choices { left:2%; right:2%; bottom:2%; gap:6px; }
+  .agar-choice { height:96px; }
+  .agar-choice strong { font-size:.66rem; }
+  .agar-choice small { display:none; }
+  .agar-info-button { top:3px; right:3px; width:44px; height:44px; min-width:44px; min-height:44px; }
   .sample-info-dialog { width:min(94%,680px); grid-template-columns:90px 1fr; gap:10px; padding:10px 12px; }
   .sample-info-dialog > img { max-height:150px; }
   .sample-info-dialog h2 { font-size:1.05rem; margin:.05em 0 .25em; }
@@ -398,6 +446,11 @@ h2, h3 { line-height: 1.15; }
   .sample-info-dialog { grid-template-columns:76px 1fr; }
   .sample-info-dialog > img { max-height:118px; }
   .sample-info-dialog p { font-size:.75rem; }
+  .mission-four-title h1 { font-size:1.05rem; }
+  .mission-four-title .lede { font-size:.62rem; }
+  .mission-four-feedback .feedback { font-size:.64rem; }
+  .agar-choice { height:82px; }
+  .agar-choice strong { font-size:.6rem; }
 }
 @media (max-width:900px) and (orientation:landscape) {
   .brand span:last-child { display:none; }
