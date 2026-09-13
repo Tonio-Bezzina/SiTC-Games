@@ -8,6 +8,8 @@
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let timer = null;
   let timerCounter = 0;
+  let missionTransition = false;
+  let missionTransitionTimer = null;
 
   function load() {
     try {
@@ -62,8 +64,9 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : "screen";
-    return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section></main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : "screen";
+    const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
+    return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
 
   function startScreen() {
@@ -90,7 +93,8 @@
       ["🧴","Blood culture","A bottle used when bacteria may be in blood","blood"],
       ["🧪","Throat swab","A swab collected from the throat","swab"]
     ];
-    return shell(`${missionHeader(2,"What sample do we need?","Our patient has a sore throat. Which sample should the doctor take to look for bacteria that may be causing the infection?")}<div class="grid grid-3">${options.map(o=>choice(o[0],o[1],state.age==="junior"?"":o[2],"sample",o[3])).join("")}</div>${feedback()}${state.completed.includes(2)?learning("Different infections require samples from different parts of the body.")+`<div class="actions">${btn("Mission 3 →","continue")}</div>`:""}`, "Think about where the patient's infection is. You can retry any choice.");
+    const completion = state.completed.includes(2) ? learning("Different infections require samples from different parts of the body.")+`<div class="actions">${btn("Mission 3 →","continue")}</div>` : "";
+    return shell(`<div class="mission-two-scene" aria-label="Inside the bacteriology laboratory"><img class="mission-two-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-two-title">${missionHeader(2,"What sample do we need?","Our patient has a sore throat. Which sample should the doctor take to look for bacteria that may be causing the infection?")}</div><div class="mission-two-feedback">${feedback()}${completion}</div><div class="mission-two-choices">${options.map(o=>choice(o[0],o[1],state.age==="junior"?"":o[2],"sample",o[3])).join("")}</div></div>`, "Think about where the patient's infection is. You can retry any choice.");
   }
 
   function fieldRows(person, mismatch = []) {
@@ -251,10 +255,13 @@
       if(state.ppe.includes("coat")&&state.ppe.includes("gloves")){
         const message = "Excellent! You chose the correct PPE. Now we’re ready to enter the laboratory!";
         if(!state.completed.includes(1))state.completed.push(1);
+        clearTimeout(missionTransitionTimer);
+        missionTransition=!reducedMotion;
         state.mission=2;
         state.feedback=message;
         state.feedbackType="good";
         save(); announce(message); render();
+        if(missionTransition)missionTransitionTimer=setTimeout(()=>{missionTransition=false;render();},1350);
       }
       return;
     }

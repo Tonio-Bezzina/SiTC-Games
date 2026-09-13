@@ -224,6 +224,52 @@ h2, h3 { line-height: 1.15; }
 .native-drag-image { position:fixed; left:-1000px; top:-1000px; width:110px; height:110px; object-fit:contain; }
 .ppe-drag-ghost { position:fixed; z-index:2000; width:clamp(70px,12vw,130px); height:clamp(70px,12vw,130px); object-fit:contain; pointer-events:none; transform:translate(-50%,-50%); filter:drop-shadow(0 8px 10px rgba(0,0,0,.38)); }
 
+/* Mission 1 to Mission 2 doorway transition ---------------------------- */
+.mission-door-transition {
+  position:absolute; inset:0; z-index:100; overflow:hidden; pointer-events:auto; cursor:progress; background:#d9edf3;
+  animation:mission-door-fade 1.35s ease-in forwards;
+}
+.mission-door-transition img {
+  width:100%; height:100%; object-fit:cover; transform-origin:57.4% 43%;
+  animation:mission-door-zoom 1.35s cubic-bezier(.45,.02,.74,.52) forwards;
+}
+@keyframes mission-door-zoom {
+  0% { transform:scale(1); filter:blur(0); }
+  72% { transform:scale(4.5); filter:blur(0); }
+  100% { transform:scale(5.4); filter:blur(3px); }
+}
+@keyframes mission-door-fade {
+  0%,68% { opacity:1; }
+  100% { opacity:0; }
+}
+
+/* Mission 2 layered laboratory interior -------------------------------- */
+.mission-two-screen .screen-scroll { padding:0; overflow:hidden; scrollbar-gutter:auto; }
+.mission-two-scene { position:absolute; inset:0; overflow:hidden; background:#dceef6; color:#071b36; }
+.mission-two-background { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; }
+.mission-two-title,
+.mission-two-feedback {
+  position:absolute; z-index:4; top:3%; padding:clamp(10px,1.5vw,18px); border:1px solid rgba(255,255,255,.8);
+  border-radius:clamp(12px,1.5vw,20px); background:rgba(247,252,255,.94); box-shadow:0 10px 28px rgba(4,25,43,.25);
+}
+.mission-two-title { left:3%; width:53%; }
+.mission-two-title .mission-label { color:#076a73; }
+.mission-two-title h1 { margin:.12em 0; color:#071b36; }
+.mission-two-title .lede { margin:0; color:#173b52; }
+.mission-two-feedback { right:3%; width:36%; }
+.mission-two-feedback .feedback { margin:0; color:white; background:rgba(7,27,54,.92); }
+.mission-two-feedback .learning { color:#173b52; background:rgba(7,27,54,.06); }
+.mission-two-choices {
+  position:absolute; z-index:5; left:5%; right:5%; bottom:3%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(8px,1.4vw,18px);
+}
+.mission-two-choices .choice {
+  min-height:clamp(76px,15vh,132px); display:grid; place-items:center; align-content:center; text-align:center;
+  background:linear-gradient(145deg,rgba(17,63,96,.96),rgba(7,35,63,.97)); box-shadow:0 10px 24px rgba(4,25,43,.3);
+}
+.mission-two-choices .big-icon { margin:0 0 .12em; }
+.mission-two-choices .choice strong { font-size:clamp(.8rem,1.35vw,1.1rem); }
+.mission-two-choices .choice small { font-size:clamp(.68rem,1vw,.88rem); }
+
 @media (max-height:520px) and (orientation:landscape) {
   #gameStage { grid-template-rows:42px minmax(0,1fr) 52px; }
   .topbar { padding:4px 10px; gap:8px; }
@@ -238,6 +284,18 @@ h2, h3 { line-height: 1.15; }
   .scientist-stack { height:98%; bottom:-4%; }
   .ppe-countertop { height:39%; bottom:-9%; }
   .ppe-item span { font-size:.56rem; }
+  .mission-two-title,.mission-two-feedback { top:2%; padding:7px 9px; }
+  .mission-two-title { left:2%; width:49%; }
+  .mission-two-feedback { right:2%; width:44%; }
+  .mission-two-title h1 { font-size:1.2rem; }
+  .mission-two-title .lede { font-size:.68rem; line-height:1.2; }
+  .mission-two-feedback .feedback { min-height:36px; padding:6px 8px; font-size:.7rem; }
+  .mission-two-feedback .learning { margin-top:5px; padding:6px 8px; font-size:.68rem; }
+  .mission-two-feedback .actions { margin-top:5px; }
+  .mission-two-feedback .btn { padding:7px 10px; }
+  .mission-two-choices { left:3%; right:3%; bottom:2%; gap:8px; }
+  .mission-two-choices .choice { min-height:68px; padding:6px; }
+  .mission-two-choices .big-icon { font-size:1.6rem; }
 }
 @media (max-height:430px) and (orientation:landscape) {
   #gameStage { grid-template-rows:38px minmax(0,1fr) 46px; }
@@ -249,6 +307,11 @@ h2, h3 { line-height: 1.15; }
   .game-footer p { display:inline; }
   .mission-one-title .lede { font-size:.68rem; }
   .mission-one-title h1 { font-size:1.2rem; }
+  .mission-two-title h1 { font-size:1.05rem; }
+  .mission-two-title .lede { font-size:.62rem; }
+  .mission-two-feedback .feedback { font-size:.64rem; }
+  .mission-two-choices .choice { min-height:60px; }
+  .mission-two-choices .big-icon { font-size:1.35rem; }
 }
 @media (max-width:900px) and (orientation:landscape) {
   .brand span:last-child { display:none; }
