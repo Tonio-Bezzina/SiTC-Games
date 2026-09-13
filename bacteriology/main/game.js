@@ -247,7 +247,17 @@
     if(action==="continue"){continueMission();return;}
     if(action==="ppe"){selectPpe(value);return;}
     if(action==="apply-ppe"){if(state.selectedPpe)handlePpe(state.selectedPpe);return;}
-    if(action==="complete-1"){if(state.ppe.includes("coat")&&state.ppe.includes("gloves"))completeMission(1,"Excellent! You chose the correct PPE. Now we’re ready to enter the laboratory!");return;}
+    if(action==="complete-1"){
+      if(state.ppe.includes("coat")&&state.ppe.includes("gloves")){
+        const message = "Excellent! You chose the correct PPE. Now we’re ready to enter the laboratory!";
+        if(!state.completed.includes(1))state.completed.push(1);
+        state.mission=2;
+        state.feedback=message;
+        state.feedbackType="good";
+        save(); announce(message); render();
+      }
+      return;
+    }
     if(action==="sample"){if(value==="swab")completeMission(2,"Correct! A throat swab collects a sample from the throat so the laboratory can look for bacteria.");else setFeedback("Not this one! This sample comes from a different part of the body. Think about where the infection is.","try");return;}
     if(action==="open-carrier"){state.matching.carrierOpen=true;state.matching.clueSeen=true;setFeedback("Carrier open. Inspect a complete bottle-and-paper set before selecting it.","good");return;}
     if(action==="inspect"){state.matching.expanded=state.matching.expanded===Number(value)?null:Number(value);state.matching.mismatch=[];state.feedback="Opening a set is for inspection—it does not submit an answer.";state.feedbackType="";save();render();if(state.matching.expanded!=null)setTimeout(()=>document.querySelector('[data-action="select-candidate"]')?.focus(),0);return;}
