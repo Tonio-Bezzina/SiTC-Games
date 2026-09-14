@@ -33,6 +33,18 @@
   let state = load();
   if (!("selectedPpe" in state)) state.selectedPpe = null;
   if (!("sampleSelected" in state.matching)) state.matching.sampleSelected = false;
+  const m5Defaults = L.initialState().mission5;
+  const legacyM5 = state.mission5 || {};
+  const previousM5Step = Number(legacyM5.step || 0);
+  const hasModernM5 = "swabOpen" in legacyM5;
+  state.mission5 = { ...m5Defaults, ...legacyM5 };
+  if (!hasModernM5 && previousM5Step > 0) {
+    state.mission5.swabOpen = previousM5Step >= 1;
+    state.mission5.plateOpen = previousM5Step >= 2;
+    state.mission5.inoculated = previousM5Step >= 3;
+    state.mission5.swabClosed = previousM5Step >= 4;
+    if (previousM5Step >= 5) { state.mission5.loopLoaded = true; state.mission5.streakStage = 3; }
+  }
   if (state.gram && state.gram.running) state.gram.running = false;
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
 
@@ -78,7 +90,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -166,10 +178,26 @@
   }
 
   function mission5() {
-    const s = state.mission5.step;
-    const instructions = ["First, open the sample.","Now open the culture plate.","Create a small starting area of the sample here.","Close the swab before continuing.","Use the 10 µL loop through the pool, then streak across the rest of the plate.","Excellent streaking!"];
-    const actionLabels = ["Open throat swab","Open culture plate","Apply swab to starting area","Close throat swab","Streak with 10 µL loop"];
-    return shell(`${missionHeader(5,"Streak the plate","Create the initial inoculation area, then spread the material so separate colonies can grow.")}<div class="instruction"><strong>Step ${Math.min(s+1,5)}:</strong> ${instructions[s]}</div><div class="lab-bench"><div class="plate" data-drop="streak" tabindex="0" aria-label="Blood agar plate${s>=2?" with initial inoculation pool":""}${s>=5?" and completed streak pattern":""}">${s>=3?'<span class="pool"></span>':""}${s>=5?'<span class="streaks"></span>':""}</div><div class="actions" style="justify-content:center">${s<5?btn(actionLabels[s],"streak-step",s===4?"coral":""):""}</div></div>${feedback()}${s>=5?learning("Streaking helps spread the bacteria out so that separate colonies can grow.","Each visible colony may have grown from a single bacterium or a small group of bacteria.")+`<div class="actions">${state.completed.includes(5)?btn("Mission 6 →","continue"):btn("Finish Mission 5","complete-5","coral")}</div>`:""}`, s<3?"Follow the safe on-screen steps in order.":"The swab makes a small pool first. The loop streaks from that pool across the remainder of the plate.");
+    const m = state.mission5;
+    const phase = !m.swabOpen ? 0 : !m.plateOpen ? 1 : !m.inoculated ? 2 : !m.swabClosed ? 3 : !m.loopLoaded ? 4 : m.streakStage < 3 ? 5 : 6;
+    const prompts = [
+      "First, open the throat-swab container.",
+      "Now open the blood agar plate.",
+      "Move the throat swab onto the starting area of the blood agar.",
+      "Close the throat swab safely before continuing.",
+      "Move the 10 µL loop through the starting area.",
+      "Now streak across the rest of the agar.",
+      "The plate is ready for the incubator."
+    ];
+    const arrowLabels = ["Open the swab","Lift the lid","Start here","Close the swab","Touch the starting area","Follow the arrows",""];
+    const swabFile = m.swabOpen && !m.swabClosed ? "throat-swab-open.png" : "throat-swab-closed.png";
+    const swabActive = phase === 0 || phase === 2 || phase === 3;
+    const loopActive = phase === 4 || phase === 5;
+    const streakFile = m.streakStage === 1 ? "streak-pattern-stage-1.png" : m.streakStage === 2 ? "streak-pattern-stage-2.png" : m.streakStage >= 3 ? "streak-pattern-complete.png" : "";
+    const zones = [1,2,3].map(zone => `<button class="m5-streak-zone zone-${zone} ${phase===5&&zone===m.streakStage+1?"active":""} ${zone<=m.streakStage?"done":""}" data-action="m5-streak-zone" data-value="${zone}" data-drop="m5-streak" aria-label="Streak section ${zone}${zone<=m.streakStage?", complete":zone===m.streakStage+1?", next":""}" aria-disabled="${phase!==5||zone!==m.streakStage+1}"><span>${zone}</span></button>`).join("");
+    const arrow = phase < 6 ? `<div class="m5-guidance arrow-${phase}" aria-hidden="true"><svg viewBox="0 0 180 80"><path d="M8 58 C55 8 110 8 158 46"/><path d="M145 30 L160 47 L137 51"/></svg><span>${arrowLabels[phase]}</span></div>` : "";
+    const completion = phase === 6 ? `<div class="m5-completion" role="status" aria-live="polite"><div class="m5-completion-card"><p><strong>Excellent!</strong> The blood agar plate has been inoculated and streaked correctly.</p>${learning("Streaking spreads bacteria across the agar so that separate colonies can grow.","Each visible colony may grow from a single bacterium or a small group of bacteria.")}<div class="actions">${btn("Place in the incubator →","m5-next","coral")}</div></div></div>` : "";
+    return shell(`<div class="mission-five-scene" aria-label="Blood agar inoculation workstation"><img class="mission-five-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-five-title"><div class="mission-label">Mission 5 of 10</div><h1>Streak the plate</h1><p>Create the starting area, then spread the material so separate colonies can grow.</p></div><div class="mission-five-prompt" role="status"><strong>Step ${Math.min(phase+1,6)} of 6</strong><span>${prompts[phase]}</span></div><div class="m5-countertop" aria-hidden="true"></div><button class="m5-swab ${swabActive?"active":""} ${m.selected==="swab"?"selected":""} ${m.swabClosed?"put-away":""}" data-action="${phase===0?"m5-open-swab":phase===3?"m5-close-swab":"m5-select-tool"}" data-value="swab" draggable="${phase===2}" data-drag="m5-pool" data-drag-image="assets/mission-5/throat-swab-applicator.png" aria-pressed="${m.selected==="swab"}" aria-label="${phase===0?"Open the throat-swab container":phase===3?"Return and close the throat swab":"Throat-swab applicator"}"><img src="assets/mission-5/${swabFile}" alt="">${m.swabOpen&&!m.swabClosed?`<img class="m5-swab-stick" src="assets/mission-5/throat-swab-applicator.png" alt="">`:""}<span>${phase===0?"Open the swab":phase===3?"Close the swab":"Throat swab"}</span></button><div class="m5-plate ${m.plateOpen?"open":""}"><button class="m5-plate-control ${phase===1?"active":""}" data-action="m5-open-plate" aria-label="Open the blood agar plate"><img class="m5-plate-base" src="assets/mission-5/${m.plateOpen?"blood-agar-plate-open.png":"blood-agar-plate-closed.png"}" alt="Blood agar plate"><img class="m5-plate-lid" src="assets/mission-5/blood-agar-lid.png" alt="" aria-hidden="true"></button>${m.inoculated?`<img class="m5-plate-overlay m5-pool" src="assets/mission-5/inoculation-pool-overlay.png" alt="">`:""}${streakFile?`<img class="m5-plate-overlay m5-streak-overlay" src="assets/mission-5/${streakFile}" alt="">`:""}<button class="m5-pool-target ${phase===2||phase===4?"active":""}" data-action="m5-pool-target" data-drop="m5-pool" aria-label="${phase===2?"Starting area for the throat swab":phase===4?"Starting area for the 10 microlitre loop":"Starting inoculation area"}" ${phase===2||phase===4?"":"disabled"}><span>${phase===2?"Start here":phase===4?"Touch the starting area":"✓"}</span></button>${phase===5?`<div class="m5-streak-zones">${zones}</div>`:""}</div><button class="m5-loop ${loopActive?"active":""} ${m.selected==="loop"?"selected":""}" data-action="m5-select-tool" data-value="loop" draggable="${loopActive}" data-drag="${phase===4?"m5-pool":"m5-streak"}" data-drag-image="assets/mission-5/sterile-loop-10ul.png" aria-pressed="${m.selected==="loop"}" aria-label="10 microlitre sterile loop"><img src="assets/mission-5/sterile-loop-10ul.png" alt=""><span>10 µL loop</span></button>${arrow}${completion}</div>`, prompts[phase]);
   }
 
   function mission6() {
@@ -261,7 +289,7 @@
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -274,7 +302,7 @@
     };
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);}
+      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -291,6 +319,43 @@
     if(state.matching.accepted==null)return;
     if(!fromDrag&&!state.matching.sampleSelected){setFeedback("Select the accepted throat swab first, then select the receiving rack.");return;}
     state.matching.sampleSelected=false;state.matching.racked=true;setFeedback("Scanned! The existing patient label is now linked to the bacteriology accession record.","good");
+  }
+  function m5Phase(){
+    const m=state.mission5;
+    return !m.swabOpen?0:!m.plateOpen?1:!m.inoculated?2:!m.swabClosed?3:!m.loopLoaded?4:m.streakStage<3?5:6;
+  }
+  function m5Update(message,type="good"){
+    state.feedback=message;state.feedbackType=type;save();announce(message);render();
+  }
+  function m5Wrong(){
+    const prompts=["Open the throat-swab container first.","Open the blood agar plate next.","Select the throat swab, then choose the highlighted starting area.","Close the throat swab safely before using the loop.","Select the 10 µL loop, then choose the highlighted starting area.","Follow the numbered streak sections in order.","The plate is ready for the incubator."];
+    m5Update(`Not yet. ${prompts[m5Phase()]}`,"try");
+  }
+  function m5SelectTool(value){
+    const phase=m5Phase();
+    if((phase===2&&value!=="swab")||((phase===4||phase===5)&&value!=="loop")||![2,4,5].includes(phase)){m5Wrong();return;}
+    state.mission5.selected=value;
+    m5Update(value==="swab"?"Throat swab selected. Now choose the highlighted starting area.":phase===4?"10 µL loop selected. Now touch the highlighted starting area.":"Loop selected. Follow the next numbered streak section.");
+  }
+  function m5Pool(fromDrag=false,value=""){
+    const phase=m5Phase(),m=state.mission5;
+    if(phase===2&&(fromDrag?value==="swab":m.selected==="swab")){
+      m.inoculated=true;m.step=3;m.selected=null;m5Update("Good! You created a small starting area on the agar.");return;
+    }
+    if(phase===4&&(fromDrag?value==="loop":m.selected==="loop")){
+      m.loopLoaded=true;m.step=5;m.selected="loop";m5Update("The loop has collected material from the starting area.");return;
+    }
+    m5Wrong();
+  }
+  function m5Streak(zone,fromDrag=false,value=""){
+    const m=state.mission5,next=m.streakStage+1;
+    if(m5Phase()!==5||(!fromDrag&&m.selected!=="loop")||(fromDrag&&value!=="loop")||Number(zone)!==next){m5Wrong();return;}
+    m.streakStage=next;m.step=5+next;
+    m5Update(next===3?"Excellent streaking! Material is spread from the starting area across the plate.":"Good—continue following the arrows.");
+  }
+  function handleM5Drop(value,targetType,targetValue){
+    if(targetType==="m5-pool")m5Pool(true,value);
+    if(targetType==="m5-streak")m5Streak(targetValue,true,value);
   }
 
   app.addEventListener("click", function(ev){
@@ -365,8 +430,25 @@
       return;
     }
     if(action==="agar"){if(value==="blood")completeMission(4,"Excellent! You selected blood agar for this investigation.");else setFeedback("Not this one! This agar is designed for a different investigation. Try again.","try");return;}
-    if(action==="streak-step"){state.mission5.step=Math.min(5,state.mission5.step+1);state.feedback=["The throat swab is open.","The blood agar plate is open.","A small pool of inoculum is now on the agar.","The swab is safely closed.","Excellent streaking! Material is spread from the pool across the plate."][state.mission5.step-1];state.feedbackType="good";save();render();return;}
-    if(action==="complete-5"){if(state.mission5.step>=5)completeMission(5,"The plate is ready for incubation.");return;}
+    if(action==="m5-open-swab"){
+      if(m5Phase()!==0){m5Wrong();return;}
+      state.mission5.swabOpen=true;state.mission5.step=1;m5Update("The throat swab is open.");return;
+    }
+    if(action==="m5-open-plate"){
+      if(m5Phase()!==1){m5Wrong();return;}
+      state.mission5.plateOpen=true;state.mission5.step=2;m5Update("The blood agar plate is open.");return;
+    }
+    if(action==="m5-select-tool"){m5SelectTool(value);return;}
+    if(action==="m5-pool-target"){m5Pool();return;}
+    if(action==="m5-close-swab"){
+      if(m5Phase()!==3){m5Wrong();return;}
+      state.mission5.swabClosed=true;state.mission5.step=4;state.mission5.selected=null;m5Update("The throat swab is safely closed.");return;
+    }
+    if(action==="m5-streak-zone"){m5Streak(value);return;}
+    if(action==="m5-next"){
+      if(m5Phase()===6){if(!state.completed.includes(5))state.completed.push(5);state.mission=6;state.feedback="The plate is ready for incubation.";state.feedbackType="good";save();announce(state.feedback);render();}
+      return;
+    }
     if(action==="incubator-step"){state.mission6.step=Math.min(5,state.mission6.step+1);state.feedback=state.mission6.step===4?"Incubation complete: night has become morning.":"Good—continue in order.";state.feedbackType="good";save();render();return;}
     if(action==="growth"){if(value==="colonies")completeMission(6,"Correct! The bacteria grew into small beta-haemolytic, pale-grey colonies.");else setFeedback(value==="gone"?"Not quite. Look at the new pale-grey spots on the plate.":"Bacteria do not turn into viruses. Look for visible growth on the plate.","try");return;}
     if(action==="slide-step"){state.mission7.step=Math.min(5,state.mission7.step+1);state.feedback=["One drop of distilled water is on the slide.","The loop is ready.","One colony has been selected.","The bacteria are spread into the water drop.","The slide has been heat-fixed and is ready to stain."][state.mission7.step-1];state.feedbackType="good";save();render();return;}
