@@ -12,6 +12,7 @@
   let missionTransitionTimer = null;
   let mission5Animating = false;
   let mission5AnimationTimer = null;
+  let mission6Timer = null;
   let openSampleInfo = null;
   let openAgarInfo = null;
   const SAMPLE_INFO = {
@@ -46,6 +47,20 @@
     state.mission5.inoculated = previousM5Step >= 3;
     state.mission5.swabClosed = previousM5Step >= 4;
     if (previousM5Step >= 5) { state.mission5.loopLoaded = true; state.mission5.streakStage = 3; }
+  }
+  const m6Defaults = L.initialState().mission6;
+  const legacyM6 = state.mission6 || {};
+  const previousM6Step = Number(legacyM6.step || 0);
+  const hasModernM6 = "incubatorOpen" in legacyM6;
+  state.mission6 = { ...m6Defaults, ...legacyM6 };
+  if (!hasModernM6 && previousM6Step > 0) {
+    state.mission6.incubatorOpen = previousM6Step >= 1;
+    state.mission6.platePlaced = previousM6Step >= 2;
+    state.mission6.incubatorClosed = previousM6Step >= 3;
+    state.mission6.incubationStarted = previousM6Step >= 4;
+    state.mission6.incubationComplete = previousM6Step >= 4;
+    state.mission6.reopened = previousM6Step >= 5;
+    state.mission6.inspected = previousM6Step >= 5;
   }
   if (state.gram && state.gram.running) state.gram.running = false;
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
@@ -92,7 +107,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -204,9 +219,19 @@
   }
 
   function mission6() {
-    const s=state.mission6.step;
-    const text=["Open the incubator.","Move the streaked plate inside.","Close the incubator.","Incubating… night becomes morning.","Open the incubator and inspect the plate.","What happened to the bacteria?"][s];
-    return shell(`${missionHeader(6,"Into the incubator","Bacteria need the right conditions to grow.")}<div class="instruction">${text}</div><div class="lab-bench" style="display:grid;place-items:center"><div class="maldi" style="width:min(520px,100%)"><div class="maldi-screen"><strong>INCUBATOR</strong><div class="timer">37°C</div><p>${s===0?"Door closed":s===1?"Door open — empty shelf":s===2?"Plate on shelf — door open":s===3?"INCUBATING…":s>=4?"Incubation complete":""}</p></div>${s>=2?`<div class="plate" style="width:120px">${s>=4?'<span class="colonies"></span>':s>=2?'<span class="streaks"></span>':""}</div>`:""}</div><div class="actions">${s<5?btn(["Open incubator","Place plate inside","Close incubator","Wait for morning","Open and inspect"][s],"incubator-step",s===2?"coral":""):""}</div></div>${s===5?`<div class="grid grid-3">${choice("💨","They disappeared","","growth","gone")}${choice("🦠","They grew into colonies","","growth","colonies")}${choice("🧬","They turned into viruses","","growth","viruses")}</div>`:""}${feedback()}${state.completed.includes(6)?learning("Bacteria need suitable conditions, such as the right temperature and enough time, to grow.")+`<div class="actions">${btn("Mission 7 →","continue")}</div>`:""}`, "The incubator is set to 37°C. Complete opening, loading and closing in the correct order.");
+    const m=state.mission6,phase=m6Phase();
+    const prompts=["First, open the incubator.","Place the streaked blood agar plate on the highlighted shelf.","Close the incubator door.","Start the incubation.","The bacteria need time to grow.","Incubation is complete. Open the incubator.","Select the plate to inspect the bacterial growth.","What happened to the bacteria during incubation?","The culture is ready for Gram-stain preparation."];
+    const labels=["Open the incubator","Place it here","Close the door","Start incubation","Incubating at 37°C…","Open and inspect","Inspect the plate","Choose an answer",""];
+    const incubatorFile=phase===0?"incubator-closed.png":[1,2,6,7,8].includes(phase)?"incubator-open-empty.png":phase===3?"incubator-closed.png":"incubator-closed-active.png";
+    const plateOnBench=phase<=1;
+    const plateOnShelf=m.platePlaced&&(phase===2||phase===6);
+    const grown=m.incubationComplete;
+    const plateStack=(cls,interactive=false)=>`<${interactive?"button":"div"} class="m6-plate-stack ${cls} ${m.selected==="plate"?"selected":""}" ${interactive?`data-action="${phase<=1?"m6-select-plate":"m6-inspect"}" data-value="plate" draggable="true" data-drag="${phase<=1?"m6-shelf":"m6-inspect"}" data-drag-image="assets/mission-6/${grown?"incubated-blood-agar-plate.png":"streaked-blood-agar-plate.png"}" aria-pressed="${m.selected==="plate"}" aria-label="${grown?"Incubated blood agar plate with visible colonies":"Completed streaked blood agar plate"}"`:""}><img class="m6-plate-base" src="assets/mission-6/${grown?"incubated-blood-agar-plate.png":"streaked-blood-agar-plate.png"}" alt=""><img class="m6-streak-layer" src="assets/mission-5/streak-pattern-complete.png" alt="">${grown?`<img class="m6-colony-layer" src="assets/mission-6/colony-inspection-overlay.png" alt="">`:""}</${interactive?"button":"div"}>`;
+    const incubatorAction=phase===0||phase===5?"m6-open":phase===2?"m6-close":phase===3?"m6-start":"m6-incubator";
+    const arrow=phase<7?`<div class="m6-guidance guide-${phase}" aria-hidden="true"><svg viewBox="0 0 180 80"><path d="M8 58 C55 8 110 8 158 46"/><path d="M145 30 L160 47 L137 51"/></svg><span>${labels[phase]}</span></div>`:"";
+    const answers=phase===7?`<div class="m6-question" role="group" aria-label="What happened to the bacteria during incubation?"><h2>What happened to the bacteria?</h2>${choice("💨","They disappeared","","growth","gone")}${choice("🦠","They grew into colonies","","growth","colonies")}${choice("🧬","They turned into viruses","","growth","viruses")}</div>`:"";
+    const completion=phase===8?`<div class="m6-completion" role="status" aria-live="polite"><div class="m6-completion-card"><p><strong>Excellent!</strong> The incubated plate shows visible bacterial colonies.</p>${learning("Bacteria need suitable conditions, such as the right temperature and enough time, to grow.","A visible colony may develop from one bacterium or a small group of bacteria multiplying many times.")}<div class="actions">${btn("Prepare a Gram stain →","m6-next","coral")}</div></div></div>`:"";
+    return shell(`<div class="mission-six-scene phase-${phase}" aria-label="Incubation workstation inside the bacteriology laboratory"><img class="mission-six-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-six-title"><div class="mission-label">Mission 6 of 10</div><h1>Into the incubator</h1><p>Bacteria need the right conditions and time to grow.</p></div><div class="mission-six-prompt" role="status"><strong>Step ${Math.min(phase+1,8)} of 8</strong><span>${prompts[phase]}</span></div><div class="m6-countertop" aria-hidden="true"></div>${plateOnBench?plateStack(`on-bench ${phase===1?"active":""}`,true):""}<div class="m6-incubator ${phase===4?"incubating":""}"><img src="assets/mission-6/${incubatorFile}" alt="${phase===0||phase===3||phase===4||phase===5?"Closed":"Open"} laboratory incubator set to 37 degrees Celsius"><button class="m6-incubator-control ${[0,2,3,5].includes(phase)?"active":""}" data-action="${incubatorAction}" aria-label="${labels[phase]||"Incubator"}"></button>${plateOnShelf?plateStack(`on-shelf ${phase===6?"active":""}`,phase===6):""}<button class="m6-shelf-target ${phase===1?"active":""}" data-action="m6-shelf" data-drop="m6-shelf" aria-label="Highlighted incubator shelf. Place the streaked plate here." ${phase===1?"":"disabled"}><span>Place it here</span></button></div>${phase===4?`<div class="m6-time-overlay" role="status"><div class="m6-night-light"></div><div class="m6-clock"><img src="assets/mission-6/laboratory-clock.png" alt="Laboratory clock showing time passing"><i aria-hidden="true"></i></div><strong>Incubating at 37°C…</strong>${btn("Skip time animation","m6-skip","secondary")}</div>`:""}${phase===6?`<button class="m6-inspect-target" data-action="m6-inspect" data-drop="m6-inspect" aria-label="Inspection area for the incubated plate">Inspect the plate</button>`:""}${m.inspected?plateStack("inspection",false):""}${answers}${arrow}${completion}</div>`,prompts[phase]);
   }
 
   function mission7() {
@@ -252,11 +277,13 @@
 
   function render() {
     clearTimeout(timer);
+    clearTimeout(mission6Timer);
     if (!state.age || state.mission===0) app.innerHTML=startScreen();
     else if(state.mission===11) app.innerHTML=summary();
     else app.innerHTML=({1:mission1,2:mission2,3:mission3,4:mission4,5:mission5,6:mission6,7:mission7,8:mission8,9:mission9,10:mission10}[state.mission]||mission1)();
     bindDrag();
     if(!orientationBlocked&&state.mission===8&&state.gram.mode==="auto"&&!state.gram.paused&&!state.gram.complete) scheduleGramAuto();
+    if(!orientationBlocked&&state.mission===6&&state.mission6.incubationStarted&&!state.mission6.incubationComplete) scheduleMission6Incubation();
   }
 
   function resetGram(mode) { clearTimeout(timer); state.gram={mode,step:0,paused:false,complete:false,running:false}; timerCounter=0; save(); render(); }
@@ -292,7 +319,7 @@
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -305,7 +332,7 @@
     };
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);}
+      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -365,6 +392,33 @@
   function handleM5Drop(value,targetType,targetValue){
     if(targetType==="m5-pool")m5Pool(true,value);
     if(targetType==="m5-streak")m5Streak(targetValue,true,value);
+  }
+  function m6Phase(){
+    const m=state.mission6;
+    return !m.incubatorOpen?0:!m.platePlaced?1:!m.incubatorClosed?2:!m.incubationStarted?3:!m.incubationComplete?4:!m.reopened?5:!m.inspected?6:!m.complete?7:8;
+  }
+  function m6Update(message,type="good"){
+    state.mission6.step=m6Phase();state.feedback=message;state.feedbackType=type;save();announce(message);render();
+  }
+  function m6Wrong(){
+    const messages=["Open the incubator before placing the plate inside.","Select the streaked plate, then place it on the highlighted shelf.","Place the streaked plate on the shelf before closing the incubator.","Close the incubator before starting incubation.","Wait until incubation is complete before opening the door.","Incubation is complete. Open the incubator to continue.","Select the incubated plate to inspect its growth.","Inspect the plate and choose what happened to the bacteria.","The culture is ready for Gram-stain preparation."];
+    m6Update(messages[m6Phase()],"try");
+  }
+  function scheduleMission6Incubation(){
+    mission6Timer=setTimeout(()=>{if(state.mission!==6||state.mission6.incubationComplete)return;state.mission6.incubationComplete=true;m6Update("Incubation complete: night has become morning.");},reducedMotion?80:2600);
+  }
+  function m6PlacePlate(fromDrag=false,value=""){
+    const m=state.mission6;
+    if(m6Phase()!==1||(fromDrag?value!=="plate":m.selected!=="plate")){m6Wrong();return;}
+    m.platePlaced=true;m.selected=null;m6Update("The streaked plate is safely inside the incubator.");
+  }
+  function m6Inspect(fromDrag=false,value=""){
+    if(m6Phase()!==6||(fromDrag&&value!=="plate")){m6Wrong();return;}
+    state.mission6.inspected=true;state.mission6.selected=null;m6Update("Growth is visible on the blood agar.");
+  }
+  function handleM6Drop(value,targetType){
+    if(targetType==="m6-shelf")m6PlacePlate(true,value);
+    if(targetType==="m6-inspect")m6Inspect(true,value);
   }
 
   app.addEventListener("click", function(ev){
@@ -458,8 +512,23 @@
       if(m5Phase()===6){if(!state.completed.includes(5))state.completed.push(5);state.mission=6;state.feedback="The plate is ready for incubation.";state.feedbackType="good";save();announce(state.feedback);render();}
       return;
     }
-    if(action==="incubator-step"){state.mission6.step=Math.min(5,state.mission6.step+1);state.feedback=state.mission6.step===4?"Incubation complete: night has become morning.":"Good—continue in order.";state.feedbackType="good";save();render();return;}
-    if(action==="growth"){if(value==="colonies")completeMission(6,"Correct! The bacteria grew into small beta-haemolytic, pale-grey colonies.");else setFeedback(value==="gone"?"Not quite. Look at the new pale-grey spots on the plate.":"Bacteria do not turn into viruses. Look for visible growth on the plate.","try");return;}
+    if(action==="m6-open"){
+      const phase=m6Phase();if(phase===0){state.mission6.incubatorOpen=true;m6Update("The incubator is open.");return;}if(phase===5){state.mission6.reopened=true;m6Update("The plate is ready to inspect.");return;}m6Wrong();return;
+    }
+    if(action==="m6-select-plate"){if(m6Phase()!==1){m6Wrong();return;}state.mission6.selected=state.mission6.selected==="plate"?null:"plate";m6Update(state.mission6.selected?"Streaked plate selected. Now choose the highlighted shelf.":"Plate deselected.",state.mission6.selected?"good":"");return;}
+    if(action==="m6-shelf"){m6PlacePlate();return;}
+    if(action==="m6-close"){if(m6Phase()!==2){m6Wrong();return;}state.mission6.incubatorClosed=true;m6Update("The incubator is closed and set to 37°C.");return;}
+    if(action==="m6-start"){if(m6Phase()!==3){m6Wrong();return;}state.mission6.incubationStarted=true;m6Update("Incubation has started at 37°C.");return;}
+    if(action==="m6-skip"){if(m6Phase()!==4){m6Wrong();return;}state.mission6.incubationComplete=true;m6Update("Incubation complete: night has become morning.");return;}
+    if(action==="m6-inspect"){m6Inspect();return;}
+    if(action==="m6-incubator"){m6Wrong();return;}
+    if(action==="growth"){
+      if(m6Phase()!==7){m6Wrong();return;}
+      if(value==="colonies"){state.mission6.complete=true;if(!state.completed.includes(6))state.completed.push(6);m6Update("Correct! The bacteria multiplied and grew into visible colonies.");}
+      else m6Update("Not quite. Incubation provides suitable conditions for bacteria to grow. Try again.","try");
+      return;
+    }
+    if(action==="m6-next"){if(m6Phase()===8){state.mission=7;state.feedback="The culture is ready for Gram-stain preparation.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
     if(action==="slide-step"){state.mission7.step=Math.min(5,state.mission7.step+1);state.feedback=["One drop of distilled water is on the slide.","The loop is ready.","One colony has been selected.","The bacteria are spread into the water drop.","The slide has been heat-fixed and is ready to stain."][state.mission7.step-1];state.feedbackType="good";save();render();return;}
     if(action==="complete-7"){if(state.mission7.step>=5)completeMission(7,"Slide preparation complete.");return;}
     if(action==="gram-play"){state.gram.mode="choose";save();render();return;}

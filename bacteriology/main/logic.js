@@ -107,7 +107,7 @@
       version: 1, age: null, mission: 0, completed: [], patientCase: null,
       feedback: "", ppe: [], selectedPpe: null,
       mission5: { step:0, swabOpen:false, plateOpen:false, inoculated:false, swabClosed:false, loopLoaded:false, streakStage:0, selected:null },
-      mission6: { step: 0 },
+      mission6: { step:0, incubatorOpen:false, platePlaced:false, incubatorClosed:false, incubationStarted:false, incubationComplete:false, reopened:false, inspected:false, selected:null, complete:false },
       mission7: { step: 0 }, gram: { mode: null, step: 0, paused: false, complete: false },
       mission9: { placed: false }, mission10: { step: 0 }, selectedAnswers: {},
       matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false, sampleSelected: false }
