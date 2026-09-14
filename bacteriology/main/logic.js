@@ -108,7 +108,11 @@
       feedback: "", ppe: [], selectedPpe: null,
       mission5: { step:0, swabOpen:false, plateOpen:false, inoculated:false, swabClosed:false, loopLoaded:false, streakStage:0, selected:null },
       mission6: { step:0, incubatorOpen:false, platePlaced:false, incubatorClosed:false, incubationStarted:false, incubationComplete:false, reopened:false, inspected:false, selected:null, complete:false },
-      mission7: { step: 0 }, gram: { mode: null, step: 0, paused: false, complete: false },
+      mission7: {
+        step:0, waterAdded:false, loopSelected:false, colonySelected:false, selectedColony:null,
+        colonyTransferred:false, smearStage:0, wetSmearComplete:false, dryingStarted:false,
+        dryingComplete:false, burnerLit:false, heatPass:0, heatFixed:false, complete:false, selected:null
+      }, gram: { mode: null, step: 0, paused: false, complete: false },
       mission9: { placed: false }, mission10: { step: 0 }, selectedAnswers: {},
       matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false, sampleSelected: false }
     };

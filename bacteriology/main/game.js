@@ -13,6 +13,7 @@
   let mission5Animating = false;
   let mission5AnimationTimer = null;
   let mission6Timer = null;
+  let mission7Timer = null;
   let openSampleInfo = null;
   let openAgarInfo = null;
   const SAMPLE_INFO = {
@@ -62,6 +63,25 @@
     state.mission6.reopened = previousM6Step >= 5;
     state.mission6.inspected = previousM6Step >= 5;
   }
+  const m7Defaults = L.initialState().mission7;
+  const legacyM7 = state.mission7 || {};
+  const previousM7Step = Number(legacyM7.step || 0);
+  const hasModernM7 = "waterAdded" in legacyM7;
+  state.mission7 = { ...m7Defaults, ...legacyM7 };
+  if (!hasModernM7 && previousM7Step > 0) {
+    state.mission7.waterAdded = previousM7Step >= 1;
+    state.mission7.loopSelected = previousM7Step >= 2;
+    state.mission7.colonySelected = previousM7Step >= 3;
+    state.mission7.selectedColony = previousM7Step >= 3 ? "isolated-1" : null;
+    state.mission7.colonyTransferred = previousM7Step >= 4;
+    state.mission7.smearStage = previousM7Step >= 4 ? 3 : 0;
+    state.mission7.wetSmearComplete = previousM7Step >= 4;
+    state.mission7.dryingStarted = previousM7Step >= 5;
+    state.mission7.dryingComplete = previousM7Step >= 5;
+    state.mission7.heatPass = previousM7Step >= 5 ? 3 : 0;
+    state.mission7.heatFixed = previousM7Step >= 5;
+    state.mission7.complete = previousM7Step >= 5;
+  }
   if (state.gram && state.gram.running) state.gram.running = false;
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
 
@@ -107,7 +127,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -235,10 +255,30 @@
   }
 
   function mission7() {
-    const s=state.mission7.step;
-    const steps=["Place one drop of distilled water onto the slide.","Select the loop.","Choose one colony from the culture plate.","Spread the bacteria onto the drop of water.","Move the slide over the Bunsen burner to heat-fix it.","The slide is ready for staining."];
-    const actions=["Use distilled-water dropper","Select the loop","Pick one colony","Spread bacteria in the water","Heat-fix the slide"];
-    return shell(`${missionHeader(7,"Prepare the slide","Bacteria are microscopic. Prepare a sample so we can examine it under a microscope.")}<div class="instruction"><strong>Step ${Math.min(s+1,5)}:</strong> ${steps[s]}</div><div class="lab-bench"><div class="grid grid-4"><div class="object"><span class="big-icon">🧫</span><strong>Culture plate</strong>${s>=2?'<small>Colony selected</small>':""}</div><div class="object"><span class="big-icon">▱</span><strong>Microscope slide</strong>${s>=1?'<small>💧 Water drop</small>':""}</div><div class="object"><span class="big-icon">💧</span><strong>Distilled water</strong></div><div class="object"><span class="big-icon">🔥</span><strong>Bunsen burner</strong></div></div><div class="actions">${s<5?btn(actions[s],"slide-step",s===4?"coral":""):""}</div></div>${feedback()}${s>=5?learning("We prepare bacteria on a slide so that we can examine them under a microscope.")+`<div class="actions">${state.completed.includes(7)?btn("Mission 8 →","continue"):btn("Finish Mission 7","complete-7","coral")}</div>`:""}`, "Keep the preparation order exact: water, colony, spreading, then heat-fixation.");
+    const m=state.mission7,phase=m7Phase();
+    const prompts=[
+      "Add one drop of distilled water to the centre of the microscope slide.",
+      "Select the sterile 1 µL loop.",
+      "Use the loop to select one isolated colony from the incubated plate.",
+      "Move the colony into the water drop on the slide.",
+      "Spread the bacteria through the water to make a thin smear.",
+      "Allow the smear to air-dry before heat fixation.",
+      "Air-drying…",
+      "Light the Bunsen burner.",
+      "Pass the dried slide carefully above the flame to heat-fix the smear.",
+      "The prepared slide is ready for Gram staining."
+    ];
+    const stepNumber=[1,2,3,4,5,6,6,7,7,7][phase];
+    const slideFile=m.heatFixed?"microscope-slide-heat-fixed.png":m.dryingComplete?"microscope-slide-smear-dry.png":m.wetSmearComplete?"microscope-slide-smear-wet.png":m.colonyTransferred?"microscope-slide-colony-in-water.png":m.waterAdded?"microscope-slide-water-drop.png":"microscope-slide-clean.png";
+    const slideActive=[0,3,4,5,8].includes(phase);
+    const loopActive=[1,2,3,4].includes(phase);
+    const guideLabels=["Add one drop","Select the 1 µL loop","Choose one colony","Transfer the colony","Spread a thin smear","Leave the slide to dry","Air-drying…","Light the burner","Pass above the flame",""];
+    const guidance=phase<9?`<div class="m7-guidance guide-${phase}" aria-hidden="true"><svg viewBox="0 0 190 90"><path d="M8 65 C58 8 124 8 168 51"/><path d="M153 35 L170 52 L145 57"/></svg><span>${guideLabels[phase]}</span></div>`:"";
+    const smearZones=phase===4?[1,2,3].map(i=>`<button class="m7-smear-zone zone-${i} ${i===m.smearStage+1?"active":i<=m.smearStage?"done":""}" data-action="m7-smear-zone" data-value="${i}" data-drop="m7-smear" aria-label="Smear guidance zone ${i} of 3" ${i===m.smearStage+1?"":"disabled"}><span>${i<=m.smearStage?"✓":i}</span></button>`).join(""):"";
+    const heatZones=phase===8?[1,2,3].map(i=>`<button class="m7-heat-zone zone-${i} ${i===m.heatPass+1?"active":i<=m.heatPass?"done":""}" data-action="m7-heat-zone" data-value="${i}" data-drop="m7-heat" aria-label="Heat-fix pass ${i} of 3 above the flame" ${i===m.heatPass+1?"":"disabled"}><span>${i<=m.heatPass?"✓":i}</span></button>`).join(""):"";
+    const colonies=phase===2?`<div class="m7-colony-targets" role="group" aria-label="Choose an isolated colony"><button class="m7-colony-target isolated one" data-action="m7-colony" data-value="isolated-1" data-drop="m7-colony" aria-label="Isolated colony one"></button><button class="m7-colony-target isolated two" data-action="m7-colony" data-value="isolated-2" data-drop="m7-colony" aria-label="Isolated colony two"></button><button class="m7-colony-target crowded" data-action="m7-colony" data-value="crowded" data-drop="m7-colony" aria-label="Crowded area of bacterial growth"></button></div>`:"";
+    const completion=phase===9?`<div class="m7-completion" role="status" aria-live="polite"><div class="m7-completion-card"><p><strong>Excellent!</strong> The bacterial smear is prepared and ready for Gram staining.</p>${learning("We prepare bacteria on a slide so that we can examine them under a microscope.","Heat fixation helps attach the dried bacterial smear to the slide before staining.")}<div class="actions">${btn("Start the Gram stain →","m7-next","coral")}</div></div></div>`:"";
+    return shell(`<div class="mission-seven-scene phase-${phase}" aria-label="Bacterial smear preparation workstation"><img class="mission-seven-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-seven-title"><div class="mission-label">Mission 7 of 10</div><h1>Prepare the slide</h1><p>Make a thin bacterial smear for Gram staining.</p></div><div class="mission-seven-prompt" role="status" aria-live="polite"><strong>Step ${stepNumber} of 7</strong><span>${prompts[phase]}</span></div><div class="m7-countertop" aria-hidden="true"></div><div class="m7-plate ${phase>2?"picked":""}" aria-label="Incubated blood agar plate"><img src="assets/mission-7/incubated-blood-agar-plate.png" alt=""><img src="assets/mission-5/streak-pattern-complete.png" alt=""><img src="assets/mission-7/${phase>2?"colony-picked-overlay.png":"selectable-colony-overlay.png"}" alt="">${colonies}</div><button class="m7-dropper ${phase===0?"active":""} ${m.selected==="dropper"?"selected":""}" data-action="m7-select-dropper" data-value="dropper" draggable="${phase===0}" data-drag="m7-water" data-drag-image="assets/mission-7/distilled-water-dropper.png" aria-pressed="${m.selected==="dropper"}" aria-label="Distilled-water dropper"><img src="assets/mission-7/distilled-water-dropper.png" alt=""><span>Select distilled water</span></button><button class="m7-loop ${loopActive?"active":""} ${m.loopSelected?"selected":""} ${m.colonySelected?"loaded":""}" data-action="m7-select-loop" data-value="loop" draggable="${[2,3,4].includes(phase)}" data-drag="${phase===2?"m7-colony":phase===3?"m7-transfer":"m7-smear"}" data-drag-image="assets/mission-7/${m.colonySelected?"loop-with-colony.png":"sterile-loop-1ul.png"}" aria-pressed="${m.loopSelected}" aria-label="Sterile 1 microlitre loop${m.colonySelected?" carrying one colony":""}"><img src="assets/mission-7/${m.colonySelected?"loop-with-colony.png":"sterile-loop-1ul.png"}" alt=""><span>1 µL loop</span></button><button class="m7-slide ${slideActive?"active":""} ${m.selected==="slide"?"selected":""} ${m.dryingStarted&&!m.dryingComplete?"on-rack":""} ${m.heatFixed?"heat-fixed":""}" data-action="m7-slide" data-value="slide" draggable="${phase===5||phase===8}" data-drag="${phase===5?"m7-rack":"m7-heat"}" data-drag-image="assets/mission-7/${slideFile}" aria-pressed="${m.selected==="slide"}" aria-label="${m.heatFixed?"Completed heat-fixed microscope slide":m.dryingComplete?"Dry bacterial smear on microscope slide":m.wetSmearComplete?"Wet bacterial smear on microscope slide":"Microscope slide"}"><img src="assets/mission-7/${slideFile}" alt=""></button><button class="m7-water-target ${phase===0||phase===3?"active":""}" data-action="${phase===0?"m7-water":phase===3?"m7-transfer":"m7-wrong"}" data-drop="${phase===0?"m7-water":"m7-transfer"}" aria-label="${phase===0?"Centre target for one drop of distilled water":"Water-drop transfer target"}" ${phase===0||phase===3?"":"disabled"}><span>${phase===0?"Add one drop":"Transfer here"}</span></button>${smearZones}<div class="m7-rack ${m.selected==="slide"?"ready":""}"><img src="assets/mission-7/slide-rack.png" alt="Slide drying rack"><button class="m7-rack-target ${phase===5?"active":""} ${m.selected==="slide"?"ready":""}" data-action="m7-rack" data-drop="m7-rack" aria-label="Safe slide rack for air-drying" ${phase===5?"":"disabled"}><span>Leave the slide to dry</span></button></div><button class="m7-burner ${phase===7?"active":""}" data-action="m7-burner" aria-pressed="${m.burnerLit}" aria-label="${m.burnerLit?"Lit Bunsen burner with a controlled blue flame":"Light the Bunsen burner"}"><img src="assets/mission-7/${m.burnerLit?"bunsen-burner-lit.png":"bunsen-burner-unlit.png"}" alt=""><i class="m7-flame" aria-hidden="true"></i><span>${phase===7?"Light the burner":"Bunsen burner"}</span></button>${heatZones}${phase===6?`<div class="m7-drying" role="status"><strong>Air-drying…</strong><span aria-hidden="true">≈ ≈ ≈</span>${btn("Skip drying animation","m7-skip-drying","secondary")}</div>`:""}${phase===0?`<img class="m7-droplet" src="assets/mission-7/distilled-water-drop.png" alt="" aria-hidden="true">`:""}${guidance}${completion}</div>`,prompts[phase]);
   }
 
   function gramChecklist() {
@@ -278,12 +318,14 @@
   function render() {
     clearTimeout(timer);
     clearTimeout(mission6Timer);
+    clearTimeout(mission7Timer);
     if (!state.age || state.mission===0) app.innerHTML=startScreen();
     else if(state.mission===11) app.innerHTML=summary();
     else app.innerHTML=({1:mission1,2:mission2,3:mission3,4:mission4,5:mission5,6:mission6,7:mission7,8:mission8,9:mission9,10:mission10}[state.mission]||mission1)();
     bindDrag();
     if(!orientationBlocked&&state.mission===8&&state.gram.mode==="auto"&&!state.gram.paused&&!state.gram.complete) scheduleGramAuto();
     if(!orientationBlocked&&state.mission===6&&state.mission6.incubationStarted&&!state.mission6.incubationComplete) scheduleMission6Incubation();
+    if(!orientationBlocked&&state.mission===7&&state.mission7.dryingStarted&&!state.mission7.dryingComplete) scheduleMission7Drying();
   }
 
   function resetGram(mode) { clearTimeout(timer); state.gram={mode,step:0,paused:false,complete:false,running:false}; timerCounter=0; save(); render(); }
@@ -319,7 +361,7 @@
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);if(el.dataset.drop.startsWith("m7-"))handleM7Drop(v,el.dataset.drop,el.dataset.value);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -332,7 +374,7 @@
     };
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);}
+      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);if(target&&dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -419,6 +461,60 @@
   function handleM6Drop(value,targetType){
     if(targetType==="m6-shelf")m6PlacePlate(true,value);
     if(targetType==="m6-inspect")m6Inspect(true,value);
+  }
+
+  function m7Phase(){
+    const m=state.mission7;
+    return !m.waterAdded?0:!m.loopSelected?1:!m.colonySelected&&!m.colonyTransferred?2:!m.colonyTransferred?3:!m.wetSmearComplete?4:!m.dryingStarted?5:!m.dryingComplete?6:!m.burnerLit&&!m.heatFixed?7:!m.heatFixed?8:9;
+  }
+  function m7Update(message,type="good"){
+    state.mission7.step=m7Phase();state.feedback=message;state.feedbackType=type;save();announce(message);render();
+  }
+  function m7Wrong(message=""){
+    const messages=["Add the distilled water before selecting a colony.","Select the sterile 1 µL loop.","Use the 1 µL loop to select one isolated colony.","Place the colony into the water drop before spreading it.","Follow the highlighted area to keep the smear thin and controlled.","Place the wet smear on the slide rack to air-dry.","The smear must be completely air-dried before heat fixation.","Light the burner before heat-fixing the slide.","Keep the slide above the flame and move it through carefully.","The slide is ready for Gram staining."];
+    m7Update(message||messages[m7Phase()],"try");
+  }
+  function m7Water(fromDrag=false,value=""){
+    const m=state.mission7;if(m7Phase()!==0||(fromDrag?value!=="dropper":m.selected!=="dropper")){m7Wrong();return;}
+    m.waterAdded=true;m.selected=null;m7Update("One drop of distilled water is on the slide.");
+  }
+  function m7Colony(value,fromDrag=false,dragValue=""){
+    if(m7Phase()!==2||(fromDrag&&dragValue!=="loop")){m7Wrong(m7Phase()<2?"Select the sterile 1 µL loop first.":"");return;}
+    if(value==="crowded"){m7Wrong("Choose a separate, isolated colony rather than an area where colonies are crowded together.");return;}
+    const m=state.mission7;m.colonySelected=true;m.selectedColony=value;m.selected="loop";m7Update("One isolated colony has been selected.");
+  }
+  function m7Transfer(fromDrag=false,value=""){
+    const m=state.mission7;if(m7Phase()!==3||(fromDrag?value!=="loop":m.selected!=="loop")){m7Wrong();return;}
+    m.colonyTransferred=true;m.colonySelected=false;m.selected="loop";m7Update("The bacterial colony is now in the water drop.");
+  }
+  function m7Smear(zone,fromDrag=false,value=""){
+    const m=state.mission7,next=m.smearStage+1;
+    if(m7Phase()!==4||Number(zone)!==next||(fromDrag?value!=="loop":m.selected!=="loop")){m7Wrong();return;}
+    m.smearStage=next;
+    if(next===3){m.wetSmearComplete=true;m.selected=null;m7Update("The bacteria have been spread into a thin wet smear.");}
+    else m7Update("Good—keep the smear thin and even.");
+  }
+  function m7Rack(fromDrag=false,value=""){
+    const m=state.mission7;if(m7Phase()!==5||(fromDrag?value!=="slide":m.selected!=="slide")){m7Wrong();return;}
+    m.dryingStarted=true;m.selected=null;m7Update("Air-drying…");
+  }
+  function scheduleMission7Drying(){
+    mission7Timer=setTimeout(()=>{if(state.mission!==7||state.mission7.dryingComplete)return;state.mission7.dryingComplete=true;m7Update("The smear is dry and ready to heat-fix.");},reducedMotion?80:1900);
+  }
+  function m7Heat(zone,fromDrag=false,value=""){
+    const m=state.mission7,next=m.heatPass+1;
+    if(m7Phase()!==8||Number(zone)!==next||(fromDrag?value!=="slide":m.selected!=="slide")){m7Wrong();return;}
+    m.heatPass=next;
+    if(next===3){m.heatFixed=true;m.burnerLit=false;m.complete=true;m.selected=null;if(!state.completed.includes(7))state.completed.push(7);m7Update("The dried bacterial smear has been heat-fixed safely.");}
+    else m7Update(next===2?"Good—one more careful pass above the flame.":"Good—continue with another careful pass above the flame.");
+  }
+  function handleM7Drop(value,targetType,targetValue){
+    if(targetType==="m7-water")m7Water(true,value);
+    else if(targetType==="m7-colony")m7Colony(targetValue,true,value);
+    else if(targetType==="m7-transfer")m7Transfer(true,value);
+    else if(targetType==="m7-smear")m7Smear(targetValue,true,value);
+    else if(targetType==="m7-rack")m7Rack(true,value);
+    else if(targetType==="m7-heat")m7Heat(targetValue,true,value);
   }
 
   app.addEventListener("click", function(ev){
@@ -529,8 +625,28 @@
       return;
     }
     if(action==="m6-next"){if(m6Phase()===8){state.mission=7;state.feedback="The culture is ready for Gram-stain preparation.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
-    if(action==="slide-step"){state.mission7.step=Math.min(5,state.mission7.step+1);state.feedback=["One drop of distilled water is on the slide.","The loop is ready.","One colony has been selected.","The bacteria are spread into the water drop.","The slide has been heat-fixed and is ready to stain."][state.mission7.step-1];state.feedbackType="good";save();render();return;}
-    if(action==="complete-7"){if(state.mission7.step>=5)completeMission(7,"Slide preparation complete.");return;}
+    if(action==="m7-select-dropper"){if(m7Phase()!==0){m7Wrong();return;}state.mission7.selected=state.mission7.selected==="dropper"?null:"dropper";m7Update(state.mission7.selected?"Distilled water selected. Now choose the centre of the slide.":"Distilled water deselected.",state.mission7.selected?"good":"");return;}
+    if(action==="m7-water"){m7Water();return;}
+    if(action==="m7-select-loop"){
+      const phase=m7Phase();
+      if(phase===1){state.mission7.loopSelected=true;state.mission7.selected="loop";m7Update("The 1 µL loop is ready.");return;}
+      if([2,3,4].includes(phase)){state.mission7.selected="loop";m7Update(phase===2?"Loop selected. Choose one isolated colony.":phase===3?"Loaded loop selected. Transfer the colony into the water drop.":"Loop selected. Follow the smear zones in order.");return;}
+      m7Wrong();return;
+    }
+    if(action==="m7-colony"){m7Colony(value);return;}
+    if(action==="m7-transfer"){m7Transfer();return;}
+    if(action==="m7-smear-zone"){m7Smear(value);return;}
+    if(action==="m7-slide"){
+      const phase=m7Phase();
+      if(phase===5||phase===8){state.mission7.selected=state.mission7.selected==="slide"?null:"slide";m7Update(state.mission7.selected?(phase===5?"Slide selected. Place it on the drying rack.":"Dried slide selected. Follow the heat-fix zones above the flame."):"Slide deselected.",state.mission7.selected?"good":"");return;}
+      m7Wrong();return;
+    }
+    if(action==="m7-rack"){m7Rack();return;}
+    if(action==="m7-skip-drying"){if(m7Phase()!==6){m7Wrong();return;}state.mission7.dryingComplete=true;m7Update("The smear is dry and ready to heat-fix.");return;}
+    if(action==="m7-burner"){if(m7Phase()!==7){m7Wrong(m7Phase()===6?"The smear must be completely air-dried before heat fixation.":"");return;}state.mission7.burnerLit=true;state.mission7.selected="slide";m7Update("The burner is lit. Pass the dried slide carefully above the flame.");return;}
+    if(action==="m7-heat-zone"){m7Heat(value);return;}
+    if(action==="m7-wrong"){m7Wrong();return;}
+    if(action==="m7-next"){if(m7Phase()===9){state.mission=8;state.feedback="The prepared slide is ready for Gram staining.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
     if(action==="gram-play"){state.gram.mode="choose";save();render();return;}
     if(action==="gram-mode"){resetGram(value);return;}
     if(action==="gram-bottle"){applyManualBottle(value);return;}
@@ -577,6 +693,6 @@
     if((ev.key==="Enter"||ev.key===" ")&&document.activeElement?.dataset.drop==="rack"){ev.preventDefault();rackSample();}
   });
   const orientationQuery=matchMedia("(orientation: portrait) and (max-width: 900px)");
-  orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);if(state.gram?.running){state.gram.running=false;save();}}else render();});
+  orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);clearTimeout(mission6Timer);clearTimeout(mission7Timer);if(state.gram?.running){state.gram.running=false;save();}}else render();});
   render();
 })();

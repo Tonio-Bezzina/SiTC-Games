@@ -1,0 +1,17 @@
+{
+  "background": "../mission-2/laboratory-interior-background.png",
+  "slideStates": [
+    "microscope-slide-clean.png",
+    "microscope-slide-water-drop.png",
+    "microscope-slide-colony-in-water.png",
+    "microscope-slide-smear-wet.png",
+    "microscope-slide-smear-dry.png",
+    "microscope-slide-heat-fixed.png"
+  ],
+  "water": ["distilled-water-dropper.png", "distilled-water-drop.png"],
+  "loopStates": ["sterile-loop-1ul.png", "loop-with-colony.png"],
+  "plate": ["incubated-blood-agar-plate.png", "selectable-colony-overlay.png", "colony-picked-overlay.png"],
+  "burnerStates": ["bunsen-burner-unlit.png", "bunsen-burner-lit.png"],
+  "drying": ["slide-rack.png"],
+  "codeNative": ["heat-fix-path-overlay", "guidance-arrows", "airflow-lines", "controlled-blue-flame"]
+}
