@@ -497,7 +497,7 @@ button.m6-plate-stack { cursor:pointer; pointer-events:auto; }
 .m7-slide.heat-fixed img { filter:sepia(.13) saturate(.9) drop-shadow(0 7px 8px rgba(0,0,0,.3)); }
 .m7-burner { z-index:9; right:5%; bottom:0; width:15%; height:43%; opacity:.54; }
 .mission-seven-scene.phase-7 .m7-burner,.mission-seven-scene.phase-8 .m7-burner { z-index:17; opacity:1; }
-.m7-flame { display:none; position:absolute; z-index:5; left:46%; top:3%; width:12%; height:21%; border-radius:52% 48% 58% 42%; background:radial-gradient(ellipse at 50% 72%,#fff 0 13%,#66dfff 16% 42%,#1b55ef 65%,transparent 70%); transform:translateY(-72%); filter:drop-shadow(0 0 8px #4fc9ff); animation:m7-flame-flicker .45s ease-in-out infinite alternate; }
+.m7-flame { display:none!important; }
 .m7-burner[aria-pressed="true"] .m7-flame { display:block; }
 .m7-dropper.active,.m7-loop.active,.m7-slide.active,.m7-burner.active { outline:4px solid #ffd166; outline-offset:2px; animation:m5-object-pulse 1.2s ease-in-out infinite; }
 .m7-loop:not(.active),.m7-dropper:not(.active),.m7-slide:not(.active) { pointer-events:none; }
