@@ -116,7 +116,10 @@
         mode: null, step: 0, paused: false, complete: false, running: false,
         selected: null, timerRemaining: 0, timerTotal: 0, visualSkipped: false
       },
-      mission9: { placed: false }, mission10: { step: 0 }, selectedAnswers: {},
+      mission9: {
+        selected: false, placed: false, transitionStarted: false, focusComplete: false,
+        focusSkipped: false, attempts: [], selectedAnswer: null, complete: false
+      }, mission10: { step: 0 }, selectedAnswers: {},
       matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false, sampleSelected: false }
     };
   }

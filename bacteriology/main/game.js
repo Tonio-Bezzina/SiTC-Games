@@ -14,6 +14,7 @@
   let mission5AnimationTimer = null;
   let mission6Timer = null;
   let mission7Timer = null;
+  let mission9Timer = null;
   let gramAutoTimer = null;
   let openSampleInfo = null;
   let openAgarInfo = null;
@@ -84,8 +85,25 @@
     state.mission7.complete = previousM7Step >= 5;
   }
   state.gram = { ...L.initialState().gram, ...(state.gram || {}) };
+  const m9Defaults = L.initialState().mission9;
+  const legacyM9 = state.mission9 || {};
+  const hasModernM9 = "focusComplete" in legacyM9;
+  state.mission9 = { ...m9Defaults, ...legacyM9 };
+  if (!hasModernM9 && legacyM9.placed) {
+    state.mission9.transitionStarted = true;
+    state.mission9.focusComplete = true;
+  }
+  if (state.completed.includes(9)) {
+    state.mission9.placed = true;
+    state.mission9.transitionStarted = true;
+    state.mission9.focusComplete = true;
+    state.mission9.selectedAnswer = "chains";
+    state.mission9.complete = true;
+  }
   const M8_ASSETS = ["gram-stain-rack.png","staining-tray.png","crystal-violet-bottle.png","lugols-iodine-bottle.png","decolorizer-bottle.png","carbol-fuchsin-bottle.png","wash-bottle.png","reagent-drop-clear.png","reagent-drop-violet.png","reagent-drop-iodine.png","reagent-drop-decolorizer.png","reagent-drop-fuchsin.png","slide-heat-fixed.png","slide-crystal-violet.png","slide-crystal-violet-rinsed.png","slide-iodine.png","slide-iodine-rinsed.png","slide-decolorizing.png","slide-decolorized-rinsed.png","slide-carbol-fuchsin.png","slide-gram-stain-complete.png"];
   M8_ASSETS.forEach(file=>{const image=new Image();image.src=`assets/mission-8/${file}`;image.decode?.().catch(()=>{});});
+  const M9_ASSETS = ["compound-microscope-empty.png","compound-microscope-with-slide.png","microscope-stage-closeup-empty.png","microscope-stage-closeup-with-slide.png","gram-stained-slide-draggable.png","microscope-eyepiece-overlay.png","microscopy-field-pink-rods.png","microscopy-field-purple-rods.png","microscopy-field-purple-cocci-chains.png","microscopy-field-purple-cocci-clusters.png","microscope-focus-soft.png","microscope-focus-sharp.png"];
+  M9_ASSETS.forEach(file=>{const image=new Image();image.src=`assets/mission-9/${file}`;image.decode?.().catch(()=>{});});
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
 
   function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
@@ -130,7 +148,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : state.mission === 8 ? "screen mission-eight-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : state.mission === 8 ? "screen mission-eight-screen" : state.mission === 9 ? "screen mission-nine-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -315,9 +333,21 @@
   }
 
   function mission9() {
-    if (!state.mission9.placed) return shell(`${missionHeader(9,"Look under the microscope","Your stained slide is ready.")}<div class="instruction">Place the slide onto the microscope stage.</div><div class="lab-bench" style="display:grid;place-items:center"><div style="font-size:7rem" aria-hidden="true">🔬</div>${btn("Place slide on microscope","place-slide","coral")}</div>${feedback()}`, "Use the microscope to compare colour, shape and arrangement.");
-    const opts=[["pink-rods","Pink rods","pink"],["purple-rods","Purple rods","prods"],["chains","Purple cocci in chains","chains"],["clusters","Purple cocci in clusters","clusters"]];
-    return shell(`${missionHeader(9,"Look under the microscope","Which picture shows the bacteria we are looking for?")}<div class="grid micro-grid">${opts.map(o=>`<button class="choice micro-choice" data-action="microscope" data-value="${o[2]}"><span class="micro ${o[0]}" aria-hidden="true"><span></span></span><strong>${o[1]}</strong></button>`).join("")}</div>${feedback()}${state.completed.includes(9)?learning("These are Gram-positive cocci arranged in chains. This appearance is consistent with streptococci.","Their purple colour, round shape and chain arrangement help us recognise them as streptococci, but species identification needs another test.")+`<div class="actions">${btn("Mission 10 →","continue")}</div>`:""}`, "Look carefully at all three clues: purple colour, round shape and chain arrangement.");
+    const m=state.mission9;
+    if (!m.placed) {
+      return shell(`<div class="mission-nine-scene placement" aria-label="Microscope workstation inside the bacteriology laboratory"><img class="mission-nine-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-nine-title"><div class="mission-label">Mission 9 of 10</div><h1>Look under the microscope</h1><p>Your completed Gram-stained slide is ready.</p></div><div class="mission-nine-prompt" role="status" aria-live="polite"><strong>Step 1 of 2</strong><span>Place the completed Gram-stained slide onto the microscope stage.</span></div><div class="m9-countertop" aria-hidden="true"></div><img class="m9-microscope" src="assets/mission-9/compound-microscope-empty.png" alt="Binocular microscope with an empty stage"><button class="m9-slide ${m.selected?"selected":""}" data-action="m9-select-slide" data-value="slide" draggable="true" data-drag="m9-stage" data-drag-image="assets/mission-9/gram-stained-slide-draggable.png" aria-pressed="${m.selected}" aria-label="Completed Gram-stained slide. Select it, then choose the microscope stage."><img src="assets/mission-9/gram-stained-slide-draggable.png" alt=""><span>Select the slide</span></button><button class="m9-stage-target ${m.selected?"ready":""}" data-action="m9-place-slide" data-drop="m9-stage" aria-label="Empty microscope stage, slide placement target"><img src="assets/mission-9/microscope-stage-closeup-empty.png" alt=""><span>Place slide here</span></button><div class="m9-guidance" aria-hidden="true"><svg viewBox="0 0 220 100"><path d="M10 72 C65 12 136 12 198 58"/><path d="M181 40 L201 59 L173 65"/></svg><span>Move the slide to the stage</span></div></div>`, "Select the stained slide, then place it on the highlighted microscope stage.");
+    }
+    if (!m.focusComplete) {
+      return shell(`<div class="mission-nine-scene focusing" aria-label="Focusing the microscope"><img class="mission-nine-background m9-zoom-background" src="assets/mission-2/laboratory-interior-background.png" alt=""><div class="m9-countertop" aria-hidden="true"></div><img class="m9-microscope placed" src="assets/mission-9/compound-microscope-with-slide.png" alt="Microscope with the Gram-stained slide secured on its stage"><div class="m9-focus-view" role="status" aria-live="polite"><img class="m9-focus-soft" src="assets/mission-9/microscope-focus-soft.png" alt=""><img class="m9-focus-sharp" src="assets/mission-9/microscope-focus-sharp.png" alt=""><img class="m9-eyepiece" src="assets/mission-9/microscope-eyepiece-overlay.png" alt=""><strong>Focusing the microscope…</strong><span>The view is becoming clear.</span></div><div class="m9-focus-control">${btn("Skip focus animation","m9-skip-focus","secondary")}</div></div>`, "The slide is secure. Focus the view before comparing the bacteria.");
+    }
+    const opts=[
+      ["pink","Pink rods","microscopy-field-pink-rods.png"],
+      ["prods","Purple rods","microscopy-field-purple-rods.png"],
+      ["chains","Purple cocci in chains","microscopy-field-purple-cocci-chains.png"],
+      ["clusters","Purple cocci in clusters","microscopy-field-purple-cocci-clusters.png"]
+    ];
+    const completion=m.complete?`<div class="m9-completion" role="dialog" aria-modal="true" aria-labelledby="m9-complete-title"><div class="m9-completion-card"><p id="m9-complete-title"><strong>Excellent!</strong> These Gram-positive cocci in chains are consistent with streptococci.</p><div class="m9-clues" aria-label="Microscopy clues"><span><b>Purple</b> colour</span><span><b>Round</b> shape</span><span><b>Chain</b> arrangement</span></div>${learning("These are Gram-positive cocci arranged in chains. This appearance is consistent with streptococci.","Their purple colour, round shape and chain arrangement help us recognise them as streptococci, but species identification needs another test.")}<div class="actions">${btn("Identify the species →","m9-next","coral")}</div></div></div>`:"";
+    return shell(`<div class="mission-nine-scene comparison" aria-label="Microscope field comparison"><div class="m9-micro-background"></div><div class="mission-nine-title"><div class="mission-label">Mission 9 of 10</div><h1>Look under the microscope</h1><p>Compare colour, shape and arrangement.</p></div><div class="mission-nine-prompt" role="status" aria-live="polite"><strong>Step 2 of 2</strong><span>Which picture shows the bacteria we are looking for?</span></div><div class="m9-field-grid" role="group" aria-label="Microscopic appearance choices">${opts.map(([value,label,file])=>{const wrong=m.attempts.includes(value),selected=m.selectedAnswer===value;return `<button class="m9-field-choice ${wrong?"wrong":""} ${selected?"selected":""}" data-action="m9-answer" data-value="${value}" aria-pressed="${selected}" aria-label="${label}"><img src="assets/mission-9/${file}" alt=""><strong>${label}</strong>${wrong?'<small>Try again</small>':""}</button>`;}).join("")}</div><p class="m9-comparison-hint">Look carefully at all three clues: colour, shape and arrangement.</p>${completion}</div>`, "Look carefully at all three clues: purple colour, round shape and chain arrangement.");
   }
 
   function mission10() {
@@ -338,6 +368,7 @@
     clearTimeout(gramAutoTimer);
     clearTimeout(mission6Timer);
     clearTimeout(mission7Timer);
+    clearTimeout(mission9Timer);
     if (!state.age || state.mission===0) app.innerHTML=startScreen();
     else if(state.mission===11) app.innerHTML=summary();
     else app.innerHTML=({1:mission1,2:mission2,3:mission3,4:mission4,5:mission5,6:mission6,7:mission7,8:mission8,9:mission9,10:mission10}[state.mission]||mission1)();
@@ -346,6 +377,7 @@
     else if(!orientationBlocked&&state.mission===8&&state.gram.mode==="auto"&&!state.gram.paused&&!state.gram.complete) scheduleGramAuto();
     if(!orientationBlocked&&state.mission===6&&state.mission6.incubationStarted&&!state.mission6.incubationComplete) scheduleMission6Incubation();
     if(!orientationBlocked&&state.mission===7&&state.mission7.dryingStarted&&!state.mission7.dryingComplete) scheduleMission7Drying();
+    if(!orientationBlocked&&state.mission===9&&state.mission9.transitionStarted&&!state.mission9.focusComplete) scheduleMission9Focus();
   }
 
   function resetGram(mode) { clearTimeout(timer);clearTimeout(gramAutoTimer);state.gram={...L.initialState().gram,mode};timerCounter=0;state.feedback="";state.feedbackType="";save();render(); }
@@ -378,6 +410,45 @@
     state.gram.selected=state.gram.selected===value?null:value;state.feedback=state.gram.selected?`${step.title} selected. Apply it to the highlighted slide.`:`${step.title} deselected.`;state.feedbackType=state.gram.selected?"good":"";save();render();
   }
 
+  function m9Update(message,type="good"){
+    state.feedback=message;state.feedbackType=type;save();announce(message);render();
+  }
+  function m9Wrong(message="Place the Gram-stained slide carefully onto the microscope stage."){
+    m9Update(message,"try");
+  }
+  function m9PlaceSlide(fromDrag=false,value=""){
+    const m=state.mission9;
+    if(m.placed||(fromDrag?value!=="slide":!m.selected)){m9Wrong();return;}
+    m.selected=false;m.placed=true;m.transitionStarted=true;m.focusComplete=false;m.focusSkipped=false;
+    m9Update("Slide placed. Now look through the microscope.");
+  }
+  function scheduleMission9Focus(){
+    clearTimeout(mission9Timer);
+    mission9Timer=setTimeout(()=>{
+      if(state.mission!==9||orientationBlocked||state.mission9.focusComplete)return;
+      state.mission9.focusComplete=true;
+      state.feedback="The microscopic fields are in focus. Compare the colour, shape and arrangement.";
+      state.feedbackType="good";
+      save();announce(state.feedback);render();
+    },reducedMotion?30:1650);
+  }
+  function m9Answer(value){
+    const m=state.mission9;
+    if(!m.focusComplete){m9Wrong("Finish focusing the microscope before comparing the fields.");return;}
+    m.selectedAnswer=value;
+    if(value==="chains"){
+      m.complete=true;
+      if(!state.completed.includes(9))state.completed.push(9);
+      state.feedback="Excellent! These Gram-positive cocci in chains are consistent with streptococci.";
+      state.feedbackType="good";
+      save();announce(state.feedback);render();
+      setTimeout(()=>document.querySelector('[data-action="m9-next"]')?.focus(),0);
+      return;
+    }
+    if(!m.attempts.includes(value))m.attempts.push(value);
+    m9Update("Not quite. Look carefully at the colour, shape and arrangement. Try again!","try");
+  }
+
   function bindDrag(){
     document.querySelectorAll("[draggable=true]").forEach(el=>{
       el.addEventListener("dragstart",ev=>{
@@ -390,7 +461,7 @@
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);if(el.dataset.drop.startsWith("m7-"))handleM7Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop==="m8-slide")startGramStep(v);});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);if(el.dataset.drop.startsWith("m7-"))handleM7Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop==="m8-slide")startGramStep(v);if(el.dataset.drop==="m9-stage")m9PlaceSlide(true,v);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -403,7 +474,7 @@
     };
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);if(target&&dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType==="m8-slide")startGramStep(value);}
+      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);if(target&&dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType==="m8-slide")startGramStep(value);if(target&&dropType==="m9-stage")m9PlaceSlide(true,value);if(!target&&dropType==="m9-stage")m9Wrong();}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -685,8 +756,11 @@
     if(action==="gram-replay"){resetGram(state.gram.mode==="choose"?"auto":state.gram.mode);return;}
     if(action==="gram-switch"){resetGram("manual");return;}
     if(action==="m8-next"){if(state.gram.complete){if(!state.completed.includes(8))state.completed.push(8);state.mission=9;state.feedback="The stained slide is ready for microscopy.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
-    if(action==="place-slide"){state.mission9.placed=true;setFeedback("Slide placed. Now compare the microscopic appearances.","good");return;}
-    if(action==="microscope"){if(value==="chains")completeMission(9,"Excellent! These Gram-positive cocci in chains are consistent with streptococci.");else setFeedback("Not quite. Look carefully at the colour, shape and arrangement. Try again!","try");return;}
+    if(action==="m9-select-slide"){if(state.mission9.placed){m9Wrong("The slide is already secured on the microscope stage.");return;}state.mission9.selected=!state.mission9.selected;m9Update(state.mission9.selected?"Gram-stained slide selected. Now choose the highlighted microscope stage.":"Slide deselected.",state.mission9.selected?"good":"");return;}
+    if(action==="m9-place-slide"){m9PlaceSlide();return;}
+    if(action==="m9-skip-focus"){if(!state.mission9.placed||state.mission9.focusComplete){m9Wrong("Place the slide before focusing the microscope.");return;}clearTimeout(mission9Timer);state.mission9.focusSkipped=true;state.mission9.focusComplete=true;m9Update("The microscopic fields are in focus. Compare the colour, shape and arrangement.");return;}
+    if(action==="m9-answer"){m9Answer(value);return;}
+    if(action==="m9-next"){if(state.mission9.complete){state.mission=10;state.feedback="Microscopy is consistent with streptococci. Use MALDI-TOF to identify the species.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
     if(action==="maldi-step"){state.mission10.step=Math.min(8,state.mission10.step+1);state.feedback=state.mission10.step===8?"MALDI-TOF found a species match.":"Correct—continue the MALDI-TOF preparation.";state.feedbackType="good";save();render();return;}
     if(action==="complete-10"){if(state.mission10.step>=8){if(!state.completed.includes(10))state.completed.push(10);state.mission=11;save();saveHubCompletion();render();}return;}
     if(action==="review"){state.mission=1;save();render();return;}
@@ -723,6 +797,6 @@
     if((ev.key==="Enter"||ev.key===" ")&&document.activeElement?.dataset.drop==="rack"){ev.preventDefault();rackSample();}
   });
   const orientationQuery=matchMedia("(orientation: portrait) and (max-width: 900px)");
-  orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);clearTimeout(gramAutoTimer);clearTimeout(mission6Timer);clearTimeout(mission7Timer);save();}else render();});
+  orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);clearTimeout(gramAutoTimer);clearTimeout(mission6Timer);clearTimeout(mission7Timer);clearTimeout(mission9Timer);save();}else render();});
   render();
 })();

@@ -1,0 +1,18 @@
+{
+  "mission": 9,
+  "canvas": { "width": 1254, "height": 1254 },
+  "assets": [
+    { "filename": "compound-microscope-empty.png", "purpose": "Empty microscope before slide placement", "transparent": true, "alignmentGroup": "compound-microscope" },
+    { "filename": "compound-microscope-with-slide.png", "purpose": "Microscope after slide placement", "transparent": true, "alignmentGroup": "compound-microscope" },
+    { "filename": "microscope-stage-closeup-empty.png", "purpose": "Empty stage close-up and drop target", "transparent": true, "alignmentGroup": "stage-closeup" },
+    { "filename": "microscope-stage-closeup-with-slide.png", "purpose": "Stage close-up with secured slide", "transparent": true, "alignmentGroup": "stage-closeup" },
+    { "filename": "gram-stained-slide-draggable.png", "purpose": "Completed Mission 8 slide used for dragging", "transparent": true, "alignmentGroup": "slide" },
+    { "filename": "microscope-eyepiece-overlay.png", "purpose": "Binocular transition mask with transparent apertures", "transparent": true, "alignmentGroup": "eyepiece-transition" },
+    { "filename": "microscopy-field-pink-rods.png", "purpose": "Incorrect comparison field: pink rods", "transparent": false, "alignmentGroup": "microscopy-fields" },
+    { "filename": "microscopy-field-purple-rods.png", "purpose": "Incorrect comparison field: purple rods", "transparent": false, "alignmentGroup": "microscopy-fields" },
+    { "filename": "microscopy-field-purple-cocci-chains.png", "purpose": "Correct comparison field: purple cocci in chains", "transparent": false, "alignmentGroup": "microscopy-fields" },
+    { "filename": "microscopy-field-purple-cocci-clusters.png", "purpose": "Incorrect comparison field: purple cocci in clusters", "transparent": false, "alignmentGroup": "microscopy-fields" },
+    { "filename": "microscope-focus-soft.png", "purpose": "Soft focus transition state", "transparent": false, "alignmentGroup": "focus-transition" },
+    { "filename": "microscope-focus-sharp.png", "purpose": "Sharp focus transition state", "transparent": false, "alignmentGroup": "focus-transition" }
+  ]
+}
