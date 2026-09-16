@@ -14,6 +14,7 @@
   let mission5AnimationTimer = null;
   let mission6Timer = null;
   let mission7Timer = null;
+  let gramAutoTimer = null;
   let openSampleInfo = null;
   let openAgarInfo = null;
   const SAMPLE_INFO = {
@@ -82,7 +83,9 @@
     state.mission7.heatFixed = previousM7Step >= 5;
     state.mission7.complete = previousM7Step >= 5;
   }
-  if (state.gram && state.gram.running) state.gram.running = false;
+  state.gram = { ...L.initialState().gram, ...(state.gram || {}) };
+  const M8_ASSETS = ["gram-stain-rack.png","staining-tray.png","crystal-violet-bottle.png","lugols-iodine-bottle.png","decolorizer-bottle.png","carbol-fuchsin-bottle.png","wash-bottle.png","reagent-drop-clear.png","reagent-drop-violet.png","reagent-drop-iodine.png","reagent-drop-decolorizer.png","reagent-drop-fuchsin.png","slide-heat-fixed.png","slide-crystal-violet.png","slide-crystal-violet-rinsed.png","slide-iodine.png","slide-iodine-rinsed.png","slide-decolorizing.png","slide-decolorized-rinsed.png","slide-carbol-fuchsin.png","slide-gram-stain-complete.png"];
+  M8_ASSETS.forEach(file=>{const image=new Image();image.src=`assets/mission-8/${file}`;image.decode?.().catch(()=>{});});
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
 
   function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
@@ -127,7 +130,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : state.mission === 8 ? "screen mission-eight-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -282,18 +285,33 @@
   }
 
   function gramChecklist() {
-    return `<ol class="checklist">${L.GRAM_STEPS.map((step,i)=>`<li class="${i<state.gram.step?"done":i===state.gram.step&&!state.gram.complete?"current":""}">${i<state.gram.step?"✓ ":""}${i+1}. ${step.title}</li>`).join("")}</ol>`;
+    return `<ol class="m8-checklist" aria-label="Gram-stain checklist">${L.GRAM_STEPS.map((step,i)=>`<li class="${i<state.gram.step?"done":i===state.gram.step&&!state.gram.complete?"current":""}" ${i===state.gram.step&&!state.gram.complete?'aria-current="step"':""}><span>${i<state.gram.step?"✓":i+1}</span><b>${step.title}</b>${step.seconds?`<small>${step.seconds} seconds</small>`:""}</li>`).join("")}</ol>`;
   }
   function gramButtons() {
-    const bottles=[["water","Water","#bcecff"],["violet","Crystal violet","#7742b5"],["iodine","Lugol’s iodine","#be7530"],["decolorizer","Decolorizer","#e3c247"],["fuchsin","Carbol Fuchsin","#e6689a"]];
-    return `<div class="grid bottles">${bottles.map(b=>`<button class="choice bottle" style="--bottle:${b[2]}" data-action="gram-bottle" data-value="${b[0]}" ${state.gram.running||state.gram.complete?"disabled":""}><strong>${b[1]}</strong></button>`).join("")}</div>`;
+    const bottles=[["violet","Crystal violet","crystal-violet-bottle.png"],["water","Water","wash-bottle.png"],["iodine","Lugol’s iodine","lugols-iodine-bottle.png"],["decolorizer","Decolorizer","decolorizer-bottle.png"],["fuchsin","Carbol fuchsin","carbol-fuchsin-bottle.png"]];
+    const correct=(L.GRAM_STEPS[state.gram.step]||{}).bottle;
+    return `<div class="m8-bottles">${bottles.map(b=>`<button class="m8-bottle ${correct===b[0]?"active":""} ${state.gram.selected===b[0]?"selected":""}" data-action="gram-bottle" data-value="${b[0]}" draggable="${state.gram.mode==="manual"&&!state.gram.running&&!state.gram.complete}" data-drag="m8-slide" data-drag-image="assets/mission-8/${b[2]}" aria-pressed="${state.gram.selected===b[0]}" aria-label="${b[1]} bottle${correct===b[0]?", suggested for the current step":""}" ${state.gram.mode!=="manual"||state.gram.complete?"disabled":""}><img src="assets/mission-8/${b[2]}" alt=""><span>${b[1]}</span></button>`).join("")}</div>`;
+  }
+  function gramSlideFile(){
+    if(state.gram.complete)return "slide-gram-stain-complete.png";
+    const after=["slide-heat-fixed.png","slide-crystal-violet.png","slide-crystal-violet-rinsed.png","slide-iodine.png","slide-iodine-rinsed.png","slide-decolorizing.png","slide-decolorized-rinsed.png","slide-carbol-fuchsin.png"];
+    const active=["slide-crystal-violet.png","slide-crystal-violet-rinsed.png","slide-iodine.png","slide-iodine-rinsed.png","slide-decolorizing.png","slide-decolorized-rinsed.png","slide-carbol-fuchsin.png","slide-gram-stain-complete.png"];
+    return (state.gram.running?active:after)[Math.min(state.gram.step,7)];
+  }
+  function gramPrompt(){
+    const prompts=["Apply crystal violet to cover the heat-fixed smear.","Rinse the slide gently with water.","Apply Lugol’s iodine to the smear.","Rinse the slide gently with water.","Apply the decolorizer carefully.","Rinse immediately with water to stop the decolorizer.","Apply carbol fuchsin as the counterstain.","Give the slide its final gentle water rinse."];
+    return prompts[Math.min(state.gram.step,7)];
   }
   function mission8() {
-    if (!state.gram.mode) return shell(`${missionHeader(8,"The Gram stain","Follow the local laboratory protocol to stain the heat-fixed slide.")}<div class="lab-bench" style="display:grid;place-items:center"><button class="btn coral" style="font-size:1.35rem;padding:18px 30px" data-action="gram-play">▶ PLAY</button></div>${feedback()}`, "The large PLAY control lets you watch the full procedure or complete every step yourself.");
-    if (state.gram.mode === "choose") return shell(`${missionHeader(8,"Choose a play mode","Both modes teach the same eight-step Gram-stain procedure.")}<div class="grid grid-2">${choice("▶","Watch automatically","Guided animation with pause, resume and replay","gram-mode","auto")}${choice("🧪","Do it myself","Choose each bottle in checklist order","gram-mode","manual")}</div>${feedback()}`, "You can switch from automatic to manual; the procedure safely restarts from Step 1.");
+    if (!state.gram.mode) return shell(`<div class="mission-eight-scene intro" aria-label="Gram-staining laboratory workstation"><img class="mission-eight-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="m8-countertop" aria-hidden="true"></div><div class="m8-intro" role="dialog" aria-labelledby="m8-intro-title"><div class="mission-label">Mission 8 of 10</div><h1 id="m8-intro-title">The Gram stain</h1><p>Gram staining uses a sequence of stains and rinses to help us examine bacteria.</p><div class="m8-mode-grid"><button class="m8-mode" data-action="gram-mode" data-value="manual"><strong>Guide me through it</strong><span>You choose each reagent and follow every step.</span></button><button class="m8-mode" data-action="gram-mode" data-value="auto"><strong>Show the automatic procedure</strong><span>Watch the correct procedure with explanations.</span></button></div></div></div>`, "Choose guided practice or the automatic demonstration. Both use the same scientific order and timings.");
     const step=L.GRAM_STEPS[state.gram.step] || L.GRAM_STEPS[7];
-    const status=state.gram.complete?"The Gram stain is complete!":state.gram.running?`${step.message}`:`Next: ${step.detail}`;
-    return shell(`${missionHeader(8,"The Gram stain",state.gram.mode==="auto"?"Watch the complete guided procedure.":"Use the checklist to apply each reagent and rinse in order.")}<div class="gram-layout"><div><div class="instruction">${status}</div><div class="lab-bench" style="min-height:180px;text-align:center"><div aria-label="Slide rack over sink" style="font-size:4rem">${state.gram.complete?"🟣":"▱"}</div>${state.gram.running?`<div class="timer">${timerCounter?`0:${String(timerCounter).padStart(2,"0")}`:"FAST TIMER"}</div>`:""}</div>${state.gram.mode==="manual"?gramButtons():""}<div class="actions">${state.gram.mode==="auto"&&!state.gram.complete?(state.gram.paused?btn("Resume","gram-resume"):btn("Pause","gram-pause","secondary"))+btn("Replay","gram-replay","secondary"):""}${state.gram.mode==="auto"?btn("Switch to do it myself","gram-switch","secondary"):""}${state.gram.complete?btn("Replay procedure","gram-replay","secondary")+(state.completed.includes(8)?btn("Mission 9 →","continue"):btn("Finish Mission 8","complete-8","coral")):""}</div></div><aside>${gramChecklist()}</aside></div>${feedback()}${state.gram.complete?learning("Gram staining helps us see and classify bacteria. Gram-positive bacteria stain purple, while Gram-negative bacteria stain pink.","The difference happens because Gram-positive and Gram-negative bacteria have different cell-envelope structures."):""}`, "The order is crystal violet, water, Lugol’s iodine, water, decolorizer, water, Carbol Fuchsin, then water.");
+    const isRinse=step.bottle==="water";
+    const drop={violet:"violet",water:"clear",iodine:"iodine",decolorizer:"decolorizer",fuchsin:"fuchsin"}[step.bottle];
+    const timing=step.seconds?`${step.title} — ${step.seconds} seconds`:step.key==="rinse3"?"Rinse now":"Rinse gently";
+    const timerText=String(Math.max(0,state.gram.timerRemaining||step.seconds)).padStart(2,"0");
+    const guidance=state.gram.complete?"":`<div class="m8-guidance" aria-hidden="true"><svg viewBox="0 0 180 90"><path d="M8 18 C62 4 98 76 166 50"/><path d="m151 39 16 11-18 8"/></svg><span>${isRinse?(step.key==="rinse3"?"Rinse now":"Rinse gently"):"Apply to the smear"}</span></div>`;
+    const completion=state.gram.complete?`<div class="m8-completion" role="status" aria-live="polite"><div class="m8-completion-card"><p><strong>Excellent!</strong> You completed the Gram stain in the correct order.</p>${learning("Gram staining helps us see and classify bacteria. Gram-positive bacteria stain purple, while Gram-negative bacteria stain pink.","The colour difference happens because Gram-positive and Gram-negative bacteria have different cell-envelope structures.")}<div class="actions">${state.gram.mode==="auto"?btn("Replay procedure","gram-replay","secondary"):""}${btn("View under the microscope →","m8-next","coral")}</div></div></div>`:"";
+    return shell(`<div class="mission-eight-scene mode-${state.gram.mode} step-${state.gram.step} ${state.gram.running?"running":""}" aria-label="Gram-staining laboratory workstation"><img class="mission-eight-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-eight-title"><div class="mission-label">Mission 8 of 10</div><h1>The Gram stain</h1><p>${state.gram.mode==="auto"?"Automatic demonstration":"Guided manual mode"}</p></div><div class="mission-eight-prompt" role="status" aria-live="polite"><strong>Step ${Math.min(state.gram.step+1,8)} of 8</strong><span>${state.gram.complete?"The Gram stain is complete!":gramPrompt()}</span><em>${timing}</em></div><div class="m8-countertop" aria-hidden="true"></div>${gramButtons()}<div class="m8-workstation"><img class="m8-tray" src="assets/mission-8/staining-tray.png" alt="Staining tray"><img class="m8-rack" src="assets/mission-8/gram-stain-rack.png" alt="Gram-staining rack"><button class="m8-slide-target ${state.gram.selected?"ready":""}" data-action="gram-slide" data-drop="m8-slide" aria-label="Microscope slide application target"><img src="assets/mission-8/${gramSlideFile()}" alt="${state.gram.complete?"Completed Gram-stained microscope slide":"Microscope slide at the current Gram-stain stage"}"></button>${state.gram.running?`<img class="m8-drop drop-${drop}" src="assets/mission-8/reagent-drop-${drop}.png" alt="" aria-hidden="true">${isRinse?`<i class="m8-water-stream" aria-hidden="true"></i>`:""}`:""}</div>${guidance}<aside class="m8-checklist-panel"><h2>Gram-stain checklist</h2>${gramChecklist()}</aside>${state.gram.running&&step.seconds?`<div class="m8-timer" role="timer" aria-label="${step.title} timer"><span>${timerText}</span><small>scientific seconds</small>${btn("Skip time animation","gram-skip-time","secondary")}</div>`:""}<div class="m8-controls">${state.gram.mode==="auto"&&!state.gram.complete?(state.gram.paused?btn("Resume","gram-resume"):btn("Pause","gram-pause","secondary"))+btn("Switch to guided mode","gram-switch","secondary"):""}</div>${completion}</div>`, "Follow the highlighted reagent and the eight-step checklist.");
   }
 
   function mission9() {
@@ -317,36 +335,47 @@
 
   function render() {
     clearTimeout(timer);
+    clearTimeout(gramAutoTimer);
     clearTimeout(mission6Timer);
     clearTimeout(mission7Timer);
     if (!state.age || state.mission===0) app.innerHTML=startScreen();
     else if(state.mission===11) app.innerHTML=summary();
     else app.innerHTML=({1:mission1,2:mission2,3:mission3,4:mission4,5:mission5,6:mission6,7:mission7,8:mission8,9:mission9,10:mission10}[state.mission]||mission1)();
     bindDrag();
-    if(!orientationBlocked&&state.mission===8&&state.gram.mode==="auto"&&!state.gram.paused&&!state.gram.complete) scheduleGramAuto();
+    if(!orientationBlocked&&state.mission===8&&state.gram.running&&!state.gram.paused&&!state.gram.complete) scheduleGramTick();
+    else if(!orientationBlocked&&state.mission===8&&state.gram.mode==="auto"&&!state.gram.paused&&!state.gram.complete) scheduleGramAuto();
     if(!orientationBlocked&&state.mission===6&&state.mission6.incubationStarted&&!state.mission6.incubationComplete) scheduleMission6Incubation();
     if(!orientationBlocked&&state.mission===7&&state.mission7.dryingStarted&&!state.mission7.dryingComplete) scheduleMission7Drying();
   }
 
-  function resetGram(mode) { clearTimeout(timer); state.gram={mode,step:0,paused:false,complete:false,running:false}; timerCounter=0; save(); render(); }
+  function resetGram(mode) { clearTimeout(timer);clearTimeout(gramAutoTimer);state.gram={...L.initialState().gram,mode};timerCounter=0;state.feedback="";state.feedbackType="";save();render(); }
   function advanceGram() {
-    state.gram.running=false;
-    if(state.gram.step>=L.GRAM_STEPS.length-1){ state.gram.step=L.GRAM_STEPS.length; state.gram.complete=true; state.feedback="The Gram stain is complete! Some bacteria remain purple, while others become pink."; state.feedbackType="good"; }
-    else state.gram.step+=1;
+    const finished=L.GRAM_STEPS[state.gram.step];
+    state.gram.running=false;state.gram.selected=null;state.gram.timerRemaining=0;state.gram.timerTotal=0;
+    if(state.gram.step>=L.GRAM_STEPS.length-1){state.gram.step=L.GRAM_STEPS.length;state.gram.complete=true;if(!state.completed.includes(8))state.completed.push(8);state.feedback="The Gram stain is complete! The slide is ready for microscopy.";state.feedbackType="good";}
+    else {state.gram.step+=1;state.feedback=finished.message;state.feedbackType="good";}
     save(); render();
   }
   function scheduleGramAuto() {
     if(state.gram.step>=L.GRAM_STEPS.length){state.gram.complete=true;save();render();return;}
-    const step=L.GRAM_STEPS[state.gram.step]; state.gram.running=true; save();
-    timerCounter=step.seconds;
-    const duration=reducedMotion?80:(step.seconds?900:500);
-    timer=setTimeout(advanceGram,duration);
+    gramAutoTimer=setTimeout(()=>startGramStep(L.GRAM_STEPS[state.gram.step].bottle),reducedMotion?30:350);
+  }
+  function startGramStep(value){
+    const step=L.GRAM_STEPS[state.gram.step];
+    if(value!==step.bottle){setFeedback("Not quite — check the next step on the checklist.","try");return;}
+    state.gram.selected=null;state.gram.running=true;state.gram.timerTotal=step.seconds;state.gram.timerRemaining=reducedMotion&&step.seconds?1:step.seconds;state.gram.visualSkipped=false;state.feedback=step.message;state.feedbackType="good";save();render();
+  }
+  function scheduleGramTick(){
+    const step=L.GRAM_STEPS[state.gram.step];
+    if(!step){advanceGram();return;}
+    if(!step.seconds){timer=setTimeout(advanceGram,reducedMotion?40:520);return;}
+    timer=setTimeout(()=>{if(orientationBlocked||state.gram.paused)return;state.gram.timerRemaining=Math.max(0,state.gram.timerRemaining-1);timerCounter=state.gram.timerRemaining;save();if(state.gram.timerRemaining<=0)advanceGram();else{const counter=document.querySelector(".m8-timer>span");if(counter)counter.textContent=String(state.gram.timerRemaining).padStart(2,"0");scheduleGramTick();}},reducedMotion?1:35);
   }
   function applyManualBottle(value) {
     const step=L.GRAM_STEPS[state.gram.step];
-    if(value!==step.bottle){setFeedback("Not quite — check the next step on the checklist.","try");return;}
-    state.feedback=step.message; state.feedbackType="good"; state.gram.running=true; timerCounter=step.seconds; save(); render();
-    timer=setTimeout(advanceGram,reducedMotion?80:(step.seconds?700:300));
+    if(state.gram.running)return;
+    if(value!==step.bottle){setFeedback("Not quite—check the next step on the Gram-stain checklist.","try");return;}
+    state.gram.selected=state.gram.selected===value?null:value;state.feedback=state.gram.selected?`${step.title} selected. Apply it to the highlighted slide.`:`${step.title} deselected.`;state.feedbackType=state.gram.selected?"good":"";save();render();
   }
 
   function bindDrag(){
@@ -361,7 +390,7 @@
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);if(el.dataset.drop.startsWith("m7-"))handleM7Drop(v,el.dataset.drop,el.dataset.value);});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);if(el.dataset.drop.startsWith("m7-"))handleM7Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop==="m8-slide")startGramStep(v);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -374,7 +403,7 @@
     };
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);if(target&&dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);}
+      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);if(target&&dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType==="m8-slide")startGramStep(value);}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -647,14 +676,15 @@
     if(action==="m7-heat-zone"){m7Heat(value);return;}
     if(action==="m7-wrong"){m7Wrong();return;}
     if(action==="m7-next"){if(m7Phase()===9){state.mission=8;state.feedback="The prepared slide is ready for Gram staining.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
-    if(action==="gram-play"){state.gram.mode="choose";save();render();return;}
     if(action==="gram-mode"){resetGram(value);return;}
     if(action==="gram-bottle"){applyManualBottle(value);return;}
-    if(action==="gram-pause"){clearTimeout(timer);state.gram.paused=true;state.gram.running=false;state.feedback="Automatic procedure paused safely.";save();render();return;}
+    if(action==="gram-slide"){if(state.gram.mode!=="manual"||state.gram.running)return;if(!state.gram.selected){setFeedback("Select the highlighted reagent first, then apply it to the slide.","try");return;}startGramStep(state.gram.selected);return;}
+    if(action==="gram-pause"){clearTimeout(timer);clearTimeout(gramAutoTimer);state.gram.paused=true;state.feedback="Automatic procedure paused safely.";save();render();return;}
     if(action==="gram-resume"){state.gram.paused=false;state.feedback="Automatic procedure resumed.";save();render();return;}
+    if(action==="gram-skip-time"){if(state.gram.running&&L.GRAM_STEPS[state.gram.step]?.seconds){state.gram.visualSkipped=true;state.gram.timerRemaining=0;advanceGram();}return;}
     if(action==="gram-replay"){resetGram(state.gram.mode==="choose"?"auto":state.gram.mode);return;}
     if(action==="gram-switch"){resetGram("manual");return;}
-    if(action==="complete-8"){if(state.gram.complete)completeMission(8,"Gram stain complete. The slide is ready for microscopy.");return;}
+    if(action==="m8-next"){if(state.gram.complete){if(!state.completed.includes(8))state.completed.push(8);state.mission=9;state.feedback="The stained slide is ready for microscopy.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
     if(action==="place-slide"){state.mission9.placed=true;setFeedback("Slide placed. Now compare the microscopic appearances.","good");return;}
     if(action==="microscope"){if(value==="chains")completeMission(9,"Excellent! These Gram-positive cocci in chains are consistent with streptococci.");else setFeedback("Not quite. Look carefully at the colour, shape and arrangement. Try again!","try");return;}
     if(action==="maldi-step"){state.mission10.step=Math.min(8,state.mission10.step+1);state.feedback=state.mission10.step===8?"MALDI-TOF found a species match.":"Correct—continue the MALDI-TOF preparation.";state.feedbackType="good";save();render();return;}
@@ -693,6 +723,6 @@
     if((ev.key==="Enter"||ev.key===" ")&&document.activeElement?.dataset.drop==="rack"){ev.preventDefault();rackSample();}
   });
   const orientationQuery=matchMedia("(orientation: portrait) and (max-width: 900px)");
-  orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);clearTimeout(mission6Timer);clearTimeout(mission7Timer);if(state.gram?.running){state.gram.running=false;save();}}else render();});
+  orientationQuery.addEventListener?.("change",event=>{orientationBlocked=event.matches;if(orientationBlocked){clearTimeout(timer);clearTimeout(gramAutoTimer);clearTimeout(mission6Timer);clearTimeout(mission7Timer);save();}else render();});
   render();
 })();

@@ -1,0 +1,26 @@
+{
+  "canvas": { "width": 1254, "height": 1254 },
+  "assets": [
+    "gram-stain-rack.png",
+    "staining-tray.png",
+    "crystal-violet-bottle.png",
+    "lugols-iodine-bottle.png",
+    "decolorizer-bottle.png",
+    "carbol-fuchsin-bottle.png",
+    "wash-bottle.png",
+    "reagent-drop-clear.png",
+    "reagent-drop-violet.png",
+    "reagent-drop-iodine.png",
+    "reagent-drop-decolorizer.png",
+    "reagent-drop-fuchsin.png",
+    "slide-heat-fixed.png",
+    "slide-crystal-violet.png",
+    "slide-crystal-violet-rinsed.png",
+    "slide-iodine.png",
+    "slide-iodine-rinsed.png",
+    "slide-decolorizing.png",
+    "slide-decolorized-rinsed.png",
+    "slide-carbol-fuchsin.png",
+    "slide-gram-stain-complete.png"
+  ]
+}

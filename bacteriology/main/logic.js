@@ -14,12 +14,12 @@
   const GRAM_STEPS = [
     { key: "violet", bottle: "violet", title: "Crystal violet", detail: "Apply crystal violet", seconds: 60, message: "Crystal violet is the first stain." },
     { key: "rinse1", bottle: "water", title: "Rinse", detail: "Rinse with water", seconds: 0, message: "Rinse the slide with water." },
-    { key: "iodine", bottle: "iodine", title: "Lugol’s iodine", detail: "Apply Lugol’s iodine", seconds: 60, message: "Now we add iodine." },
-    { key: "rinse2", bottle: "water", title: "Rinse", detail: "Rinse with water", seconds: 0, message: "Rinse the slide with water." },
-    { key: "decolorizer", bottle: "decolorizer", title: "Decolorizer", detail: "Apply decolorizer", seconds: 30, message: "Now comes an important step — the decolorizer." },
-    { key: "rinse3", bottle: "water", title: "Rinse", detail: "Rinse with water", seconds: 0, message: "Rinse the slide with water." },
+    { key: "iodine", bottle: "iodine", title: "Lugol’s iodine", detail: "Apply Lugol’s iodine", seconds: 60, message: "Lugol’s iodine helps the crystal violet remain within Gram-positive bacteria." },
+    { key: "rinse2", bottle: "water", title: "Rinse", detail: "Rinse with water", seconds: 0, message: "The iodine step is complete. The slide has been rinsed." },
+    { key: "decolorizer", bottle: "decolorizer", title: "Decolorizer", detail: "Apply decolorizer", seconds: 30, message: "The decolorizer is the differential step of the Gram stain." },
+    { key: "rinse3", bottle: "water", title: "Immediate rinse", detail: "Rinse immediately with water", seconds: 0, message: "Good! The water rinse stopped the decolorizer." },
     { key: "fuchsin", bottle: "fuchsin", title: "Carbol Fuchsin", detail: "Apply Carbol Fuchsin", seconds: 60, message: "Carbol Fuchsin is the final stain." },
-    { key: "rinse4", bottle: "water", title: "Final rinse", detail: "Rinse with water", seconds: 0, message: "Give the slide its final water rinse." }
+    { key: "rinse4", bottle: "water", title: "Final rinse", detail: "Rinse with water", seconds: 0, message: "The Gram stain is complete! The slide is ready for microscopy." }
   ];
 
   function randomInteger(minimum, maximum, random = Math.random) {
@@ -112,7 +112,10 @@
         step:0, waterAdded:false, loopSelected:false, colonySelected:false, selectedColony:null,
         colonyTransferred:false, smearStage:0, wetSmearComplete:false, dryingStarted:false,
         dryingComplete:false, burnerLit:false, heatPass:0, heatFixed:false, complete:false, selected:null
-      }, gram: { mode: null, step: 0, paused: false, complete: false },
+      }, gram: {
+        mode: null, step: 0, paused: false, complete: false, running: false,
+        selected: null, timerRemaining: 0, timerTotal: 0, visualSkipped: false
+      },
       mission9: { placed: false }, mission10: { step: 0 }, selectedAnswers: {},
       matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false, sampleSelected: false }
     };
