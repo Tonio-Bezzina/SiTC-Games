@@ -165,7 +165,7 @@ const labs = [
 
         href: "haematology/",
 
-        available: false,
+        available: true,
 
         mainCase: "main",
 
@@ -173,7 +173,7 @@ const labs = [
 
             {
                 id: "main",
-                name: "Main Haematology Mission",
+                name: "Identify the White Blood Cell",
                 main: true
             }
 
