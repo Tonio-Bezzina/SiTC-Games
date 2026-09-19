@@ -253,6 +253,43 @@ h1, h2, h3, p { margin-top: 0; }
   .cassette-target img { max-height: 145px; }
 }
 
+/* Mission 3: processing and embedding */
+.processing-path { display: block; width: min(720px,92%); max-height: 90px; margin: 0 auto 10px; }
+.mission-input-object { display: grid; justify-items: center; width: min(230px,45vw); margin: 0 auto 12px; border-radius: 18px; padding: 10px; background: rgba(255,255,255,.94); color: var(--navy); box-shadow: var(--shadow); }
+.mission-input-object img { width: 140px; height: 115px; object-fit: contain; }
+.equipment-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; max-width: 1150px; margin: auto; }
+.equipment-choice { min-height: 260px; border: 3px solid var(--blue); border-radius: 20px; padding: 12px; background: rgba(255,255,255,.96); color: var(--navy); box-shadow: var(--shadow); cursor: pointer; font-weight: 900; }
+.equipment-choice:hover { border-color: var(--gold); transform: translateY(-2px); }
+.equipment-choice > img, .equipment-pair { display: block; width: 100%; height: 200px; object-fit: contain; }
+.equipment-pair { display: grid; grid-template-columns: 1fr 1fr; }
+.equipment-pair img { width: 100%; height: 190px; object-fit: contain; }
+.equipment-choice strong { display: block; font-size: 1.08rem; }
+.process-stage, .wax-block-reveal { display: grid; grid-template-columns: minmax(240px,.8fr) 1.2fr; gap: 24px; align-items: center; max-width: 900px; margin: 18px auto; border: 3px solid var(--cyan); border-radius: 24px; padding: 22px; background: rgba(255,255,255,.96); box-shadow: var(--shadow); }
+.process-stage img, .wax-block-reveal img { width: 100%; max-height: 360px; object-fit: contain; }
+.process-stage h2, .wax-block-reveal h2 { color: var(--navy); font-size: clamp(1.6rem,3vw,2.6rem); }
+.process-stage p, .wax-block-reveal p { line-height: 1.5; }
+.mould-sequence { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; max-width: 1100px; margin: 18px auto; }
+.mould-sequence figure { margin: 0; border: 3px solid var(--cyan); border-radius: 20px; padding: 12px; background: rgba(255,255,255,.96); box-shadow: var(--shadow); text-align: center; }
+.mould-sequence img { width: 100%; height: 250px; object-fit: contain; }
+.mould-sequence figcaption { color: var(--navy); font-weight: 900; }
+
+@media (max-width: 720px) {
+  .equipment-grid, .mould-sequence { grid-template-columns: 1fr; }
+  .equipment-choice { min-height: 190px; }
+  .equipment-choice > img, .equipment-pair { height: 140px; }
+  .equipment-pair img { height: 135px; }
+  .process-stage, .wax-block-reveal { grid-template-columns: 1fr; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .mission-input-object { position: absolute; top: 104px; right: 18px; width: 130px; }
+  .mission-input-object img { width: 90px; height: 70px; }
+  .equipment-choice { min-height: 180px; }
+  .equipment-choice > img, .equipment-pair { height: 125px; }
+  .equipment-pair img { height: 120px; }
+  .mould-sequence img { height: 150px; }
+}
+
 /* Completion */
 .chapter-complete { position: relative; isolation: isolate; display: grid; place-items: center; min-height: calc(100vh - 70px); overflow: hidden; padding: 28px; }
 .complete-background { background: url("assets/shared/histology-lab-shell-bg.png") center / cover; }

@@ -106,3 +106,29 @@ test("Mission 2 drag placement accepts only the small cut tissue", () => {
   state = logic.applyMission2Action(state, "place-tissue", "drop");
   assert.equal(state.step, "loaded");
 });
+
+test("Mission 3 accepts only the processor and embedding centre", () => {
+  let state = logic.createMission3State();
+  state = logic.applyMission3Action(state, "choose", "microtome");
+  assert.equal(state.step, "question");
+  state = logic.applyMission3Action(state, "choose", "staining");
+  assert.equal(state.step, "question");
+  state = logic.applyMission3Action(state, "choose", logic.MISSION3_CORRECT_CHOICE);
+  assert.equal(state.step, "processing");
+  state = logic.applyMission3Action(state, "advance");
+  assert.equal(state.step, "embedding");
+  state = logic.applyMission3Action(state, "advance");
+  assert.equal(state.step, "reveal");
+  assert.equal(state.blockCreated, true);
+  state = logic.applyMission3Action(state, "advance");
+  assert.equal(state.step, "complete");
+  assert.equal(state.complete, true);
+});
+
+test("Mission 3 interrupted processing resumes at one safe wax-block reveal", () => {
+  const processing = { ...logic.createMission3State(), choice: logic.MISSION3_CORRECT_CHOICE, step: "processing" };
+  const resumed = logic.applyMission3Action(processing, "resume-safe");
+  assert.equal(resumed.step, "reveal");
+  assert.equal(resumed.blockCreated, true);
+  assert.equal(resumed.complete, false);
+});

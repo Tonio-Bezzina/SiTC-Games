@@ -48,6 +48,29 @@
     return state;
   }
 
+  const MISSION3_CORRECT_CHOICE = "processor-embedding";
+
+  function createMission3State() {
+    return { choice: null, step: "question", blockCreated: false, complete: false };
+  }
+
+  function applyMission3Action(current, action, value) {
+    const state = { ...createMission3State(), ...(current || {}) };
+    if (action === "choose" && state.step === "question") {
+      if (value !== MISSION3_CORRECT_CHOICE) return { ...state, choice: value };
+      return { ...state, choice: value, step: "processing" };
+    }
+    if (action === "advance") {
+      if (state.step === "processing") return { ...state, step: "embedding" };
+      if (state.step === "embedding") return { ...state, step: "reveal", blockCreated: true };
+      if (state.step === "reveal") return { ...state, step: "complete", blockCreated: true, complete: true };
+    }
+    if (action === "resume-safe" && ["processing", "embedding"].includes(state.step)) {
+      return { ...state, step: "reveal", blockCreated: true };
+    }
+    return state;
+  }
+
   const FIRST_NAMES = Object.freeze([
     "Alex", "Amelia", "Daniel", "Elena", "Isaac", "Leah", "Maya", "Noah",
     "Rafael", "Sara", "Sofia", "Theo", "Yasmin", "Zachary"
@@ -240,13 +263,16 @@
   return Object.freeze({
     LEVELS,
     MISSION2_CORRECT_CHOICE,
+    MISSION3_CORRECT_CHOICE,
     applyMission2Action,
+    applyMission3Action,
     ageOn,
     changeCaseLevel,
     createCase,
     createDateOfBirth,
     createIncorrectCandidate,
     createMission2State,
+    createMission3State,
     createPatientId,
     formatDisplayDate,
     identityMismatchFields,

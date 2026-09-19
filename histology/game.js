@@ -6,9 +6,10 @@
   const announcer = document.getElementById("announcer");
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
-  const VERSION = 2;
+  const VERSION = 3;
   let pendingFocus = null;
   let cutStart = null;
+  let sequenceTimer = null;
 
   function initialState() {
     return {
@@ -29,7 +30,9 @@
       feedbackType: "",
       currentMission: 1,
       mission2: L.createMission2State(),
-      mission2Complete: false
+      mission2Complete: false,
+      mission3: L.createMission3State(),
+      mission3Complete: false
     };
   }
 
@@ -37,12 +40,14 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      if (saved.version !== 1 && saved.version !== VERSION) return initialState();
+      if (![1, 2, VERSION].includes(saved.version)) return initialState();
+      const mission3 = { ...L.createMission3State(), ...(saved.mission3 || {}) };
       return {
         ...initialState(),
         ...saved,
         version: VERSION,
         mission2: { ...L.createMission2State(), ...(saved.mission2 || {}) },
+        mission3: L.applyMission3Action(mission3, "resume-safe"),
         screen: "level",
         forceReplay: false
       };
@@ -96,9 +101,13 @@
     state.currentMission = 1;
     state.mission2 = L.createMission2State();
     state.mission2Complete = false;
+    state.mission3 = L.createMission3State();
+    state.mission3Complete = false;
   }
 
   function resumeScreen() {
+    if (state.mission3Complete) return "mission3-complete";
+    if (state.currentMission === 3 && state.mission2Complete) return "mission3";
     if (state.mission2Complete) return "mission2-complete";
     if (state.currentMission === 2 && state.mission1Complete) return "mission2";
     if (state.mission1Complete) return "mission1-complete";
@@ -440,15 +449,81 @@
             <p class="eyebrow">MISSION 2 COMPLETE</p>
             <h1 id="mission2CompleteTitle">The tissue is safely inside its cassette.</h1>
             <p>${escapeHtml(name)}'s accepted skin specimen is ready for processing.</p>
-            <div class="next-preview"><strong>Next: Make a Wax Block</strong><span>The next mission will be added in a future release.</span></div>
+            <div class="next-preview"><strong>Next: Make a Wax Block</strong><span>Continue with the same patient's loaded cassette.</span></div>
             <div class="complete-actions">
-              <button class="primary-button" type="button" data-action="review-mission2">Review Mission 2</button>
+              <button class="primary-button" type="button" data-action="start-mission3">Continue to Mission 3</button>
+              <button class="secondary-button" type="button" data-action="review-mission2">Review Mission 2</button>
               <button class="secondary-button" type="button" data-action="review-mission1">Review Mission 1</button>
               <button class="secondary-button" type="button" data-action="new-case">Start a New Case</button>
               <a class="secondary-button button-link" href="../">Return to Game Hub</a>
             </div>
           </div>
         </section>
+      </main>`;
+  }
+
+  function mission3Choices() {
+    return `<div class="equipment-grid" aria-label="Choose the correct laboratory equipment">
+      <button class="equipment-choice" type="button" data-action="mission3-choice" data-value="processor-embedding">
+        <span class="equipment-pair"><img src="assets/mission-3/tissue-processor-idle.png" alt="Tissue processor"><img src="assets/mission-3/embedding-centre-idle.png" alt="Embedding centre"></span><strong>Processor &amp; Embedding Centre</strong>
+      </button>
+      <button class="equipment-choice" type="button" data-action="mission3-choice" data-value="microtome"><img src="assets/mission-3/microtome-choice-idle.png" alt="Microtome"><strong>Microtome</strong></button>
+      <button class="equipment-choice" type="button" data-action="mission3-choice" data-value="staining"><img src="assets/mission-3/staining-machine-choice-idle.png" alt="Staining machine"><strong>Staining Machine</strong></button>
+    </div>`;
+  }
+
+  function mission3ProcessView() {
+    const step = state.mission3.step;
+    if (step === "question") {
+      return `<div class="mission-input-object"><img src="assets/mission-2/histology-cassette-closed-loaded.png" alt="Labelled cassette containing the accepted patient's tissue"><strong>Loaded histology cassette</strong></div>${mission3Choices()}`;
+    }
+    if (step === "processing") {
+      return `<div class="process-stage"><img src="assets/mission-3/tissue-processor-active.png" alt="Cassette inside the active tissue processor"><div><h2>1. Process the tissue</h2><p>The cassette enters the processor so the tissue can be prepared for wax embedding.</p></div></div>`;
+    }
+    if (step === "embedding") {
+      return `<div class="mould-sequence" aria-label="Tissue embedding sequence">
+        <figure><img src="assets/mission-3/embedding-mould-empty.png" alt="Empty embedding mould"><figcaption>Embedding mould</figcaption></figure>
+        <figure><img src="assets/mission-3/embedding-mould-tissue.png" alt="Patient tissue positioned in the mould"><figcaption>Position the tissue</figcaption></figure>
+        <figure><img src="assets/mission-3/embedding-mould-wax-filled.png" alt="Mould filled with paraffin wax"><figcaption>Fill with wax and let it set</figcaption></figure>
+      </div>`;
+    }
+    return `<div class="wax-block-reveal">
+      <img src="assets/mission-3/ffpe-block-complete.png" alt="Completed FFPE wax block containing the patient tissue">
+      <div><p class="eyebrow">WAX BLOCK</p><h2>FFPE Block</h2><p><strong>Formalin-Fixed Paraffin-Embedded Tissue</strong></p><p>“Look! We've made a wax block!”</p></div>
+    </div>`;
+  }
+
+  function mission3GuideText() {
+    const step = state.mission3.step;
+    if (step === "question") return "Choose the equipment that prepares the tissue and embeds it in wax.";
+    if (step === "processing") return "The cassette is inside the tissue processor.";
+    if (step === "embedding") return "The prepared tissue is positioned in a mould and surrounded with wax.";
+    return "Look! We've made a wax block!";
+  }
+
+  function mission3Screen() {
+    return `
+      ${missionHeader(3, "Make a Wax Block")}
+      <main class="game-main" id="mainContent">
+        <div class="mission-scene mission3-scene">
+          <img class="scene-background" src="assets/mission-3/processing-lab-background.png" alt="Histology tissue processing laboratory">
+          <div class="scene-shade" aria-hidden="true"></div>
+          <div class="mission-title-card"><p class="eyebrow">TISSUE PROCESSING &amp; PARAFFIN EMBEDDING</p><h1>Make a Wax Block</h1><p>“Our tissue is in its cassette. Where should it go next?”</p></div>
+          ${caseIdentityChip()}
+          <img class="processing-path" src="assets/mission-3/processing-path-diagram.svg" alt="Tissue in cassette, then processing and embedding, then FFPE wax block">
+          ${mission3ProcessView()}
+          <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission3-next" ${state.mission3.complete ? "" : "disabled"}>NEXT →</button></div>
+          ${mission2Feedback()}
+        </div>
+      </main>
+      <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission3GuideText()}</p></div></footer>`;
+  }
+
+  function mission3CompleteScreen() {
+    return `
+      ${missionHeader(3, "Make a Wax Block")}
+      <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
+        <section class="complete-card" aria-labelledby="mission3CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 3 COMPLETE</p><h1 id="mission3CompleteTitle">One FFPE wax block is ready.</h1><p>The accepted patient's tissue has been processed and embedded in wax.</p><div class="next-preview"><strong>Next: Cut Very Thin Sections</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission3">Review Mission 3</button><button class="secondary-button" type="button" data-action="review-mission2">Review Mission 2</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
       </main>`;
   }
 
@@ -479,11 +554,17 @@
   }
 
   function render() {
+    if (sequenceTimer) {
+      clearTimeout(sequenceTimer);
+      sequenceTimer = null;
+    }
     const screens = {
       mission1: missionScreen,
       "mission1-complete": completionScreen,
       mission2: mission2Screen,
       "mission2-complete": mission2CompleteScreen,
+      mission3: mission3Screen,
+      "mission3-complete": mission3CompleteScreen,
       level: levelScreen
     };
     app.innerHTML = (screens[state.screen] || levelScreen)();
@@ -493,6 +574,23 @@
       pendingFocus = null;
       requestAnimationFrame(() => app.querySelector(selector)?.focus());
     }
+    scheduleMission3Sequence();
+  }
+
+  function scheduleMission3Sequence() {
+    if (state.screen !== "mission3" || !["processing", "embedding", "reveal"].includes(state.mission3.step)) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sequenceTimer = setTimeout(() => {
+      state.mission3 = L.applyMission3Action(state.mission3, "advance");
+      const messages = {
+        embedding: "The tissue is prepared. Now it is positioned in an embedding mould and surrounded with wax.",
+        reveal: "The wax has set and one FFPE block has been created.",
+        complete: "Look! We've made a wax block!"
+      };
+      state.feedback = messages[state.mission3.step] || state.feedback;
+      state.feedbackType = "good";
+      save(); announce(state.feedback); render();
+    }, reduced ? 40 : 850);
   }
 
   function setFeedback(message, type = "") {
@@ -668,6 +766,34 @@
       state.screen = "mission2";
       save(); render(); return;
     }
+    if (action === "start-mission3") {
+      state.currentMission = 3;
+      state.screen = "mission3";
+      state.feedback = "Choose where the loaded tissue cassette should go next.";
+      state.feedbackType = "info";
+      save(); announce("Mission 3. Make a Wax Block."); render(); return;
+    }
+    if (action === "mission3-choice") {
+      state.mission3 = L.applyMission3Action(state.mission3, "choose", value);
+      if (value === L.MISSION3_CORRECT_CHOICE) {
+        state.feedback = "Correct! The tissue needs to be processed and embedded in wax.";
+        state.feedbackType = "good";
+      } else {
+        state.feedback = "Not yet! Our tissue isn't ready for that machine. Try again.";
+        state.feedbackType = "try";
+      }
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission3-next" && state.mission3.complete) {
+      state.mission3Complete = true;
+      state.screen = "mission3-complete";
+      save(); announce("Mission 3 complete."); render(); return;
+    }
+    if (action === "review-mission3") {
+      state.currentMission = 3;
+      state.screen = "mission3";
+      save(); render(); return;
+    }
     if (action === "review-mission1") {
       state.screen = "mission1";
       save(); render(); return;
@@ -749,7 +875,7 @@
   });
 
   function updateOrientation() {
-    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2"].includes(state.screen);
+    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3"].includes(state.screen);
     orientationBlocker.hidden = !blocked;
     app.inert = blocked;
     document.documentElement.classList.toggle("orientation-blocked", blocked);
