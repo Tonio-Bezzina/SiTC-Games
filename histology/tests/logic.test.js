@@ -172,3 +172,40 @@ test("Mission 4 interrupted cutting resumes at a safe, non-duplicated state", ()
   assert.equal(revealed.sectionRevealed, true);
   assert.equal(revealed.complete, false);
 });
+
+test("Mission 5 keeps both distractors safe and gates slide transfer", () => {
+  let state = logic.createMission5State();
+  state = logic.applyMission5Action(state, "choose", "cassette");
+  assert.equal(state.step, "question");
+  assert.equal(state.sectionOnSlide, false);
+  state = logic.applyMission5Action(state, "choose", "bin");
+  assert.equal(state.step, "question");
+  assert.equal(state.sectionOnSlide, false);
+  state = logic.applyMission5Action(state, "choose", logic.MISSION5_CORRECT_CHOICE);
+  assert.equal(state.step, "transfer_ready");
+  assert.equal(logic.applyMission5Action(state, "place-section").step, "transfer_ready");
+  state = logic.applyMission5Action(state, "select-section");
+  state = logic.applyMission5Action(state, "place-section");
+  assert.equal(state.step, "section_on_slide");
+  assert.equal(state.sectionOnSlide, true);
+  assert.equal(state.complete, false);
+  state = logic.applyMission5Action(state, "advance");
+  assert.equal(state.step, "unstained_slide_reveal");
+  assert.equal(state.revealed, true);
+  state = logic.applyMission5Action(state, "advance");
+  assert.equal(state.step, "complete");
+  assert.equal(state.complete, true);
+});
+
+test("Mission 5 drag and interrupted transfer reach the same safe output", () => {
+  let state = logic.createMission5State();
+  state = logic.applyMission5Action(state, "choose", logic.MISSION5_CORRECT_CHOICE);
+  state = logic.applyMission5Action(state, "place-section", "drop");
+  assert.equal(state.step, "section_on_slide");
+  assert.equal(state.sectionOnSlide, true);
+  const resumed = logic.applyMission5Action(state, "resume-safe");
+  assert.equal(resumed.step, "unstained_slide_reveal");
+  assert.equal(resumed.sectionOnSlide, true);
+  assert.equal(resumed.revealed, true);
+  assert.equal(resumed.complete, false);
+});

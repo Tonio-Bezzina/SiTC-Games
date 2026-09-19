@@ -103,6 +103,41 @@
     return state;
   }
 
+  const MISSION5_CORRECT_CHOICE = "glass-slide";
+
+  function createMission5State() {
+    return {
+      choice: null,
+      step: "question",
+      sectionSelected: false,
+      sectionOnSlide: false,
+      revealed: false,
+      complete: false
+    };
+  }
+
+  function applyMission5Action(current, action, value) {
+    const state = { ...createMission5State(), ...(current || {}) };
+    if (action === "choose" && state.step === "question") {
+      if (value !== MISSION5_CORRECT_CHOICE) return { ...state, choice: value };
+      return { ...state, choice: value, step: "transfer_ready" };
+    }
+    if (action === "select-section" && state.step === "transfer_ready") {
+      return { ...state, sectionSelected: !state.sectionSelected };
+    }
+    if (action === "place-section" && state.step === "transfer_ready" && (state.sectionSelected || value === "drop")) {
+      return { ...state, step: "section_on_slide", sectionSelected: false, sectionOnSlide: true };
+    }
+    if (action === "advance") {
+      if (state.step === "section_on_slide") return { ...state, step: "unstained_slide_reveal", sectionOnSlide: true, revealed: true };
+      if (state.step === "unstained_slide_reveal") return { ...state, step: "complete", sectionOnSlide: true, revealed: true, complete: true };
+    }
+    if (action === "resume-safe" && state.step === "section_on_slide") {
+      return { ...state, step: "unstained_slide_reveal", sectionSelected: false, sectionOnSlide: true, revealed: true };
+    }
+    return state;
+  }
+
   const FIRST_NAMES = Object.freeze([
     "Alex", "Amelia", "Daniel", "Elena", "Isaac", "Leah", "Maya", "Noah",
     "Rafael", "Sara", "Sofia", "Theo", "Yasmin", "Zachary"
@@ -297,9 +332,11 @@
     MISSION2_CORRECT_CHOICE,
     MISSION3_CORRECT_CHOICE,
     MISSION4_CORRECT_CHOICE,
+    MISSION5_CORRECT_CHOICE,
     applyMission2Action,
     applyMission3Action,
     applyMission4Action,
+    applyMission5Action,
     ageOn,
     changeCaseLevel,
     createCase,
@@ -308,6 +345,7 @@
     createMission2State,
     createMission3State,
     createMission4State,
+    createMission5State,
     createPatientId,
     formatDisplayDate,
     identityMismatchFields,

@@ -6,7 +6,7 @@
   const announcer = document.getElementById("announcer");
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
-  const VERSION = 4;
+  const VERSION = 5;
   let pendingFocus = null;
   let cutStart = null;
   let sequenceTimer = null;
@@ -34,7 +34,9 @@
       mission3: L.createMission3State(),
       mission3Complete: false,
       mission4: L.createMission4State(),
-      mission4Complete: false
+      mission4Complete: false,
+      mission5: L.createMission5State(),
+      mission5Complete: false
     };
   }
 
@@ -42,9 +44,10 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      if (![1, 2, 3, VERSION].includes(saved.version)) return initialState();
+      if (![1, 2, 3, 4, VERSION].includes(saved.version)) return initialState();
       const mission3 = { ...L.createMission3State(), ...(saved.mission3 || {}) };
       const mission4 = { ...L.createMission4State(), ...(saved.mission4 || {}) };
+      const mission5 = { ...L.createMission5State(), ...(saved.mission5 || {}) };
       return {
         ...initialState(),
         ...saved,
@@ -52,6 +55,7 @@
         mission2: { ...L.createMission2State(), ...(saved.mission2 || {}) },
         mission3: L.applyMission3Action(mission3, "resume-safe"),
         mission4: L.applyMission4Action(mission4, "resume-safe"),
+        mission5: L.applyMission5Action(mission5, "resume-safe"),
         screen: "level",
         forceReplay: false
       };
@@ -109,9 +113,13 @@
     state.mission3Complete = false;
     state.mission4 = L.createMission4State();
     state.mission4Complete = false;
+    state.mission5 = L.createMission5State();
+    state.mission5Complete = false;
   }
 
   function resumeScreen() {
+    if (state.mission5Complete) return "mission5-complete";
+    if (state.currentMission === 5 && state.mission4Complete) return "mission5";
     if (state.mission4Complete) return "mission4-complete";
     if (state.currentMission === 4 && state.mission3Complete) return "mission4";
     if (state.mission3Complete) return "mission3-complete";
@@ -140,7 +148,7 @@
     state.caseData.level = level;
     state.screen = resumeScreen();
     state.forceReplay = false;
-    state.feedback = state.clueSeen ? "Choose a complete sample set to inspect." : "";
+    if (state.screen === "mission1") state.feedback = state.clueSeen ? "Choose a complete sample set to inspect." : "";
     save();
     render();
   }
@@ -589,7 +597,64 @@
     return `
       ${missionHeader(4, "Cut Very Thin Sections")}
       <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
-        <section class="complete-card" aria-labelledby="mission4CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 4 COMPLETE</p><h1 id="mission4CompleteTitle">One very thin tissue section is ready.</h1><p>The accepted patient's FFPE block has been cut safely by the protected microtome.</p><div class="next-preview"><strong>Next: Put the Section on a Glass Slide</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission4">Review Mission 4</button><button class="secondary-button" type="button" data-action="review-mission3">Review Mission 3</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+        <section class="complete-card" aria-labelledby="mission4CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 4 COMPLETE</p><h1 id="mission4CompleteTitle">One very thin tissue section is ready.</h1><p>The accepted patient's FFPE block has been cut safely by the protected microtome.</p><div class="next-preview"><strong>Next: Put the Section on a Glass Slide</strong><span>Continue with the same patient's very thin tissue section.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="start-mission5">Continue to Mission 5</button><button class="secondary-button" type="button" data-action="review-mission4">Review Mission 4</button><button class="secondary-button" type="button" data-action="review-mission3">Review Mission 3</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+      </main>`;
+  }
+
+  function mission5Choices() {
+    return `<div class="equipment-grid slide-choice-grid" aria-label="Choose where to put the thin tissue section">
+      <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="glass-slide"><img src="assets/mission-5/microscope-slide-blank.png" alt="Blank glass microscope slide with a frosted label end and clear viewing area"><strong>On a glass microscope slide</strong></button>
+      <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="cassette"><img src="assets/mission-5/cassette-m5-distractor.png" alt="Closed histology cassette"><strong>Back into the cassette</strong></button>
+      <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="bin"><img src="assets/mission-5/laboratory-bin.png" alt="Closed laboratory waste bin"><strong>Into the bin</strong></button>
+    </div>`;
+  }
+
+  function mission5ProcessView() {
+    const step = state.mission5.step;
+    if (step === "question") {
+      return `<div class="mission-input-object section-input"><img src="assets/mission-4/thin-section-ribbon.png" alt="The accepted patient's very thin tissue section"><strong>Very thin tissue section</strong></div>${mission5Choices()}`;
+    }
+    if (step === "transfer_ready") {
+      return `<img class="processing-path" src="assets/mission-5/section-to-slide-diagram.svg" alt="Very thin tissue section moves onto a glass microscope slide">
+        <div class="slide-transfer-workspace">
+          <button class="transfer-section ${state.mission5.sectionSelected ? "selected" : ""}" type="button" draggable="true" data-action="mission5-select-section" aria-pressed="${state.mission5.sectionSelected}"><img src="assets/mission-4/thin-section-single.png" alt="Very thin tissue section ready to transfer"><strong>Select the tissue section</strong></button>
+          <span class="journey-arrow" aria-hidden="true">→</span>
+          <button class="slide-drop-target" type="button" data-action="mission5-place-section" data-drop="slide" aria-label="Place the selected tissue section in the glass slide viewing area"><img src="assets/mission-5/microscope-slide-blank.png" alt="Blank glass microscope slide"><strong>Glass slide viewing area</strong></button>
+        </div>`;
+    }
+    return `<div class="unstained-reveal">
+      <img src="assets/mission-5/microscope-slide-unstained.png" alt="Glass microscope slide with the patient's pale tissue section centred in its viewing area">
+      <div><p class="eyebrow">UNSTAINED SLIDE</p><h2>UNSTAINED SLIDE</h2><p>“We have our microscope slide, but the tissue is difficult to see.”</p><p><strong>“It needs some colour!”</strong></p></div>
+    </div>`;
+  }
+
+  function mission5GuideText() {
+    const step = state.mission5.step;
+    if (step === "question") return "Choose where the very thin tissue section should go.";
+    if (step === "transfer_ready") return state.mission5.sectionSelected ? "Now choose the glass slide viewing area." : "Select or drag the tissue section onto the glass slide.";
+    return step === "section_on_slide" ? "The section is centred safely on the slide." : "We have our microscope slide, but the tissue is difficult to see. It needs some colour!";
+  }
+
+  function mission5Screen() {
+    return `
+      ${missionHeader(5, "Put the Section on a Glass Slide")}
+      <main class="game-main" id="mainContent"><div class="mission-scene mission5-scene">
+        <img class="scene-background" src="assets/mission-5/slide-prep-bench-background.png" alt="Clean histology slide-preparation bench">
+        <div class="scene-shade" aria-hidden="true"></div>
+        <div class="mission-title-card"><p class="eyebrow">SLIDE PREPARATION</p><h1>Put the Section on a Glass Slide</h1><p>“We've cut a super-thin section. Where should we put it?”</p></div>
+        ${caseIdentityChip()}
+        ${mission5ProcessView()}
+        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission5-next" ${state.mission5.complete ? "" : "disabled"}>NEXT →</button></div>
+        ${mission2Feedback()}
+      </div></main>
+      <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission5GuideText()}</p></div></footer>`;
+  }
+
+  function mission5CompleteScreen() {
+    return `
+      ${missionHeader(5, "Put the Section on a Glass Slide")}
+      <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
+        <section class="complete-card" aria-labelledby="mission5CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 5 COMPLETE</p><h1 id="mission5CompleteTitle">The unstained slide is ready.</h1><p>The accepted patient's intact tissue section is centred on its glass microscope slide.</p><div class="next-preview"><strong>Next: Add Colour to the Tissue</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission5">Review Mission 5</button><button class="secondary-button" type="button" data-action="review-mission4">Review Mission 4</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
       </main>`;
   }
 
@@ -633,6 +698,8 @@
       "mission3-complete": mission3CompleteScreen,
       mission4: mission4Screen,
       "mission4-complete": mission4CompleteScreen,
+      mission5: mission5Screen,
+      "mission5-complete": mission5CompleteScreen,
       level: levelScreen
     };
     app.innerHTML = (screens[state.screen] || levelScreen)();
@@ -644,6 +711,7 @@
     }
     scheduleMission3Sequence();
     scheduleMission4Sequence();
+    scheduleMission5Sequence();
   }
 
   function scheduleMission3Sequence() {
@@ -677,6 +745,19 @@
       state.feedbackType = "good";
       save(); announce(state.feedback); render();
     }, reduced ? 40 : 850);
+  }
+
+  function scheduleMission5Sequence() {
+    if (state.screen !== "mission5" || !["section_on_slide", "unstained_slide_reveal"].includes(state.mission5.step)) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sequenceTimer = setTimeout(() => {
+      state.mission5 = L.applyMission5Action(state.mission5, "advance");
+      state.feedback = state.mission5.step === "unstained_slide_reveal"
+        ? "The tissue section is centred on the glass slide. It is still difficult to see."
+        : "We have our microscope slide, but the tissue is difficult to see. It needs some colour!";
+      state.feedbackType = "good";
+      save(); announce(state.feedback); render();
+    }, reduced ? 40 : 700);
   }
 
   function setFeedback(message, type = "") {
@@ -908,6 +989,53 @@
       state.screen = "mission4";
       save(); render(); return;
     }
+    if (action === "start-mission5") {
+      state.currentMission = 5;
+      state.screen = "mission5";
+      state.feedback = "Choose where the very thin tissue section should go.";
+      state.feedbackType = "info";
+      save(); announce("Mission 5. Put the Section on a Glass Slide."); render(); return;
+    }
+    if (action === "mission5-choice") {
+      state.mission5 = L.applyMission5Action(state.mission5, "choose", value);
+      if (value === L.MISSION5_CORRECT_CHOICE) {
+        state.feedback = "Exactly! The thin tissue section goes onto a glass microscope slide.";
+        state.feedbackType = "good";
+        pendingFocus = '[data-action="mission5-select-section"]';
+      } else {
+        state.feedback = "We need to keep our thin tissue section so we can look at it under a microscope. Try again.";
+        state.feedbackType = "try";
+      }
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission5-select-section") {
+      state.mission5 = L.applyMission5Action(state.mission5, "select-section");
+      state.feedback = state.mission5.sectionSelected ? "Tissue section selected. Now choose the glass slide viewing area." : "Select or drag the tissue section onto the glass slide.";
+      state.feedbackType = "info";
+      pendingFocus = state.mission5.sectionSelected ? '[data-action="mission5-place-section"]' : '[data-action="mission5-select-section"]';
+      save(); render(); return;
+    }
+    if (action === "mission5-place-section") {
+      const next = L.applyMission5Action(state.mission5, "place-section", trigger);
+      if (next.step === state.mission5.step) {
+        setFeedback("Select the tissue section first, then choose the glass slide viewing area.", "info");
+        return;
+      }
+      state.mission5 = next;
+      state.feedback = "The tissue section is centred safely on the glass slide.";
+      state.feedbackType = "good";
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission5-next" && state.mission5.complete) {
+      state.mission5Complete = true;
+      state.screen = "mission5-complete";
+      save(); announce("Mission 5 complete."); render(); return;
+    }
+    if (action === "review-mission5") {
+      state.currentMission = 5;
+      state.screen = "mission5";
+      save(); render(); return;
+    }
     if (action === "review-mission1") {
       state.screen = "mission1";
       save(); render(); return;
@@ -942,6 +1070,15 @@
       save();
       return;
     }
+    const section = event.target.closest('[data-action="mission5-select-section"]');
+    if (section && state.mission5.step === "transfer_ready") {
+      state.mission5 = { ...state.mission5, sectionSelected: true };
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", "histology-thin-section");
+      document.documentElement.classList.add("is-dragging");
+      save();
+      return;
+    }
     const accepted = event.target.closest('[data-action="toggle-transfer"]');
     if (!accepted || state.racked) {
       event.preventDefault();
@@ -959,18 +1096,20 @@
   });
 
   app.addEventListener("dragover", (event) => {
-    if (event.target.closest('[data-drop="rack"], [data-drop="cassette"]')) event.preventDefault();
+    if (event.target.closest('[data-drop="rack"], [data-drop="cassette"], [data-drop="slide"]')) event.preventDefault();
   });
 
   app.addEventListener("drop", (event) => {
     const rack = event.target.closest('[data-drop="rack"]');
     const cassette = event.target.closest('[data-drop="cassette"]');
-    if (!rack && !cassette) return;
+    const slide = event.target.closest('[data-drop="slide"]');
+    if (!rack && !cassette && !slide) return;
     event.preventDefault();
     document.documentElement.classList.remove("is-dragging");
     const payload = event.dataTransfer.getData("text/plain");
     if (rack && payload === "accepted-histology-specimen") handleAction("rack-sample", "", "drop");
     if (cassette && payload === "histology-small-tissue") handleAction("mission2-place-tissue", "", "drop");
+    if (slide && payload === "histology-thin-section") handleAction("mission5-place-section", "", "drop");
   });
 
   app.addEventListener("pointerdown", (event) => {
@@ -989,7 +1128,7 @@
   });
 
   function updateOrientation() {
-    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4"].includes(state.screen);
+    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4", "mission5"].includes(state.screen);
     orientationBlocker.hidden = !blocked;
     app.inert = blocked;
     document.documentElement.classList.toggle("orientation-blocked", blocked);
