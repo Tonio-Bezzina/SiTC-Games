@@ -6,7 +6,7 @@
   const announcer = document.getElementById("announcer");
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
-  const VERSION = 3;
+  const VERSION = 4;
   let pendingFocus = null;
   let cutStart = null;
   let sequenceTimer = null;
@@ -32,7 +32,9 @@
       mission2: L.createMission2State(),
       mission2Complete: false,
       mission3: L.createMission3State(),
-      mission3Complete: false
+      mission3Complete: false,
+      mission4: L.createMission4State(),
+      mission4Complete: false
     };
   }
 
@@ -40,14 +42,16 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      if (![1, 2, VERSION].includes(saved.version)) return initialState();
+      if (![1, 2, 3, VERSION].includes(saved.version)) return initialState();
       const mission3 = { ...L.createMission3State(), ...(saved.mission3 || {}) };
+      const mission4 = { ...L.createMission4State(), ...(saved.mission4 || {}) };
       return {
         ...initialState(),
         ...saved,
         version: VERSION,
         mission2: { ...L.createMission2State(), ...(saved.mission2 || {}) },
         mission3: L.applyMission3Action(mission3, "resume-safe"),
+        mission4: L.applyMission4Action(mission4, "resume-safe"),
         screen: "level",
         forceReplay: false
       };
@@ -103,9 +107,13 @@
     state.mission2Complete = false;
     state.mission3 = L.createMission3State();
     state.mission3Complete = false;
+    state.mission4 = L.createMission4State();
+    state.mission4Complete = false;
   }
 
   function resumeScreen() {
+    if (state.mission4Complete) return "mission4-complete";
+    if (state.currentMission === 4 && state.mission3Complete) return "mission4";
     if (state.mission3Complete) return "mission3-complete";
     if (state.currentMission === 3 && state.mission2Complete) return "mission3";
     if (state.mission2Complete) return "mission2-complete";
@@ -523,7 +531,65 @@
     return `
       ${missionHeader(3, "Make a Wax Block")}
       <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
-        <section class="complete-card" aria-labelledby="mission3CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 3 COMPLETE</p><h1 id="mission3CompleteTitle">One FFPE wax block is ready.</h1><p>The accepted patient's tissue has been processed and embedded in wax.</p><div class="next-preview"><strong>Next: Cut Very Thin Sections</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission3">Review Mission 3</button><button class="secondary-button" type="button" data-action="review-mission2">Review Mission 2</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+        <section class="complete-card" aria-labelledby="mission3CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 3 COMPLETE</p><h1 id="mission3CompleteTitle">One FFPE wax block is ready.</h1><p>The accepted patient's tissue has been processed and embedded in wax.</p><div class="next-preview"><strong>Next: Cut Very Thin Sections</strong><span>Continue with the same patient's FFPE wax block.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="start-mission4">Continue to Mission 4</button><button class="secondary-button" type="button" data-action="review-mission3">Review Mission 3</button><button class="secondary-button" type="button" data-action="review-mission2">Review Mission 2</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+      </main>`;
+  }
+
+  function mission4ProcessView() {
+    const step = state.mission4.step;
+    if (step === "question") {
+      return `<div class="mission-input-object"><img src="assets/mission-3/ffpe-block-complete.png" alt="The accepted patient's completed FFPE wax block"><strong>FFPE wax block</strong></div>
+        <div class="equipment-grid equipment-grid-two" aria-label="Choose the machine that cuts very thin tissue sections">
+          <button class="equipment-choice" type="button" data-action="mission4-choice" data-value="microtome"><img src="assets/mission-4/microtome-empty.png" alt="Microtome with its cutting edge protected inside the housing"><strong>Microtome</strong></button>
+          <button class="equipment-choice" type="button" data-action="mission4-choice" data-value="staining"><img src="assets/mission-4/staining-machine-m4-choice.png" alt="Staining machine"><strong>Staining Machine</strong></button>
+        </div>`;
+    }
+    if (step === "microtome_selected") {
+      return `<div class="microtomy-stage"><img src="assets/mission-4/microtome-empty.png" alt="Protected microtome ready to receive the wax block"><div><h2>Microtome selected</h2><p>The cutting edge stays guarded inside the machine.</p></div></div>`;
+    }
+    if (step === "block_loaded") {
+      return `<div class="microtomy-stage"><img src="assets/mission-4/microtome-block-loaded.png" alt="FFPE wax block safely loaded in the protected microtome holder"><div><h2>FFPE block loaded</h2><p>The block is secured in the holder before a section is cut.</p></div></div>`;
+    }
+    if (step === "section_cut") {
+      return `<div class="microtomy-stage"><img src="assets/mission-4/microtome-section-emerging.png" alt="A delicate tissue section emerging from the guarded microtome"><div><h2>Very thin section emerging</h2><p>The microtome advances the wax block and produces a delicate tissue section.</p><img class="section-preview" src="assets/mission-4/thin-section-single.png" alt="One very thin cream-pink tissue section against a contrasting blue surface"></div></div>`;
+    }
+    return `<div class="microtomy-result" aria-label="Microtomy before and after comparison">
+      <img class="microtomy-diagram" src="assets/mission-4/microtomy-before-after.svg" alt="FFPE wax block becomes a very thin tissue section">
+      <figure><img src="assets/mission-3/ffpe-block-complete.png" alt="FFPE wax block before microtomy"><figcaption>FFPE wax block</figcaption></figure>
+      <span class="journey-arrow" aria-hidden="true">→</span>
+      <figure><img src="assets/mission-4/thin-section-ribbon.png" alt="Short ribbon of very thin tissue sections visible against a blue surface"><figcaption>Very thin tissue section</figcaption></figure>
+    </div>`;
+  }
+
+  function mission4GuideText() {
+    const step = state.mission4.step;
+    if (step === "question") return "Choose the machine that can cut a very thin tissue section.";
+    if (step === "microtome_selected") return "The protected microtome is ready for the wax block.";
+    if (step === "block_loaded") return "The FFPE block is safely held inside the machine.";
+    if (step === "section_cut") return "A very thin section is emerging with the cutting edge still guarded.";
+    return "The FFPE wax block has become a very thin tissue section.";
+  }
+
+  function mission4Screen() {
+    return `
+      ${missionHeader(4, "Cut Very Thin Sections")}
+      <main class="game-main" id="mainContent"><div class="mission-scene mission4-scene">
+        <img class="scene-background" src="assets/mission-4/microtomy-lab-background.png" alt="Histology microtomy laboratory">
+        <div class="scene-shade" aria-hidden="true"></div>
+        <div class="mission-title-card"><p class="eyebrow">MICROTOMY</p><h1>Cut Very Thin Sections</h1><p>“We need a very thin slice of our tissue. Which machine should we use?”</p></div>
+        ${caseIdentityChip()}
+        ${mission4ProcessView()}
+        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission4-next" ${state.mission4.complete ? "" : "disabled"}>NEXT →</button></div>
+        ${mission2Feedback()}
+      </div></main>
+      <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission4GuideText()}</p></div></footer>`;
+  }
+
+  function mission4CompleteScreen() {
+    return `
+      ${missionHeader(4, "Cut Very Thin Sections")}
+      <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
+        <section class="complete-card" aria-labelledby="mission4CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 4 COMPLETE</p><h1 id="mission4CompleteTitle">One very thin tissue section is ready.</h1><p>The accepted patient's FFPE block has been cut safely by the protected microtome.</p><div class="next-preview"><strong>Next: Put the Section on a Glass Slide</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission4">Review Mission 4</button><button class="secondary-button" type="button" data-action="review-mission3">Review Mission 3</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
       </main>`;
   }
 
@@ -565,6 +631,8 @@
       "mission2-complete": mission2CompleteScreen,
       mission3: mission3Screen,
       "mission3-complete": mission3CompleteScreen,
+      mission4: mission4Screen,
+      "mission4-complete": mission4CompleteScreen,
       level: levelScreen
     };
     app.innerHTML = (screens[state.screen] || levelScreen)();
@@ -575,6 +643,7 @@
       requestAnimationFrame(() => app.querySelector(selector)?.focus());
     }
     scheduleMission3Sequence();
+    scheduleMission4Sequence();
   }
 
   function scheduleMission3Sequence() {
@@ -588,6 +657,23 @@
         complete: "Look! We've made a wax block!"
       };
       state.feedback = messages[state.mission3.step] || state.feedback;
+      state.feedbackType = "good";
+      save(); announce(state.feedback); render();
+    }, reduced ? 40 : 850);
+  }
+
+  function scheduleMission4Sequence() {
+    if (state.screen !== "mission4" || !["microtome_selected", "block_loaded", "section_cut", "section_revealed"].includes(state.mission4.step)) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sequenceTimer = setTimeout(() => {
+      state.mission4 = L.applyMission4Action(state.mission4, "advance");
+      const messages = {
+        block_loaded: "The FFPE wax block is safely loaded in the protected microtome holder.",
+        section_cut: "The block advances and one very thin tissue section emerges.",
+        section_revealed: "The very thin tissue section is now clearly visible.",
+        complete: "That's right! A microtome cuts very thin sections of tissue."
+      };
+      state.feedback = messages[state.mission4.step] || state.feedback;
       state.feedbackType = "good";
       save(); announce(state.feedback); render();
     }, reduced ? 40 : 850);
@@ -794,6 +880,34 @@
       state.screen = "mission3";
       save(); render(); return;
     }
+    if (action === "start-mission4") {
+      state.currentMission = 4;
+      state.screen = "mission4";
+      state.feedback = "Choose the machine that can cut a very thin tissue section.";
+      state.feedbackType = "info";
+      save(); announce("Mission 4. Cut Very Thin Sections."); render(); return;
+    }
+    if (action === "mission4-choice") {
+      state.mission4 = L.applyMission4Action(state.mission4, "choose", value);
+      if (value === L.MISSION4_CORRECT_CHOICE) {
+        state.feedback = "That's right! A microtome cuts very thin sections of tissue.";
+        state.feedbackType = "good";
+      } else {
+        state.feedback = "Not yet! We need to cut the tissue before we can stain it. Try again.";
+        state.feedbackType = "try";
+      }
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission4-next" && state.mission4.complete) {
+      state.mission4Complete = true;
+      state.screen = "mission4-complete";
+      save(); announce("Mission 4 complete."); render(); return;
+    }
+    if (action === "review-mission4") {
+      state.currentMission = 4;
+      state.screen = "mission4";
+      save(); render(); return;
+    }
     if (action === "review-mission1") {
       state.screen = "mission1";
       save(); render(); return;
@@ -875,7 +989,7 @@
   });
 
   function updateOrientation() {
-    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3"].includes(state.screen);
+    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4"].includes(state.screen);
     orientationBlocker.hidden = !blocked;
     app.inert = blocked;
     document.documentElement.classList.toggle("orientation-blocked", blocked);

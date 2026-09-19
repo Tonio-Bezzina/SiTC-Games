@@ -71,6 +71,38 @@
     return state;
   }
 
+  const MISSION4_CORRECT_CHOICE = "microtome";
+
+  function createMission4State() {
+    return {
+      choice: null,
+      step: "question",
+      blockLoaded: false,
+      sectionCut: false,
+      sectionRevealed: false,
+      complete: false
+    };
+  }
+
+  function applyMission4Action(current, action, value) {
+    const state = { ...createMission4State(), ...(current || {}) };
+    if (action === "choose" && state.step === "question") {
+      if (value !== MISSION4_CORRECT_CHOICE) return { ...state, choice: value };
+      return { ...state, choice: value, step: "microtome_selected" };
+    }
+    if (action === "advance") {
+      if (state.step === "microtome_selected") return { ...state, step: "block_loaded", blockLoaded: true };
+      if (state.step === "block_loaded") return { ...state, step: "section_cut", blockLoaded: true, sectionCut: true };
+      if (state.step === "section_cut") return { ...state, step: "section_revealed", blockLoaded: true, sectionCut: true, sectionRevealed: true };
+      if (state.step === "section_revealed") return { ...state, step: "complete", blockLoaded: true, sectionCut: true, sectionRevealed: true, complete: true };
+    }
+    if (action === "resume-safe") {
+      if (state.step === "microtome_selected") return { ...state, step: "block_loaded", blockLoaded: true };
+      if (state.step === "section_cut") return { ...state, step: "section_revealed", blockLoaded: true, sectionCut: true, sectionRevealed: true };
+    }
+    return state;
+  }
+
   const FIRST_NAMES = Object.freeze([
     "Alex", "Amelia", "Daniel", "Elena", "Isaac", "Leah", "Maya", "Noah",
     "Rafael", "Sara", "Sofia", "Theo", "Yasmin", "Zachary"
@@ -264,8 +296,10 @@
     LEVELS,
     MISSION2_CORRECT_CHOICE,
     MISSION3_CORRECT_CHOICE,
+    MISSION4_CORRECT_CHOICE,
     applyMission2Action,
     applyMission3Action,
+    applyMission4Action,
     ageOn,
     changeCaseLevel,
     createCase,
@@ -273,6 +307,7 @@
     createIncorrectCandidate,
     createMission2State,
     createMission3State,
+    createMission4State,
     createPatientId,
     formatDisplayDate,
     identityMismatchFields,

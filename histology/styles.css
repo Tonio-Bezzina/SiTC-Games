@@ -290,6 +290,34 @@ h1, h2, h3, p { margin-top: 0; }
   .mould-sequence img { height: 150px; }
 }
 
+/* Mission 4: protected microtomy */
+.equipment-grid-two { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 850px; }
+.microtomy-stage { display: grid; grid-template-columns: minmax(280px,1.1fr) 1fr; gap: 25px; align-items: center; max-width: 980px; margin: 18px auto; border: 3px solid var(--cyan); border-radius: 24px; padding: 22px; background: rgba(255,255,255,.96); box-shadow: var(--shadow); }
+.microtomy-stage img { width: 100%; max-height: 360px; object-fit: contain; }
+.microtomy-stage .section-preview { width: 140px; height: 90px; border-radius: 14px; padding: 7px; background: var(--soft); }
+.microtomy-stage h2 { color: var(--navy); font-size: clamp(1.6rem,3vw,2.6rem); }
+.microtomy-stage p { line-height: 1.5; }
+.microtomy-result { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: center; max-width: 980px; margin: 18px auto; border: 3px solid var(--cyan); border-radius: 24px; padding: 20px; background: rgba(255,255,255,.96); box-shadow: var(--shadow); }
+.microtomy-result .microtomy-diagram { grid-column: 1 / -1; width: min(650px,100%); max-height: 95px; margin: auto; object-fit: contain; }
+.microtomy-result figure { display: grid; gap: 8px; justify-items: center; margin: 0; border-radius: 18px; padding: 14px; background: var(--soft); text-align: center; }
+.microtomy-result figure img { width: 100%; height: 220px; object-fit: contain; }
+.microtomy-result figcaption { color: var(--navy); font-weight: 900; }
+.journey-arrow { color: var(--blue); font-size: 2.5rem; font-weight: 900; }
+
+@media (max-width: 720px) {
+  .equipment-grid-two, .microtomy-stage, .microtomy-result { grid-template-columns: 1fr; }
+  .microtomy-result .microtomy-diagram { grid-column: 1; }
+  .journey-arrow { transform: rotate(90deg); text-align: center; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .microtomy-stage { grid-template-columns: 1.3fr 1fr; margin-block: 8px; padding: 12px; }
+  .microtomy-stage img { max-height: 220px; }
+  .microtomy-result { margin-block: 8px; padding: 10px; }
+  .microtomy-result .microtomy-diagram { display: none; }
+  .microtomy-result figure img { height: 120px; }
+}
+
 /* Completion */
 .chapter-complete { position: relative; isolation: isolate; display: grid; place-items: center; min-height: calc(100vh - 70px); overflow: hidden; padding: 28px; }
 .complete-background { background: url("assets/shared/histology-lab-shell-bg.png") center / cover; }

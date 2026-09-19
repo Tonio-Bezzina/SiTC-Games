@@ -132,3 +132,43 @@ test("Mission 3 interrupted processing resumes at one safe wax-block reveal", ()
   assert.equal(resumed.blockCreated, true);
   assert.equal(resumed.complete, false);
 });
+
+test("Mission 4 accepts only the microtome and reveals a section in order", () => {
+  let state = logic.createMission4State();
+  state = logic.applyMission4Action(state, "choose", "staining");
+  assert.equal(state.step, "question");
+  assert.equal(state.choice, "staining");
+  state = logic.applyMission4Action(state, "choose", logic.MISSION4_CORRECT_CHOICE);
+  assert.equal(state.step, "microtome_selected");
+  assert.equal(state.blockLoaded, false);
+  state = logic.applyMission4Action(state, "advance");
+  assert.equal(state.step, "block_loaded");
+  assert.equal(state.blockLoaded, true);
+  assert.equal(state.sectionCut, false);
+  state = logic.applyMission4Action(state, "advance");
+  assert.equal(state.step, "section_cut");
+  assert.equal(state.sectionCut, true);
+  assert.equal(state.sectionRevealed, false);
+  state = logic.applyMission4Action(state, "advance");
+  assert.equal(state.step, "section_revealed");
+  assert.equal(state.sectionRevealed, true);
+  assert.equal(state.complete, false);
+  state = logic.applyMission4Action(state, "advance");
+  assert.equal(state.step, "complete");
+  assert.equal(state.complete, true);
+});
+
+test("Mission 4 interrupted cutting resumes at a safe, non-duplicated state", () => {
+  const selected = { ...logic.createMission4State(), choice: logic.MISSION4_CORRECT_CHOICE, step: "microtome_selected" };
+  const loaded = logic.applyMission4Action(selected, "resume-safe");
+  assert.equal(loaded.step, "block_loaded");
+  assert.equal(loaded.blockLoaded, true);
+  assert.equal(loaded.sectionRevealed, false);
+
+  const cutting = { ...loaded, step: "section_cut", sectionCut: true };
+  const revealed = logic.applyMission4Action(cutting, "resume-safe");
+  assert.equal(revealed.step, "section_revealed");
+  assert.equal(revealed.sectionCut, true);
+  assert.equal(revealed.sectionRevealed, true);
+  assert.equal(revealed.complete, false);
+});
