@@ -168,6 +168,38 @@
     return state;
   }
 
+  const MISSION7_CORRECT_CHOICE = "slide-b";
+
+  function createMission7State() {
+    return { selectedSlide: null, hintOpen: false, correctSelected: false, finalReached: false, hubAwarded: false };
+  }
+
+  function applyMission7Action(current, action, value) {
+    const state = { ...createMission7State(), ...(current || {}) };
+    if (action === "toggle-hint" && !state.correctSelected) return { ...state, hintOpen: !state.hintOpen };
+    if (action === "choose" && !state.correctSelected) {
+      return value === MISSION7_CORRECT_CHOICE
+        ? { ...state, selectedSlide: value, correctSelected: true }
+        : { ...state, selectedSlide: value };
+    }
+    if (action === "finish" && state.correctSelected) return { ...state, finalReached: true };
+    if (action === "mark-awarded" && state.finalReached) return { ...state, hubAwarded: true };
+    return state;
+  }
+
+  function journeyCanAward(completion) {
+    return [1, 2, 3, 4, 5, 6, 7].every((number) => completion && completion[`mission${number}Complete`] === true);
+  }
+
+  function withHistologyHubCompletion(progress) {
+    const safe = progress && typeof progress === "object" ? { ...progress } : {};
+    const completedCases = safe.completedCases && typeof safe.completedCases === "object" ? { ...safe.completedCases } : {};
+    const histology = Array.isArray(completedCases.histology) ? [...completedCases.histology] : [];
+    if (!histology.includes("main")) histology.push("main");
+    completedCases.histology = histology;
+    return { ...safe, completedCases };
+  }
+
   const FIRST_NAMES = Object.freeze([
     "Alex", "Amelia", "Daniel", "Elena", "Isaac", "Leah", "Maya", "Noah",
     "Rafael", "Sara", "Sofia", "Theo", "Yasmin", "Zachary"
@@ -363,11 +395,13 @@
     MISSION3_CORRECT_CHOICE,
     MISSION4_CORRECT_CHOICE,
     MISSION5_CORRECT_CHOICE,
+    MISSION7_CORRECT_CHOICE,
     applyMission2Action,
     applyMission3Action,
     applyMission4Action,
     applyMission5Action,
     applyMission6Action,
+    applyMission7Action,
     ageOn,
     changeCaseLevel,
     createCase,
@@ -378,13 +412,16 @@
     createMission4State,
     createMission5State,
     createMission6State,
+    createMission7State,
     createPatientId,
     formatDisplayDate,
     identityMismatchFields,
+    journeyCanAward,
     orderCandidates,
     isCorrectCandidate,
     isPatientIdValid,
     parseDisplayDate,
-    randomInteger
+    randomInteger,
+    withHistologyHubCompletion
   });
 });

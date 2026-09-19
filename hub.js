@@ -192,7 +192,7 @@ const labs = [
         icon: "🔎",
 
         description:
-            "Begin The Histology Journey by matching a skin specimen to the correct patient details.",
+            "Follow a skin specimen from patient checks to a finished H&E microscope slide.",
 
         href: "histology/",
 

@@ -6,10 +6,12 @@
   const announcer = document.getElementById("announcer");
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
-  const VERSION = 6;
+  const HUB_STORAGE_KEY = "sitcGameProgressV2";
+  const VERSION = 7;
   let pendingFocus = null;
   let cutStart = null;
   let sequenceTimer = null;
+  let lastRenderedScreen = null;
 
   function initialState() {
     return {
@@ -38,7 +40,9 @@
       mission5: L.createMission5State(),
       mission5Complete: false,
       mission6: L.createMission6State(),
-      mission6Complete: false
+      mission6Complete: false,
+      mission7: L.createMission7State(),
+      mission7Complete: false
     };
   }
 
@@ -46,11 +50,12 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      if (![1, 2, 3, 4, 5, VERSION].includes(saved.version)) return initialState();
+      if (![1, 2, 3, 4, 5, 6, VERSION].includes(saved.version)) return initialState();
       const mission3 = { ...L.createMission3State(), ...(saved.mission3 || {}) };
       const mission4 = { ...L.createMission4State(), ...(saved.mission4 || {}) };
       const mission5 = { ...L.createMission5State(), ...(saved.mission5 || {}) };
       const mission6 = { ...L.createMission6State(), ...(saved.mission6 || {}) };
+      const mission7 = { ...L.createMission7State(), ...(saved.mission7 || {}) };
       return {
         ...initialState(),
         ...saved,
@@ -60,6 +65,7 @@
         mission4: L.applyMission4Action(mission4, "resume-safe"),
         mission5: L.applyMission5Action(mission5, "resume-safe"),
         mission6: L.applyMission6Action(mission6, "resume-safe"),
+        mission7,
         screen: "level",
         forceReplay: false
       };
@@ -121,9 +127,13 @@
     state.mission5Complete = false;
     state.mission6 = L.createMission6State();
     state.mission6Complete = false;
+    state.mission7 = L.createMission7State();
+    state.mission7Complete = false;
   }
 
   function resumeScreen() {
+    if (state.mission7Complete) return "journey-complete";
+    if (state.currentMission === 7 && state.mission6Complete) return "mission7";
     if (state.mission6Complete) return "mission6-complete";
     if (state.currentMission === 6 && state.mission5Complete) return "mission6";
     if (state.mission5Complete) return "mission5-complete";
@@ -712,7 +722,67 @@
     return `
       ${missionHeader(6, "Add Colour to the Tissue")}
       <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
-        <section class="complete-card" aria-labelledby="mission6CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 6 COMPLETE</p><h1 id="mission6CompleteTitle">The stained slides are ready.</h1><p>Staining has added visible colour to the accepted patient's tissue.</p><div class="next-preview"><strong>Next: Find the H&amp;E Slide</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission6">Review Mission 6</button><button class="secondary-button" type="button" data-action="review-mission5">Review Mission 5</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+        <section class="complete-card" aria-labelledby="mission6CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 6 COMPLETE</p><h1 id="mission6CompleteTitle">The stained slides are ready.</h1><p>Staining has added visible colour to the accepted patient's tissue.</p><div class="next-preview"><strong>Next: Find the H&amp;E Slide</strong><span>Continue with the three stained slide choices.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="start-mission7">Continue to Mission 7</button><button class="secondary-button" type="button" data-action="review-mission6">Review Mission 6</button><button class="secondary-button" type="button" data-action="review-mission5">Review Mission 5</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+      </main>`;
+  }
+
+  function mission7SlideCard(id, image, label, alt) {
+    const selected = state.mission7.selectedSlide === id;
+    const correct = state.mission7.correctSelected && id === L.MISSION7_CORRECT_CHOICE;
+    const hint = state.mission7.hintOpen && id === "slide-b" && !state.mission7.correctSelected;
+    return `<button class="he-slide-card ${correct ? "correct" : ""}" type="button" data-action="mission7-choice" data-value="${id}" ${state.mission7.correctSelected ? "disabled" : ""} aria-pressed="${selected}">
+      <span class="he-image-wrap"><img class="he-tissue-image" src="assets/mission-7/${image}" alt="${alt}">${hint ? `<span class="he-callout nuclei"><img src="assets/mission-7/he-hint-nuclei-callout.svg" alt="Callout pointing to representative blue-purple nuclei"></span><span class="he-callout pink"><img src="assets/mission-7/he-hint-pink-tissue-callout.svg" alt="Callout pointing to representative pink surrounding tissue"></span>` : ""}</span>
+      <strong>${label}</strong>${correct ? `<span class="correct-label">✓ Correct — H&amp;E</span>` : ""}
+    </button>`;
+  }
+
+  function mission7Screen() {
+    return `
+      ${missionHeader(7, "Find the H&E Slide")}
+      <main class="game-main" id="mainContent"><div class="mission-scene mission7-scene">
+        <div class="scene-shade" aria-hidden="true"></div>
+        <div class="mission-title-card"><p class="eyebrow">HAEMATOXYLIN &amp; EOSIN (H&amp;E) STAINING</p><h1>Find the H&amp;E Slide</h1><p>“Which one is the H&amp;E slide?”</p></div>
+        ${caseIdentityChip()}
+        <div class="he-toolbar"><button class="hint-button" type="button" data-action="mission7-hint" aria-expanded="${state.mission7.hintOpen}">${state.mission7.hintOpen ? "Hide Hint" : "Hint"}</button>${state.mission7.hintOpen ? `<p class="he-hint" role="note">H&amp;E usually makes the nuclei blue-purple and much of the surrounding tissue pink.</p>` : ""}</div>
+        <div class="he-slide-grid" aria-label="Choose the H and E stained slide">
+          ${mission7SlideCard("slide-a", "slide-a-green-yellow.png", "Slide A – Green + Yellow", "Green-dominant skin tissue with yellow structures")}
+          ${mission7SlideCard("slide-b", "slide-b-he-purple-pink.png", "Slide B – Purple + Pink", "Skin tissue with blue-purple nuclei and abundant pink surrounding tissue")}
+          ${mission7SlideCard("slide-c", "slide-c-blue-violet.png", "Slide C – Blue + Violet", "Blue and violet skin tissue with little pink")}
+        </div>
+        ${state.mission7.correctSelected ? `<div class="he-finished-preview"><img src="assets/mission-7/he-slide-finished.png" alt="Finished H and E glass slide"><strong>YES! You found the H&amp;E slide!</strong></div>` : ""}
+        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission7-finish" ${state.mission7.correctSelected ? "" : "disabled"}>FINISH</button></div>
+        ${mission2Feedback()}
+      </div></main>
+      <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${state.mission7.correctSelected ? "YES! You found the H&E slide!" : "Look for blue-purple nuclei and lots of pink surrounding tissue."}</p></div></footer>`;
+  }
+
+  function journeyStep(icon, label) {
+    return `<li><img src="assets/completion/${icon}" alt=""><span>${label}</span></li>`;
+  }
+
+  function journeyCompleteScreen() {
+    const steps = [
+      ["journey-specimen-icon.svg", "Check the patient details"],
+      ["journey-cassette-icon.svg", "Prepare the tissue"],
+      ["journey-cassette-icon.svg", "Put it in a cassette"],
+      ["journey-processor-icon.svg", "Process & embed the tissue"],
+      ["journey-wax-block-icon.svg", "Make an FFPE wax block"],
+      ["journey-microtome-icon.svg", "Cut very thin sections"],
+      ["journey-slide-icon.svg", "Put the section on a slide"],
+      ["journey-stain-icon.svg", "Stain the tissue"],
+      ["journey-he-icon.svg", "Find the H&E slide!"]
+    ];
+    const journey = steps.map((step, index) => `${journeyStep(step[0], step[1])}${index < steps.length - 1 ? `<li class="journey-down" aria-hidden="true"><img src="assets/shared/journey-down-arrow.svg" alt=""></li>` : ""}`).join("");
+    return `
+      <main class="journey-complete" id="mainContent">
+        <img class="completion-background" src="assets/completion/completion-lab-background.png" alt="Bright celebratory histology laboratory">
+        <section class="journey-celebration" aria-labelledby="journeyCompleteTitle">
+          <div class="celebration-heading"><img src="assets/completion/completion-badge.svg" alt="Completed"><p class="eyebrow">Mission Complete!</p><h1 id="journeyCompleteTitle">GREAT JOB, SCIENTIST!</h1><p>“You successfully prepared a histology sample!”</p></div>
+          <div class="completion-hero"><img src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="microscope-finale"><img src="assets/completion/compound-microscope.png" alt="Compound microscope"><img src="assets/completion/he-slide-beside-microscope.png" alt="Finished H and E slide beside the microscope"></div></div>
+          <ol class="journey-list" aria-label="Your histology journey">${journey}</ol>
+          <div class="final-message"><p>“Your H&amp;E slide is now ready to be looked at under the microscope!”</p><h2>WELL DONE, SCIENTIST!</h2></div>
+          <div class="complete-actions final-actions"><button class="secondary-button" type="button" data-action="play-again">PLAY AGAIN</button><button class="primary-button" type="button" data-action="finish-to-hub">FINISH</button></div>
+        </section>
       </main>`;
   }
 
@@ -760,9 +830,14 @@
       "mission5-complete": mission5CompleteScreen,
       mission6: mission6Screen,
       "mission6-complete": mission6CompleteScreen,
+      mission7: mission7Screen,
+      "journey-complete": journeyCompleteScreen,
       level: levelScreen
     };
+    const screenChanged = lastRenderedScreen !== state.screen;
+    lastRenderedScreen = state.screen;
     app.innerHTML = (screens[state.screen] || levelScreen)();
+    if (screenChanged) requestAnimationFrame(() => window.scrollTo(0, 0));
     updateOrientation();
     if (pendingFocus) {
       const selector = pendingFocus;
@@ -843,6 +918,21 @@
     save();
     announce(message);
     render();
+  }
+
+  function saveHubCompletion() {
+    if (!state.mission7.finalReached || !L.journeyCanAward(state)) return false;
+    let progress = { completedCases: {} };
+    try {
+      const saved = JSON.parse(localStorage.getItem(HUB_STORAGE_KEY));
+      if (saved && typeof saved === "object") progress = saved;
+    } catch (_) {
+      progress = { completedCases: {} };
+    }
+    localStorage.setItem(HUB_STORAGE_KEY, JSON.stringify(L.withHistologyHubCompletion(progress)));
+    state.mission7 = L.applyMission7Action(state.mission7, "mark-awarded");
+    save();
+    return true;
   }
 
   function handleAction(action, value, trigger) {
@@ -1148,6 +1238,48 @@
       state.screen = "mission6";
       save(); render(); return;
     }
+    if (action === "start-mission7") {
+      state.currentMission = 7;
+      state.screen = "mission7";
+      state.feedback = "Which one is the H&E slide?";
+      state.feedbackType = "info";
+      save(); announce("Mission 7. Find the H&E Slide."); render(); return;
+    }
+    if (action === "mission7-hint") {
+      state.mission7 = L.applyMission7Action(state.mission7, "toggle-hint");
+      state.feedback = "H&E usually makes the nuclei blue-purple and much of the surrounding tissue pink.";
+      state.feedbackType = "info";
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission7-choice") {
+      state.mission7 = L.applyMission7Action(state.mission7, "choose", value);
+      if (value === "slide-a") state.feedback = "Not this one. H&E doesn't normally look green and yellow. Try again!";
+      if (value === "slide-c") state.feedback = "Nearly! Look for the slide that also has lots of pink. Try again!";
+      if (value === L.MISSION7_CORRECT_CHOICE) state.feedback = "YES! You found the H&E slide!";
+      state.feedbackType = value === L.MISSION7_CORRECT_CHOICE ? "good" : "try";
+      if (state.mission7.correctSelected) pendingFocus = '[data-action="mission7-finish"]';
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission7-finish" && state.mission7.correctSelected) {
+      state.mission7 = L.applyMission7Action(state.mission7, "finish");
+      state.mission7Complete = true;
+      state.screen = "journey-complete";
+      save(); announce("Mission complete. Great job, scientist!"); render(); return;
+    }
+    if (action === "play-again") {
+      if (!window.confirm("Play again with a new patient case? This will reset the Histology journey.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = initialState();
+      announce("Choose a difficulty to start a new Histology case."); render(); return;
+    }
+    if (action === "finish-to-hub") {
+      if (!saveHubCompletion()) {
+        announce("Complete all seven Histology missions before returning to the hub.");
+        return;
+      }
+      window.location.href = "../";
+      return;
+    }
     if (action === "review-mission1") {
       state.screen = "mission1";
       save(); render(); return;
@@ -1251,7 +1383,7 @@
   });
 
   function updateOrientation() {
-    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4", "mission5", "mission6"].includes(state.screen);
+    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4", "mission5", "mission6", "mission7"].includes(state.screen);
     orientationBlocker.hidden = !blocked;
     app.inert = blocked;
     document.documentElement.classList.toggle("orientation-blocked", blocked);

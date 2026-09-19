@@ -246,3 +246,44 @@ test("Mission 6 drop and interrupted staining restore one completed output", () 
   assert.equal(resumedStaining.slideInMachine, true);
   assert.equal(resumedStaining.stainingComplete, true);
 });
+
+test("Mission 7 hint is repeatable and only Slide B unlocks completion", () => {
+  let state = logic.createMission7State();
+  state = logic.applyMission7Action(state, "toggle-hint");
+  assert.equal(state.hintOpen, true);
+  assert.equal(state.selectedSlide, null);
+  state = logic.applyMission7Action(state, "toggle-hint");
+  assert.equal(state.hintOpen, false);
+
+  state = logic.applyMission7Action(state, "choose", "slide-a");
+  assert.equal(state.selectedSlide, "slide-a");
+  assert.equal(state.correctSelected, false);
+  assert.equal(logic.applyMission7Action(state, "finish").finalReached, false);
+  state = logic.applyMission7Action(state, "choose", "slide-c");
+  assert.equal(state.selectedSlide, "slide-c");
+  assert.equal(state.correctSelected, false);
+  state = logic.applyMission7Action(state, "choose", logic.MISSION7_CORRECT_CHOICE);
+  assert.equal(state.correctSelected, true);
+  state = logic.applyMission7Action(state, "finish");
+  assert.equal(state.finalReached, true);
+});
+
+test("Histology hub award requires all seven missions and is idempotent", () => {
+  const sixOnly = Object.fromEntries([1, 2, 3, 4, 5, 6].map((number) => [`mission${number}Complete`, true]));
+  assert.equal(logic.journeyCanAward(sixOnly), false);
+  const allSeven = { ...sixOnly, mission7Complete: true };
+  assert.equal(logic.journeyCanAward(allSeven), true);
+
+  const original = { completedCases: { chemistry: ["main"], histology: [] }, setting: "keep" };
+  const once = logic.withHistologyHubCompletion(original);
+  const twice = logic.withHistologyHubCompletion(once);
+  assert.deepEqual(twice.completedCases.histology, ["main"]);
+  assert.deepEqual(twice.completedCases.chemistry, ["main"]);
+  assert.equal(twice.setting, "keep");
+  assert.deepEqual(original.completedCases.histology, []);
+});
+
+test("Mission 7 replay state starts clean without changing the hub award", () => {
+  const replay = logic.createMission7State();
+  assert.deepEqual(replay, { selectedSlide: null, hintOpen: false, correctSelected: false, finalReached: false, hubAwarded: false });
+});
