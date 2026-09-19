@@ -345,6 +345,42 @@ h1, h2, h3, p { margin-top: 0; }
   .unstained-reveal > img { max-height: 190px; }
 }
 
+/* Mission 6: histological staining */
+.staining-transfer-workspace { display: grid; grid-template-columns: minmax(260px,.9fr) auto minmax(320px,1.1fr); gap: 20px; align-items: center; max-width: 1080px; margin: 16px auto; }
+.unstained-slide-source, .staining-machine-target { position: relative; min-height: 245px; border: 3px solid var(--blue); border-radius: 22px; padding: 14px; background: rgba(255,255,255,.96); color: var(--navy); box-shadow: var(--shadow); cursor: pointer; font-weight: 900; }
+.unstained-slide-source.selected { border-color: var(--gold); background: #fff9df; }
+.unstained-slide-source > img, .staining-machine-target > img { display: block; width: 100%; height: 185px; object-fit: contain; }
+.staining-machine-target { border-style: dashed; }
+.carrier-inset { position: absolute; top: 28%; right: 8%; width: 30%; }
+.carrier-inset img { width: 100%; height: 75px; object-fit: contain; }
+.is-dragging .staining-machine-target { border-color: var(--gold); background: #fff9df; }
+.staining-stage, .stained-ready { display: grid; grid-template-columns: minmax(330px,1.2fr) 1fr; gap: 26px; align-items: center; max-width: 1040px; margin: 18px auto; border: 3px solid var(--cyan); border-radius: 24px; padding: 22px; background: rgba(255,255,255,.96); box-shadow: var(--shadow); }
+.staining-machine-stack { position: relative; min-height: 310px; }
+.staining-machine-stack > img:first-child { width: 100%; height: 310px; object-fit: contain; }
+.carrier-overlay { position: absolute; right: 14%; bottom: 10%; width: 35%; max-height: 120px; object-fit: contain; }
+.colour-streams { position: absolute; inset: 16% 12% auto; width: 76%; height: 63%; object-fit: contain; opacity: .88; }
+.staining-stage h2, .stained-ready h2 { color: var(--navy); font-size: clamp(1.7rem,3vw,2.8rem); }
+.process-word { margin-bottom: 7px; color: #7851a9; font-size: clamp(2rem,5vw,4rem); font-weight: 900; letter-spacing: .08em; }
+.process-word.ding { color: var(--success); }
+.process-trail { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; color: #7851a9; font-size: clamp(1.25rem,3vw,2rem); font-weight: 900; }
+.process-trail strong { color: var(--success); }
+.stained-ready > img { width: 100%; max-height: 330px; object-fit: contain; }
+.stained-ready p { line-height: 1.5; }
+
+@media (max-width: 720px) {
+  .staining-transfer-workspace, .staining-stage, .stained-ready { grid-template-columns: 1fr; }
+  .staining-transfer-workspace .journey-arrow { transform: rotate(90deg); }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .staining-transfer-workspace { margin-block: 6px; }
+  .unstained-slide-source, .staining-machine-target { min-height: 170px; padding: 8px; }
+  .unstained-slide-source > img, .staining-machine-target > img { height: 120px; }
+  .staining-stage, .stained-ready { grid-template-columns: 1.2fr 1fr; margin-block: 6px; padding: 10px; }
+  .staining-machine-stack, .staining-machine-stack > img:first-child { min-height: 0; height: 190px; }
+  .stained-ready > img { max-height: 190px; }
+}
+
 /* Completion */
 .chapter-complete { position: relative; isolation: isolate; display: grid; place-items: center; min-height: calc(100vh - 70px); overflow: hidden; padding: 28px; }
 .complete-background { background: url("assets/shared/histology-lab-shell-bg.png") center / cover; }

@@ -138,6 +138,36 @@
     return state;
   }
 
+  function createMission6State() {
+    return {
+      step: "transfer_ready",
+      slideSelected: false,
+      slideInMachine: false,
+      machineStarted: false,
+      stainingComplete: false,
+      complete: false
+    };
+  }
+
+  function applyMission6Action(current, action, value) {
+    const state = { ...createMission6State(), ...(current || {}) };
+    if (action === "select-slide" && state.step === "transfer_ready") {
+      return { ...state, slideSelected: !state.slideSelected };
+    }
+    if (action === "place-slide" && state.step === "transfer_ready" && (state.slideSelected || value === "drop")) {
+      return { ...state, step: "slide_in_machine", slideSelected: false, slideInMachine: true };
+    }
+    if (action === "advance") {
+      if (state.step === "slide_in_machine") return { ...state, step: "staining", slideInMachine: true, machineStarted: true };
+      if (state.step === "staining") return { ...state, step: "stained_slides_ready", slideInMachine: true, machineStarted: true, stainingComplete: true };
+      if (state.step === "stained_slides_ready") return { ...state, step: "complete", slideInMachine: true, machineStarted: true, stainingComplete: true, complete: true };
+    }
+    if (action === "resume-safe" && ["slide_in_machine", "staining"].includes(state.step)) {
+      return { ...state, step: "stained_slides_ready", slideSelected: false, slideInMachine: true, machineStarted: true, stainingComplete: true };
+    }
+    return state;
+  }
+
   const FIRST_NAMES = Object.freeze([
     "Alex", "Amelia", "Daniel", "Elena", "Isaac", "Leah", "Maya", "Noah",
     "Rafael", "Sara", "Sofia", "Theo", "Yasmin", "Zachary"
@@ -337,6 +367,7 @@
     applyMission3Action,
     applyMission4Action,
     applyMission5Action,
+    applyMission6Action,
     ageOn,
     changeCaseLevel,
     createCase,
@@ -346,6 +377,7 @@
     createMission3State,
     createMission4State,
     createMission5State,
+    createMission6State,
     createPatientId,
     formatDisplayDate,
     identityMismatchFields,

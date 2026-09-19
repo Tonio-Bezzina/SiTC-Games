@@ -209,3 +209,40 @@ test("Mission 5 drag and interrupted transfer reach the same safe output", () =>
   assert.equal(resumed.revealed, true);
   assert.equal(resumed.complete, false);
 });
+
+test("Mission 6 starts only after a valid slide placement and preserves order", () => {
+  let state = logic.createMission6State();
+  assert.equal(logic.applyMission6Action(state, "place-slide").step, "transfer_ready");
+  state = logic.applyMission6Action(state, "select-slide");
+  state = logic.applyMission6Action(state, "place-slide");
+  assert.equal(state.step, "slide_in_machine");
+  assert.equal(state.slideInMachine, true);
+  assert.equal(state.machineStarted, false);
+  state = logic.applyMission6Action(state, "advance");
+  assert.equal(state.step, "staining");
+  assert.equal(state.machineStarted, true);
+  assert.equal(state.stainingComplete, false);
+  state = logic.applyMission6Action(state, "advance");
+  assert.equal(state.step, "stained_slides_ready");
+  assert.equal(state.stainingComplete, true);
+  assert.equal(state.complete, false);
+  state = logic.applyMission6Action(state, "advance");
+  assert.equal(state.step, "complete");
+  assert.equal(state.complete, true);
+});
+
+test("Mission 6 drop and interrupted staining restore one completed output", () => {
+  let state = logic.createMission6State();
+  state = logic.applyMission6Action(state, "place-slide", "drop");
+  assert.equal(state.step, "slide_in_machine");
+  const resumedLoaded = logic.applyMission6Action(state, "resume-safe");
+  assert.equal(resumedLoaded.step, "stained_slides_ready");
+  assert.equal(resumedLoaded.stainingComplete, true);
+  assert.equal(resumedLoaded.complete, false);
+
+  state = logic.applyMission6Action(state, "advance");
+  const resumedStaining = logic.applyMission6Action(state, "resume-safe");
+  assert.equal(resumedStaining.step, "stained_slides_ready");
+  assert.equal(resumedStaining.slideInMachine, true);
+  assert.equal(resumedStaining.stainingComplete, true);
+});

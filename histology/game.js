@@ -6,7 +6,7 @@
   const announcer = document.getElementById("announcer");
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
-  const VERSION = 5;
+  const VERSION = 6;
   let pendingFocus = null;
   let cutStart = null;
   let sequenceTimer = null;
@@ -36,7 +36,9 @@
       mission4: L.createMission4State(),
       mission4Complete: false,
       mission5: L.createMission5State(),
-      mission5Complete: false
+      mission5Complete: false,
+      mission6: L.createMission6State(),
+      mission6Complete: false
     };
   }
 
@@ -44,10 +46,11 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      if (![1, 2, 3, 4, VERSION].includes(saved.version)) return initialState();
+      if (![1, 2, 3, 4, 5, VERSION].includes(saved.version)) return initialState();
       const mission3 = { ...L.createMission3State(), ...(saved.mission3 || {}) };
       const mission4 = { ...L.createMission4State(), ...(saved.mission4 || {}) };
       const mission5 = { ...L.createMission5State(), ...(saved.mission5 || {}) };
+      const mission6 = { ...L.createMission6State(), ...(saved.mission6 || {}) };
       return {
         ...initialState(),
         ...saved,
@@ -56,6 +59,7 @@
         mission3: L.applyMission3Action(mission3, "resume-safe"),
         mission4: L.applyMission4Action(mission4, "resume-safe"),
         mission5: L.applyMission5Action(mission5, "resume-safe"),
+        mission6: L.applyMission6Action(mission6, "resume-safe"),
         screen: "level",
         forceReplay: false
       };
@@ -115,9 +119,13 @@
     state.mission4Complete = false;
     state.mission5 = L.createMission5State();
     state.mission5Complete = false;
+    state.mission6 = L.createMission6State();
+    state.mission6Complete = false;
   }
 
   function resumeScreen() {
+    if (state.mission6Complete) return "mission6-complete";
+    if (state.currentMission === 6 && state.mission5Complete) return "mission6";
     if (state.mission5Complete) return "mission5-complete";
     if (state.currentMission === 5 && state.mission4Complete) return "mission5";
     if (state.mission4Complete) return "mission4-complete";
@@ -654,7 +662,57 @@
     return `
       ${missionHeader(5, "Put the Section on a Glass Slide")}
       <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
-        <section class="complete-card" aria-labelledby="mission5CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 5 COMPLETE</p><h1 id="mission5CompleteTitle">The unstained slide is ready.</h1><p>The accepted patient's intact tissue section is centred on its glass microscope slide.</p><div class="next-preview"><strong>Next: Add Colour to the Tissue</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission5">Review Mission 5</button><button class="secondary-button" type="button" data-action="review-mission4">Review Mission 4</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+        <section class="complete-card" aria-labelledby="mission5CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 5 COMPLETE</p><h1 id="mission5CompleteTitle">The unstained slide is ready.</h1><p>The accepted patient's intact tissue section is centred on its glass microscope slide.</p><div class="next-preview"><strong>Next: Add Colour to the Tissue</strong><span>Continue with the same patient's unstained slide.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="start-mission6">Continue to Mission 6</button><button class="secondary-button" type="button" data-action="review-mission5">Review Mission 5</button><button class="secondary-button" type="button" data-action="review-mission4">Review Mission 4</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
+      </main>`;
+  }
+
+  function mission6ProcessView() {
+    const step = state.mission6.step;
+    if (step === "transfer_ready") {
+      return `<img class="processing-path" src="assets/mission-6/staining-process-diagram.svg" alt="Unstained slide goes inside the staining machine and becomes stained slides">
+        <div class="staining-transfer-workspace">
+          <button class="unstained-slide-source ${state.mission6.slideSelected ? "selected" : ""}" type="button" draggable="true" data-action="mission6-select-slide" aria-pressed="${state.mission6.slideSelected}"><img src="assets/mission-5/microscope-slide-unstained.png" alt="The accepted patient's unstained microscope slide"><strong>Select the unstained slide</strong></button>
+          <span class="journey-arrow" aria-hidden="true">→</span>
+          <button class="staining-machine-target" type="button" data-action="mission6-place-slide" data-drop="staining-machine" aria-label="Load the selected slide into the staining machine"><img src="assets/mission-6/staining-machine-empty.png" alt="Staining machine with one clear loading area"><span class="carrier-inset"><img src="assets/mission-6/slide-carrier-empty.png" alt="Empty slide carrier"></span><strong>Staining Machine loading area</strong></button>
+        </div>`;
+    }
+    if (step === "slide_in_machine") {
+      return `<div class="staining-stage"><div class="staining-machine-stack"><img src="assets/mission-6/staining-machine-slide-loaded.png" alt="Unstained slide locked safely inside the staining machine"><img class="carrier-overlay" src="assets/mission-6/slide-carrier-loaded.png" alt="Carrier holding the patient slide"></div><div><h2>Slide loaded</h2><p>The machine starts only after the slide is safely in place.</p></div></div>`;
+    }
+    if (step === "staining") {
+      return `<div class="staining-stage active"><div class="staining-machine-stack"><img src="assets/mission-6/staining-machine-active.png" alt="Staining machine active with the patient slide inside"><img class="colour-streams" src="assets/mission-6/stain-colour-streams.png" alt="Gentle purple, pink, green, yellow, blue and violet colour streams inside the machine"></div><div><p class="process-word" aria-label="Whoosh">WHOOSH…</p><h2>Histological staining</h2><p>Colour is added so the different tissue parts can be seen more clearly.</p></div></div>`;
+    }
+    return `<div class="stained-ready"><img src="assets/mission-6/stained-slides-output-tray.png" alt="Output tray holding three stained slide choices"><div><p class="process-trail" aria-label="Staining sequence: Whoosh, then Ding"><span>WHOOSH…</span><span aria-hidden="true">→</span><strong>DING!</strong></p><h2>Stained slides ready</h2><p>“Great! Staining adds colour to the tissue so we can see its different parts more clearly.”</p><p><strong>“Your stained slides are ready!”</strong></p></div></div>`;
+  }
+
+  function mission6GuideText() {
+    const step = state.mission6.step;
+    if (step === "transfer_ready") return state.mission6.slideSelected ? "Now choose the Staining Machine loading area." : "Select or drag the unstained slide into the Staining Machine.";
+    if (step === "slide_in_machine") return "The slide is safely loaded and the staining sequence is starting.";
+    if (step === "staining") return "WHOOSH… Colour is moving through the staining machine.";
+    return "Great! Staining adds colour to the tissue so we can see its different parts more clearly. Your stained slides are ready!";
+  }
+
+  function mission6Screen() {
+    return `
+      ${missionHeader(6, "Add Colour to the Tissue")}
+      <main class="game-main" id="mainContent"><div class="mission-scene mission6-scene">
+        <img class="scene-background" src="assets/mission-6/staining-lab-background.png" alt="Histological staining laboratory">
+        <div class="scene-shade" aria-hidden="true"></div>
+        <div class="mission-title-card"><p class="eyebrow">HISTOLOGICAL STAINING</p><h1>Add Colour to the Tissue</h1><p>“Our tissue is on the slide, but we need to add colour so we can see the cells more clearly.”</p><p>“Drag the slide into the Staining Machine!”</p></div>
+        ${caseIdentityChip()}
+        ${mission6ProcessView()}
+        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission6-next" ${state.mission6.complete ? "" : "disabled"}>NEXT: Can you find the H&amp;E slide?</button></div>
+        ${mission2Feedback()}
+      </div></main>
+      <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission6GuideText()}</p></div></footer>`;
+  }
+
+  function mission6CompleteScreen() {
+    return `
+      ${missionHeader(6, "Add Colour to the Tissue")}
+      <main class="chapter-complete" id="mainContent"><div class="complete-background" aria-hidden="true"></div>
+        <section class="complete-card" aria-labelledby="mission6CompleteTitle"><img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you"><div class="complete-copy"><img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed"><p class="eyebrow">MISSION 6 COMPLETE</p><h1 id="mission6CompleteTitle">The stained slides are ready.</h1><p>Staining has added visible colour to the accepted patient's tissue.</p><div class="next-preview"><strong>Next: Find the H&amp;E Slide</strong><span>The next mission will be added in a future release.</span></div><div class="complete-actions"><button class="primary-button" type="button" data-action="review-mission6">Review Mission 6</button><button class="secondary-button" type="button" data-action="review-mission5">Review Mission 5</button><button class="secondary-button" type="button" data-action="new-case">Start a New Case</button><a class="secondary-button button-link" href="../">Return to Game Hub</a></div></div></section>
       </main>`;
   }
 
@@ -700,6 +758,8 @@
       "mission4-complete": mission4CompleteScreen,
       mission5: mission5Screen,
       "mission5-complete": mission5CompleteScreen,
+      mission6: mission6Screen,
+      "mission6-complete": mission6CompleteScreen,
       level: levelScreen
     };
     app.innerHTML = (screens[state.screen] || levelScreen)();
@@ -712,6 +772,7 @@
     scheduleMission3Sequence();
     scheduleMission4Sequence();
     scheduleMission5Sequence();
+    scheduleMission6Sequence();
   }
 
   function scheduleMission3Sequence() {
@@ -758,6 +819,22 @@
       state.feedbackType = "good";
       save(); announce(state.feedback); render();
     }, reduced ? 40 : 700);
+  }
+
+  function scheduleMission6Sequence() {
+    if (state.screen !== "mission6" || !["slide_in_machine", "staining", "stained_slides_ready"].includes(state.mission6.step)) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    sequenceTimer = setTimeout(() => {
+      state.mission6 = L.applyMission6Action(state.mission6, "advance");
+      const messages = {
+        staining: "WHOOSH… The slide is travelling through the staining machine.",
+        stained_slides_ready: "DING! Great! Staining adds colour to the tissue so we can see its different parts more clearly.",
+        complete: "Your stained slides are ready!"
+      };
+      state.feedback = messages[state.mission6.step] || state.feedback;
+      state.feedbackType = "good";
+      save(); announce(state.feedback); render();
+    }, reduced ? 50 : 900);
   }
 
   function setFeedback(message, type = "") {
@@ -1036,6 +1113,41 @@
       state.screen = "mission5";
       save(); render(); return;
     }
+    if (action === "start-mission6") {
+      state.currentMission = 6;
+      state.screen = "mission6";
+      state.feedback = "Select or drag the unstained slide into the Staining Machine.";
+      state.feedbackType = "info";
+      save(); announce("Mission 6. Add Colour to the Tissue."); render(); return;
+    }
+    if (action === "mission6-select-slide") {
+      state.mission6 = L.applyMission6Action(state.mission6, "select-slide");
+      state.feedback = state.mission6.slideSelected ? "Unstained slide selected. Now choose the Staining Machine loading area." : "Select or drag the unstained slide into the Staining Machine.";
+      state.feedbackType = "info";
+      pendingFocus = state.mission6.slideSelected ? '[data-action="mission6-place-slide"]' : '[data-action="mission6-select-slide"]';
+      save(); render(); return;
+    }
+    if (action === "mission6-place-slide") {
+      const next = L.applyMission6Action(state.mission6, "place-slide", trigger);
+      if (next.step === state.mission6.step) {
+        setFeedback("Select the unstained slide first, then choose the Staining Machine loading area.", "info");
+        return;
+      }
+      state.mission6 = next;
+      state.feedback = "The unstained slide is safely loaded in the Staining Machine.";
+      state.feedbackType = "good";
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission6-next" && state.mission6.complete) {
+      state.mission6Complete = true;
+      state.screen = "mission6-complete";
+      save(); announce("Mission 6 complete."); render(); return;
+    }
+    if (action === "review-mission6") {
+      state.currentMission = 6;
+      state.screen = "mission6";
+      save(); render(); return;
+    }
     if (action === "review-mission1") {
       state.screen = "mission1";
       save(); render(); return;
@@ -1079,6 +1191,15 @@
       save();
       return;
     }
+    const slide = event.target.closest('[data-action="mission6-select-slide"]');
+    if (slide && state.mission6.step === "transfer_ready") {
+      state.mission6 = { ...state.mission6, slideSelected: true };
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", "histology-unstained-slide");
+      document.documentElement.classList.add("is-dragging");
+      save();
+      return;
+    }
     const accepted = event.target.closest('[data-action="toggle-transfer"]');
     if (!accepted || state.racked) {
       event.preventDefault();
@@ -1096,20 +1217,22 @@
   });
 
   app.addEventListener("dragover", (event) => {
-    if (event.target.closest('[data-drop="rack"], [data-drop="cassette"], [data-drop="slide"]')) event.preventDefault();
+    if (event.target.closest('[data-drop="rack"], [data-drop="cassette"], [data-drop="slide"], [data-drop="staining-machine"]')) event.preventDefault();
   });
 
   app.addEventListener("drop", (event) => {
     const rack = event.target.closest('[data-drop="rack"]');
     const cassette = event.target.closest('[data-drop="cassette"]');
     const slide = event.target.closest('[data-drop="slide"]');
-    if (!rack && !cassette && !slide) return;
+    const stainingMachine = event.target.closest('[data-drop="staining-machine"]');
+    if (!rack && !cassette && !slide && !stainingMachine) return;
     event.preventDefault();
     document.documentElement.classList.remove("is-dragging");
     const payload = event.dataTransfer.getData("text/plain");
     if (rack && payload === "accepted-histology-specimen") handleAction("rack-sample", "", "drop");
     if (cassette && payload === "histology-small-tissue") handleAction("mission2-place-tissue", "", "drop");
     if (slide && payload === "histology-thin-section") handleAction("mission5-place-section", "", "drop");
+    if (stainingMachine && payload === "histology-unstained-slide") handleAction("mission6-place-slide", "", "drop");
   });
 
   app.addEventListener("pointerdown", (event) => {
@@ -1128,7 +1251,7 @@
   });
 
   function updateOrientation() {
-    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4", "mission5"].includes(state.screen);
+    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2", "mission3", "mission4", "mission5", "mission6"].includes(state.screen);
     orientationBlocker.hidden = !blocked;
     app.inert = blocked;
     document.documentElement.classList.toggle("orientation-blocked", blocked);
