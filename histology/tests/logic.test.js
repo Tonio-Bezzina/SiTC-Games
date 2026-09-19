@@ -64,3 +64,45 @@ test("patient ID validation rejects malformed and mismatched IDs", () => {
   assert.equal(logic.isPatientIdValid("123412X", "01/01/2012"), false);
   assert.equal(logic.isPatientIdValid("123411H", "01/01/2012"), false);
 });
+
+test("Mission 2 state machine gates cutting and cassette completion", () => {
+  let state = logic.createMission2State();
+  assert.deepEqual(state, {
+    choice: null,
+    step: "question",
+    scalpelSelected: false,
+    tissueSelected: false,
+    complete: false
+  });
+
+  state = logic.applyMission2Action(state, "choose", "microscope");
+  assert.equal(state.step, "question");
+  assert.equal(state.choice, "microscope");
+
+  state = logic.applyMission2Action(state, "choose", logic.MISSION2_CORRECT_CHOICE);
+  assert.equal(state.step, "cutting");
+  assert.equal(logic.applyMission2Action(state, "cut").step, "cutting");
+
+  state = logic.applyMission2Action(state, "select-scalpel");
+  state = logic.applyMission2Action(state, "cut");
+  assert.equal(state.step, "transfer");
+  assert.equal(logic.applyMission2Action(state, "place-tissue").step, "transfer");
+
+  state = logic.applyMission2Action(state, "select-tissue");
+  state = logic.applyMission2Action(state, "place-tissue");
+  assert.equal(state.step, "loaded");
+  assert.equal(state.complete, false);
+
+  state = logic.applyMission2Action(state, "close-cassette");
+  assert.equal(state.step, "complete");
+  assert.equal(state.complete, true);
+});
+
+test("Mission 2 drag placement accepts only the small cut tissue", () => {
+  let state = logic.createMission2State();
+  state = logic.applyMission2Action(state, "choose", logic.MISSION2_CORRECT_CHOICE);
+  state = logic.applyMission2Action(state, "select-scalpel");
+  state = logic.applyMission2Action(state, "cut");
+  state = logic.applyMission2Action(state, "place-tissue", "drop");
+  assert.equal(state.step, "loaded");
+});

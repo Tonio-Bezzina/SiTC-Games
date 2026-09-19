@@ -11,6 +11,43 @@
     challenge: Object.freeze({ label: "Challenge", guidance: "Fewer clues", minAge: 13, maxAge: 16 })
   });
 
+  const MISSION2_CORRECT_CHOICE = "cut-cassette";
+
+  function createMission2State() {
+    return {
+      choice: null,
+      step: "question",
+      scalpelSelected: false,
+      tissueSelected: false,
+      complete: false
+    };
+  }
+
+  function applyMission2Action(current, action, value) {
+    const state = { ...createMission2State(), ...(current || {}) };
+    if (action === "choose") {
+      if (state.step !== "question") return state;
+      if (value !== MISSION2_CORRECT_CHOICE) return { ...state, choice: value };
+      return { ...state, choice: value, step: "cutting", scalpelSelected: false };
+    }
+    if (action === "select-scalpel" && state.step === "cutting") {
+      return { ...state, scalpelSelected: !state.scalpelSelected };
+    }
+    if (action === "cut" && state.step === "cutting" && state.scalpelSelected) {
+      return { ...state, step: "transfer", scalpelSelected: false };
+    }
+    if (action === "select-tissue" && state.step === "transfer") {
+      return { ...state, tissueSelected: !state.tissueSelected };
+    }
+    if (action === "place-tissue" && state.step === "transfer" && (state.tissueSelected || value === "drop")) {
+      return { ...state, step: "loaded", tissueSelected: false };
+    }
+    if (action === "close-cassette" && state.step === "loaded") {
+      return { ...state, step: "complete", complete: true };
+    }
+    return state;
+  }
+
   const FIRST_NAMES = Object.freeze([
     "Alex", "Amelia", "Daniel", "Elena", "Isaac", "Leah", "Maya", "Noah",
     "Rafael", "Sara", "Sofia", "Theo", "Yasmin", "Zachary"
@@ -202,11 +239,14 @@
 
   return Object.freeze({
     LEVELS,
+    MISSION2_CORRECT_CHOICE,
+    applyMission2Action,
     ageOn,
     changeCaseLevel,
     createCase,
     createDateOfBirth,
     createIncorrectCandidate,
+    createMission2State,
     createPatientId,
     formatDisplayDate,
     identityMismatchFields,

@@ -6,8 +6,9 @@
   const announcer = document.getElementById("announcer");
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
-  const VERSION = 1;
+  const VERSION = 2;
   let pendingFocus = null;
+  let cutStart = null;
 
   function initialState() {
     return {
@@ -25,15 +26,26 @@
       mission1Complete: false,
       forceReplay: false,
       feedback: "",
-      feedbackType: ""
+      feedbackType: "",
+      currentMission: 1,
+      mission2: L.createMission2State(),
+      mission2Complete: false
     };
   }
 
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (!saved || saved.version !== VERSION || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      return { ...initialState(), ...saved, screen: "level", forceReplay: false };
+      if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
+      if (saved.version !== 1 && saved.version !== VERSION) return initialState();
+      return {
+        ...initialState(),
+        ...saved,
+        version: VERSION,
+        mission2: { ...L.createMission2State(), ...(saved.mission2 || {}) },
+        screen: "level",
+        forceReplay: false
+      };
     } catch (_) {
       return initialState();
     }
@@ -81,6 +93,16 @@
     state.mission1Complete = false;
     state.feedback = "";
     state.feedbackType = "";
+    state.currentMission = 1;
+    state.mission2 = L.createMission2State();
+    state.mission2Complete = false;
+  }
+
+  function resumeScreen() {
+    if (state.mission2Complete) return "mission2-complete";
+    if (state.currentMission === 2 && state.mission1Complete) return "mission2";
+    if (state.mission1Complete) return "mission1-complete";
+    return "mission1";
   }
 
   function chooseLevel(level) {
@@ -90,29 +112,32 @@
     if (needsNewCase) {
       state.caseData = L.createCase(level);
       resetActivity();
-    } else if (levelChanged || state.forceReplay) {
+    } else if (state.forceReplay) {
+      state.caseData = L.changeCaseLevel(state.caseData, level);
+      resetActivity();
+    } else if (levelChanged && !state.mission1Complete) {
       state.caseData = L.changeCaseLevel(state.caseData, level);
       resetActivity();
     }
     state.level = level;
     state.caseData.level = level;
-    state.screen = state.mission1Complete && !state.forceReplay ? "complete" : "mission";
+    state.screen = resumeScreen();
     state.forceReplay = false;
     state.feedback = state.clueSeen ? "Choose a complete sample set to inspect." : "";
     save();
     render();
   }
 
-  function missionHeader() {
+  function missionHeader(number = 1, title = "Check the Patient Details") {
     return `
       <header class="game-bar">
         <a class="back-link" href="../">← All laboratories</a>
         <div class="game-heading">
           <span>Histology</span>
-          <strong>The Histology Journey</strong>
+          <strong>${escapeHtml(title)}</strong>
         </div>
-        <div class="mission-progress" aria-label="Mission 1 of 7">
-          <span>Mission</span><strong>1 / 7</strong>
+        <div class="mission-progress" aria-label="Mission ${number} of 7">
+          <span>Mission</span><strong>${number} / 7</strong>
         </div>
         <button class="level-control" type="button" data-action="show-levels">Level: ${escapeHtml(levelConfig().label)}</button>
       </header>`;
@@ -323,6 +348,110 @@
       ${clueOverlay()}`;
   }
 
+  function caseIdentityChip() {
+    const patient = state.caseData.reference;
+    return `<div class="case-chip" aria-label="Current patient case"><strong>${escapeHtml(patient.name)}</strong><span>ID no. ${escapeHtml(patient.id)}</span><span>DOB ${escapeHtml(patient.dob)}</span><span>${escapeHtml(state.caseData.accession)}</span></div>`;
+  }
+
+  function mission2Feedback() {
+    return state.feedback ? `<div class="feedback ${state.feedbackType}" role="status">${escapeHtml(state.feedback)}</div>` : "";
+  }
+
+  function mission2Choices() {
+    const choices = [
+      ["cut-cassette", "Cut a small piece and put it in a cassette"],
+      ["staining", "Put the whole sample straight into the staining machine"],
+      ["microscope", "Put the whole sample under the microscope"]
+    ];
+    return `<div class="choice-grid" aria-label="Choose the next laboratory step">${choices.map(([value, label]) => `
+      <button class="choice-button ${state.mission2.choice === value ? "was-chosen" : ""}" type="button" data-action="mission2-choice" data-value="${value}">${label}</button>`).join("")}</div>`;
+  }
+
+  function mission2Bench() {
+    const step = state.mission2.step;
+    const cut = ["transfer", "loaded", "complete"].includes(step);
+    const loaded = ["loaded", "complete"].includes(step);
+    const complete = step === "complete";
+    return `
+      <div class="grossing-workspace">
+        <section class="cutting-zone" data-cut-zone aria-label="Cutting board with the accepted skin specimen">
+          <img class="cutting-board" src="assets/mission-2/cutting-board-clean.png" alt="Clean histology cutting board">
+          <img class="board-tissue main-tissue" src="assets/mission-2/${cut ? "skin-tissue-cut-main.png" : "skin-tissue-whole.png"}" alt="${cut ? "Main piece of the cut skin specimen" : "Whole accepted skin specimen"}">
+          ${step === "cutting" ? `<img class="cut-guide" src="assets/mission-2/cut-guide.svg" alt="Wide gold cutting guide. Swipe across it or use Cut along the guide.">` : ""}
+          ${step === "transfer" ? `<button class="small-tissue ${state.mission2.tissueSelected ? "selected" : ""}" type="button" data-action="mission2-select-tissue" draggable="true" aria-pressed="${state.mission2.tissueSelected}" aria-label="Small cut tissue piece. Select or drag it into the cassette."><img src="assets/mission-2/skin-tissue-small-piece.png" alt=""><span>${state.mission2.tissueSelected ? "Selected" : "Small tissue piece"}</span></button>` : ""}
+        </section>
+        <div class="grossing-tools">
+          <button class="scalpel-tool ${state.mission2.scalpelSelected ? "selected" : ""}" type="button" data-action="mission2-select-scalpel" aria-pressed="${state.mission2.scalpelSelected}" ${step === "cutting" ? "" : "disabled"}>
+            <img src="assets/mission-2/virtual-scalpel.png" alt="Child-safe virtual scalpel"><span>${state.mission2.scalpelSelected ? "Scalpel selected" : "Select virtual scalpel"}</span>
+          </button>
+          <button class="cassette-target ${state.mission2.tissueSelected ? "ready" : ""} ${loaded ? "loaded" : ""}" type="button" data-action="mission2-place-tissue" data-drop="cassette" ${step === "transfer" ? "" : "disabled"} aria-label="${loaded ? "Histology cassette containing the tissue" : "Open empty histology cassette. Place the small tissue piece here."}">
+            <img src="assets/mission-2/${complete ? "histology-cassette-closed-loaded.png" : loaded ? "histology-cassette-open-loaded.png" : "histology-cassette-open-empty.png"}" alt="${complete ? "Closed cassette containing the patient tissue" : loaded ? "Open cassette containing the patient tissue" : "Open empty histology cassette"}"><span>${complete ? "Cassette closed safely" : loaded ? "Tissue inside cassette" : "Histology cassette"}</span>
+          </button>
+        </div>
+      </div>`;
+  }
+
+  function mission2GuideText() {
+    const step = state.mission2.step;
+    if (step === "question") return "Choose the step that prepares a small piece of tissue for processing.";
+    if (step === "cutting") return "Select the virtual scalpel, then swipe across the broad guide or use the accessible cut button.";
+    if (step === "transfer") return "Great! Now drag your tissue into the cassette.";
+    if (step === "loaded") return "The small piece is safely in place. Close the cassette to protect it.";
+    return "Perfect! The tissue is safely inside its cassette.";
+  }
+
+  function mission2Screen() {
+    const step = state.mission2.step;
+    return `
+      ${missionHeader(2, "Prepare the Tissue")}
+      <main class="game-main" id="mainContent">
+        <div class="mission-scene mission2-scene">
+          <img class="scene-background" src="assets/mission-2/grossing-bench-background.png" alt="Clean histology grossing bench">
+          <div class="scene-shade" aria-hidden="true"></div>
+          <div class="mission-title-card">
+            <p class="eyebrow">SPECIMEN PREPARATION / GROSSING</p>
+            <h1>Prepare the Tissue</h1>
+            <p>“The skin sample is too big. What should we do next?”</p>
+          </div>
+          ${caseIdentityChip()}
+          ${step === "question" ? mission2Choices() : ""}
+          ${mission2Bench()}
+          <div class="mission2-actions">
+            ${step === "cutting" ? `<button class="primary-button" type="button" data-action="mission2-cut" ${state.mission2.scalpelSelected ? "" : "disabled"}>Cut along the guide</button>` : ""}
+            ${step === "loaded" ? `<button class="primary-button" type="button" data-action="mission2-close">Close cassette</button>` : ""}
+            <button class="primary-button next-button" type="button" data-action="mission2-next" ${state.mission2.complete ? "" : "disabled"}>NEXT →</button>
+          </div>
+          ${mission2Feedback()}
+        </div>
+      </main>
+      <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission2GuideText()}</p></div></footer>`;
+  }
+
+  function mission2CompleteScreen() {
+    const name = state.caseData.reference.name;
+    return `
+      ${missionHeader(2, "Prepare the Tissue")}
+      <main class="chapter-complete" id="mainContent">
+        <div class="complete-background" aria-hidden="true"></div>
+        <section class="complete-card" aria-labelledby="mission2CompleteTitle">
+          <img class="complete-scientist" src="assets/shared/scientist-guide-success.png" alt="Scientist guide congratulating you">
+          <div class="complete-copy">
+            <img class="complete-mark" src="assets/shared/success-check-icon.svg" alt="Completed">
+            <p class="eyebrow">MISSION 2 COMPLETE</p>
+            <h1 id="mission2CompleteTitle">The tissue is safely inside its cassette.</h1>
+            <p>${escapeHtml(name)}'s accepted skin specimen is ready for processing.</p>
+            <div class="next-preview"><strong>Next: Make a Wax Block</strong><span>The next mission will be added in a future release.</span></div>
+            <div class="complete-actions">
+              <button class="primary-button" type="button" data-action="review-mission2">Review Mission 2</button>
+              <button class="secondary-button" type="button" data-action="review-mission1">Review Mission 1</button>
+              <button class="secondary-button" type="button" data-action="new-case">Start a New Case</button>
+              <a class="secondary-button button-link" href="../">Return to Game Hub</a>
+            </div>
+          </div>
+        </section>
+      </main>`;
+  }
+
   function completionScreen() {
     const name = state.caseData ? state.caseData.reference.name : "the patient";
     return `
@@ -336,9 +465,10 @@
             <p class="eyebrow">MISSION 1 COMPLETE</p>
             <h1 id="completeTitle">The correct skin specimen was received safely.</h1>
             <p>You checked the name, ID no. and date of birth before accepting ${escapeHtml(name)}'s specimen.</p>
-            <div class="next-preview"><strong>Next: Prepare the Tissue</strong><span>The next mission will be added in a future release.</span></div>
+            <div class="next-preview"><strong>Next: Prepare the Tissue</strong><span>Continue with the same patient and accepted specimen.</span></div>
             <div class="complete-actions">
-              <button class="primary-button" type="button" data-action="review-mission">Review Mission</button>
+              <button class="primary-button" type="button" data-action="start-mission2">Continue to Mission 2</button>
+              <button class="secondary-button" type="button" data-action="review-mission">Review Mission 1</button>
               <button class="secondary-button" type="button" data-action="change-level">Choose Another Level</button>
               <button class="secondary-button" type="button" data-action="new-case">Start a New Case</button>
               <a class="secondary-button button-link" href="../">Return to Game Hub</a>
@@ -349,11 +479,14 @@
   }
 
   function render() {
-    app.innerHTML = state.screen === "mission"
-      ? missionScreen()
-      : state.screen === "complete"
-        ? completionScreen()
-        : levelScreen();
+    const screens = {
+      mission1: missionScreen,
+      "mission1-complete": completionScreen,
+      mission2: mission2Screen,
+      "mission2-complete": mission2CompleteScreen,
+      level: levelScreen
+    };
+    app.innerHTML = (screens[state.screen] || levelScreen)();
     updateOrientation();
     if (pendingFocus) {
       const selector = pendingFocus;
@@ -455,11 +588,88 @@
     }
     if (action === "mission-next" && state.racked) {
       state.mission1Complete = true;
-      state.screen = "complete";
+      state.screen = "mission1-complete";
       save(); announce("Mission 1 complete."); render(); return;
     }
     if (action === "review-mission") {
-      state.screen = "mission";
+      state.screen = "mission1";
+      save(); render(); return;
+    }
+    if (action === "start-mission2") {
+      state.currentMission = 2;
+      state.screen = "mission2";
+      state.feedback = "Choose how to prepare a small piece for processing.";
+      state.feedbackType = "info";
+      save(); announce("Mission 2. Prepare the Tissue."); render(); return;
+    }
+    if (action === "mission2-choice") {
+      state.mission2 = L.applyMission2Action(state.mission2, "choose", value);
+      if (value === L.MISSION2_CORRECT_CHOICE) {
+        state.feedback = "Correct. Select the virtual scalpel and make one simple cut along the guide.";
+        state.feedbackType = "good";
+        pendingFocus = '[data-action="mission2-select-scalpel"]';
+      } else {
+        state.feedback = "Not yet. The sample is too large. Choose the step that prepares a small piece for processing.";
+        state.feedbackType = "try";
+      }
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission2-select-scalpel") {
+      state.mission2 = L.applyMission2Action(state.mission2, "select-scalpel");
+      state.feedback = state.mission2.scalpelSelected
+        ? "Virtual scalpel selected. Swipe across the broad guide or use Cut along the guide."
+        : "Select the virtual scalpel when you are ready.";
+      state.feedbackType = "info";
+      save(); render(); return;
+    }
+    if (action === "mission2-cut") {
+      const next = L.applyMission2Action(state.mission2, "cut");
+      if (next.step === state.mission2.step) return;
+      state.mission2 = next;
+      state.feedback = "Great! Now drag your tissue into the cassette.";
+      state.feedbackType = "good";
+      pendingFocus = '[data-action="mission2-select-tissue"]';
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission2-select-tissue") {
+      state.mission2 = L.applyMission2Action(state.mission2, "select-tissue");
+      state.feedback = state.mission2.tissueSelected
+        ? "Small tissue piece selected. Now choose the open cassette."
+        : "Select or drag the small tissue piece into the cassette.";
+      state.feedbackType = "info";
+      save(); render(); return;
+    }
+    if (action === "mission2-place-tissue") {
+      const next = L.applyMission2Action(state.mission2, "place-tissue", trigger);
+      if (next.step === state.mission2.step) {
+        setFeedback("Select the small tissue piece first, then choose the open cassette.", "try");
+        return;
+      }
+      state.mission2 = next;
+      state.feedback = "The small tissue piece is safely in place. Close the cassette.";
+      state.feedbackType = "good";
+      pendingFocus = '[data-action="mission2-close"]';
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission2-close") {
+      state.mission2 = L.applyMission2Action(state.mission2, "close-cassette");
+      state.feedback = "Perfect! The tissue is safely inside its cassette.";
+      state.feedbackType = "good";
+      pendingFocus = '[data-action="mission2-next"]';
+      save(); announce(state.feedback); render(); return;
+    }
+    if (action === "mission2-next" && state.mission2.complete) {
+      state.mission2Complete = true;
+      state.screen = "mission2-complete";
+      save(); announce("Mission 2 complete."); render(); return;
+    }
+    if (action === "review-mission2") {
+      state.currentMission = 2;
+      state.screen = "mission2";
+      save(); render(); return;
+    }
+    if (action === "review-mission1") {
+      state.screen = "mission1";
       save(); render(); return;
     }
     if (action === "change-level") {
@@ -468,7 +678,7 @@
       save(); render(); return;
     }
     if (action === "new-case") {
-      if (!window.confirm("Start a new case? This will replace the current Histology patient and Mission 1 progress.")) return;
+      if (!window.confirm("Start a new case? This will replace the current Histology patient and journey progress.")) return;
       localStorage.removeItem(STORAGE_KEY);
       state = initialState();
       announce("Choose a difficulty to start a new case.");
@@ -483,6 +693,15 @@
   });
 
   app.addEventListener("dragstart", (event) => {
+    const tissue = event.target.closest('[data-action="mission2-select-tissue"]');
+    if (tissue && state.mission2.step === "transfer") {
+      state.mission2 = { ...state.mission2, tissueSelected: true };
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", "histology-small-tissue");
+      document.documentElement.classList.add("is-dragging");
+      save();
+      return;
+    }
     const accepted = event.target.closest('[data-action="toggle-transfer"]');
     if (!accepted || state.racked) {
       event.preventDefault();
@@ -500,19 +719,37 @@
   });
 
   app.addEventListener("dragover", (event) => {
-    if (event.target.closest('[data-drop="rack"]')) event.preventDefault();
+    if (event.target.closest('[data-drop="rack"], [data-drop="cassette"]')) event.preventDefault();
   });
 
   app.addEventListener("drop", (event) => {
     const rack = event.target.closest('[data-drop="rack"]');
-    if (!rack) return;
+    const cassette = event.target.closest('[data-drop="cassette"]');
+    if (!rack && !cassette) return;
     event.preventDefault();
     document.documentElement.classList.remove("is-dragging");
-    if (event.dataTransfer.getData("text/plain") === "accepted-histology-specimen") handleAction("rack-sample", "", "drop");
+    const payload = event.dataTransfer.getData("text/plain");
+    if (rack && payload === "accepted-histology-specimen") handleAction("rack-sample", "", "drop");
+    if (cassette && payload === "histology-small-tissue") handleAction("mission2-place-tissue", "", "drop");
+  });
+
+  app.addEventListener("pointerdown", (event) => {
+    if (!event.target.closest("[data-cut-zone]") || state.mission2.step !== "cutting" || !state.mission2.scalpelSelected) return;
+    cutStart = { x: event.clientX, y: event.clientY };
+    document.documentElement.classList.add("is-dragging");
+  });
+
+  app.addEventListener("pointerup", (event) => {
+    if (!cutStart) return;
+    const distance = Math.hypot(event.clientX - cutStart.x, event.clientY - cutStart.y);
+    cutStart = null;
+    document.documentElement.classList.remove("is-dragging");
+    if (distance >= 55) handleAction("mission2-cut", "", "swipe");
+    else setFeedback("Try a longer swipe across the broad gold cutting guide, or use Cut along the guide.", "info");
   });
 
   function updateOrientation() {
-    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && state.screen === "mission";
+    const blocked = window.matchMedia("(orientation: portrait) and (max-width: 720px)").matches && ["mission1", "mission2"].includes(state.screen);
     orientationBlocker.hidden = !blocked;
     app.inert = blocked;
     document.documentElement.classList.toggle("orientation-blocked", blocked);
