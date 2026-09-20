@@ -4,7 +4,7 @@
   else root.MycologyLogic = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  const VERSION = 4;
+  const VERSION = 5;
   const DIFFICULTIES = ["junior", "explorer", "challenge"];
   const QUESTIONS = [
     { q:"Why is it important to wear a lab coat while doing experiments?", a:["It keeps you warm when the room gets chilly.","It keeps your clothes clean and protects your skin.","It helps you spot microscopic mould spores easier.","It helps you run faster around the workbench."], correct:1 },
@@ -31,11 +31,11 @@
   function caseId(seed=Date.now()) { return `MYC-${String(Math.abs(Number(seed))%10000).padStart(4,"0")}`; }
   function freshState(difficulty, seed) {
     if (!DIFFICULTIES.includes(difficulty)) throw new Error("Invalid difficulty");
-    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false},2:{matched:[],selected:null,attempts:0,hintShown:false},3:{caseIndex:0,decisions:[],attempts:0,hintShown:false},4:{destinations:{},focus:35,stage:"allocate",found:false,attempts:0,hintShown:false}},completed:false,updatedAt:new Date().toISOString()};
+    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false},2:{matched:[],selected:null,attempts:0,hintShown:false},3:{caseIndex:0,decisions:[],attempts:0,hintShown:false},4:{destinations:{},focus:35,stage:"allocate",found:false,attempts:0,hintShown:false},5:{stage:"timelapse",viewed:false,selected:null,attempts:0,hintShown:false}},completed:false,updatedAt:new Date().toISOString()};
   }
   function earliestIncomplete(flags={}) { for(let i=1;i<=8;i+=1) if(flags[i]!==true) return i; return 8; }
   function sanitize(raw) {
-    if (!raw || typeof raw!=="object" || ![1,2,3,VERSION].includes(raw.version) || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
+    if (!raw || typeof raw!=="object" || ![1,2,3,4,VERSION].includes(raw.version) || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
     const flags={}; let gap=false;
     for(let i=1;i<=8;i+=1){ if(raw.missionFlags?.[i]===true && !gap) flags[i]=true; else gap=true; }
     const mission=Math.min(Number(raw.currentMission)||1,earliestIncomplete(flags));
@@ -46,7 +46,8 @@
     const matched=Array.isArray(m2.matched)?m2.matched.filter(k=>MATCHES.some(x=>x.key===k)).filter((k,i,a)=>a.indexOf(k)===i):[];
     const m3=raw.missionState?.[3]||{};const decisions=Array.isArray(m3.decisions)?m3.decisions.filter(k=>RECEPTION_CASES.some(x=>x.key===k)).filter((k,i,a)=>a.indexOf(k)===i):[];
     const m4=raw.missionState?.[4]||{};const destinations={};for(let i=1;i<=6;i+=1)if(["slide","culture"].includes(m4.destinations?.[i]))destinations[i]=m4.destinations[i];
-    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)},2:{matched,selected:null,attempts:Math.max(0,Number(m2.attempts)||0),hintShown:Boolean(m2.hintShown)},3:{caseIndex:Math.min(decisions.length,4),decisions,attempts:Math.max(0,Number(m3.attempts)||0),hintShown:Boolean(m3.hintShown)},4:{destinations,focus:Math.min(100,Math.max(0,Number(m4.focus)||35)),stage:m4.stage==="microscopy"?"microscopy":"allocate",found:Boolean(m4.found),attempts:Math.max(0,Number(m4.attempts)||0),hintShown:Boolean(m4.hintShown)}},completed:false};
+    const m5=raw.missionState?.[5]||{};
+    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)},2:{matched,selected:null,attempts:Math.max(0,Number(m2.attempts)||0),hintShown:Boolean(m2.hintShown)},3:{caseIndex:Math.min(decisions.length,4),decisions,attempts:Math.max(0,Number(m3.attempts)||0),hintShown:Boolean(m3.hintShown)},4:{destinations,focus:Math.min(100,Math.max(0,Number(m4.focus)||35)),stage:m4.stage==="microscopy"?"microscopy":"allocate",found:Boolean(m4.found),attempts:Math.max(0,Number(m4.attempts)||0),hintShown:Boolean(m4.hintShown)},5:{stage:m5.stage==="choices"?"choices":"timelapse",viewed:Boolean(m5.viewed),selected:["mould","none","bacteria","yeast"].includes(m5.selected)?m5.selected:null,attempts:Math.max(0,Number(m5.attempts)||0),hintShown:Boolean(m5.hintShown)}},completed:false};
   }
   function answerQuestion(index,choice){ return Number.isInteger(index)&&QUESTIONS[index]&&QUESTIONS[index].correct===choice; }
   function shouldAutoHint(difficulty,attempts){ return difficulty==="junior"?attempts>=1:difficulty==="explorer"?attempts>=2:false; }
@@ -60,6 +61,8 @@
   function allocationReady(destinations){const c=allocationCounts(destinations);return c.slide===3&&c.culture===3;}
   function microscopyTarget(focus,region){return Number(focus)>=60&&region==="branching";}
   function finishMission4(state){if(!allocationReady(state?.missionState?.[4]?.destinations)||!state.missionState[4].found)return false;state.missionFlags[4]=true;state.clues.microscopy="fungal elements seen";state.clues.culturePlate="simulated SDCC plate inoculated";state.currentMission=5;return true;}
+  function plateOrder(id){const plates=["mould","none","bacteria","yeast"],n=Number(String(id).slice(-1))%4;return plates.slice(n).concat(plates.slice(0,n));}
+  function finishMission5(state){if(state?.missionState?.[5]?.selected!=="mould")return false;state.missionFlags[5]=true;state.clues.culture="growth-positive fluffy powdery colony";state.currentMission=6;return true;}
   function canAwardHub(){ return false; }
-  return {VERSION,DIFFICULTIES,QUESTIONS,MATCHES,RECEPTION_CASES,caseId,freshState,sanitize,answerQuestion,shouldAutoHint,canCompleteMission1,finishMission1,matchSample,finishMission2,receptionDecision,finishMission3,allocationCounts,allocationReady,microscopyTarget,finishMission4,canAwardHub,earliestIncomplete};
+  return {VERSION,DIFFICULTIES,QUESTIONS,MATCHES,RECEPTION_CASES,caseId,freshState,sanitize,answerQuestion,shouldAutoHint,canCompleteMission1,finishMission1,matchSample,finishMission2,receptionDecision,finishMission3,allocationCounts,allocationReady,microscopyTarget,finishMission4,plateOrder,finishMission5,canAwardHub,earliestIncomplete};
 });

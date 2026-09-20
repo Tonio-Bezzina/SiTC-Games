@@ -17,4 +17,5 @@ assert.equal(L.RECEPTION_CASES.length,5);assert.deepEqual(L.RECEPTION_CASES.map(
 const s3=L.freshState("explorer",2048);s3.missionState[3].decisions=L.RECEPTION_CASES.map(x=>x.key);assert(L.finishMission3(s3));assert.equal(s3.clues.reception,"accepted MYC-2048 skin scraping");
 assert.deepEqual(L.allocationCounts({1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"}),{slide:3,culture:3});assert(L.allocationReady({1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"}));assert(!L.microscopyTarget(59,"branching"));assert(L.microscopyTarget(60,"branching"));
 const s4=L.freshState("challenge",2048);s4.missionState[4].destinations={1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"};s4.missionState[4].found=true;assert(L.finishMission4(s4));assert.equal(s4.clues.microscopy,"fungal elements seen");
-console.log("PASS mycology logic missions 1-4");
+assert.deepEqual(L.plateOrder("MYC-2048"),["mould","none","bacteria","yeast"]);assert.deepEqual(L.plateOrder("MYC-2049"),["none","bacteria","yeast","mould"]);const s5=L.freshState("junior",2048);assert(!L.finishMission5(s5));s5.missionState[5].selected="mould";assert(L.finishMission5(s5));assert.equal(s5.clues.culture,"growth-positive fluffy powdery colony");
+console.log("PASS mycology logic missions 1-5");
