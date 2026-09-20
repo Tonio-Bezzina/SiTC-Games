@@ -15,4 +15,6 @@ for(const a of L.MATCHES)for(const b of L.MATCHES)assert.equal(L.matchSample(a.k
 const s2=L.freshState("junior",2048);s2.missionFlags[1]=true;s2.currentMission=2;s2.missionState[2].matched=L.MATCHES.map(x=>x.key);assert(L.finishMission2(s2));assert.equal(s2.clues.patient,"Jamie Borg");assert.equal(s2.clues.specimen,"skin scrapings");assert.equal(L.canAwardHub(),false);
 assert.equal(L.RECEPTION_CASES.length,5);assert.deepEqual(L.RECEPTION_CASES.map(x=>x.match),[true,false,true,false,true]);L.RECEPTION_CASES.forEach((c,i)=>{assert(L.receptionDecision(i,c.match));assert(!L.receptionDecision(i,!c.match));});
 const s3=L.freshState("explorer",2048);s3.missionState[3].decisions=L.RECEPTION_CASES.map(x=>x.key);assert(L.finishMission3(s3));assert.equal(s3.clues.reception,"accepted MYC-2048 skin scraping");
-console.log("PASS mycology logic missions 1-3");
+assert.deepEqual(L.allocationCounts({1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"}),{slide:3,culture:3});assert(L.allocationReady({1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"}));assert(!L.microscopyTarget(59,"branching"));assert(L.microscopyTarget(60,"branching"));
+const s4=L.freshState("challenge",2048);s4.missionState[4].destinations={1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"};s4.missionState[4].found=true;assert(L.finishMission4(s4));assert.equal(s4.clues.microscopy,"fungal elements seen");
+console.log("PASS mycology logic missions 1-4");
