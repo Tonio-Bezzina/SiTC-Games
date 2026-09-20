@@ -1,0 +1,841 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-20T00:00:00Z",
+  "palette": {
+    "navy": "#073C63",
+    "blue": "#087FC1",
+    "cyan": "#21C9DC",
+    "gold": "#FFC83D",
+    "ink": "#153344",
+    "muted": "#4B6675",
+    "soft": "#DFF9FC",
+    "white": "#FFFFFF",
+    "success": "#08784F",
+    "error": "#B51F3C"
+  },
+  "style": "Friendly semi-realistic 3D raster environments plus deterministic scientific SVG",
+  "assets": [
+    {
+      "id": "completion-completion-lab-background",
+      "file": "completion/completion-lab-background.png",
+      "type": "png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2710374,
+      "sha256": "3f7a0d14e3686c243fd4151a091a2f18ed8317f4b60b692df5d34c3cde3ad389",
+      "background": "opaque",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "completion lab background",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "completion-junior-mycologist-badge",
+      "file": "completion/junior-mycologist-badge.svg",
+      "type": "svg",
+      "width": 542,
+      "height": 542,
+      "bytes": 763,
+      "sha256": "d4e5c1ba0b6beda1bd77601f2c0cbcd60d2536278129f8fcf9d23e74c809cf37",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "junior mycologist badge",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-1-safety-lab-vignettes",
+      "file": "mission-1/safety-lab-vignettes.svg",
+      "type": "svg",
+      "width": 2167,
+      "height": 903,
+      "bytes": 1327,
+      "sha256": "74d41d406ef9d01a12f4471a34def15a3bb5a6b3b4feb97229761313635c347c",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        1
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "safety lab vignettes",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-patient-cards",
+      "file": "mission-2/patient-cards.svg",
+      "type": "svg",
+      "width": 2528,
+      "height": 1372,
+      "bytes": 1436,
+      "sha256": "bb9f74a42b4d38fff3fdb029c7de192ec0fa8bae01433eaa1101d12f6b128a1f",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "patient cards",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-specimen-items",
+      "file": "mission-2/specimen-items.svg",
+      "type": "svg",
+      "width": 2528,
+      "height": 650,
+      "bytes": 1228,
+      "sha256": "bf3e933395ff81fb5ee3c1148f5dde6221c7c2c4a32c80819dffd78a05588ebe",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "specimen items",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-3-dermatology-envelope",
+      "file": "mission-3/dermatology-envelope.svg",
+      "type": "svg",
+      "width": 867,
+      "height": 578,
+      "bytes": 499,
+      "sha256": "6f4e188a4dca03551855e14a7bac273884bcf8906bc1504d8de28f51b5d1b01c",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        3
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "dermatology envelope",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-3-reception-background",
+      "file": "mission-3/reception-background.png",
+      "type": "png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2188270,
+      "sha256": "1967ffd6b91f0cad11fe47d8dd9c1ea5e1045d874fcdc8160996b16b4ec54d5d",
+      "background": "opaque",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        3
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "reception background",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-3-request-form-blank",
+      "file": "mission-3/request-form-blank.svg",
+      "type": "svg",
+      "width": 1083,
+      "height": 1372,
+      "bytes": 668,
+      "sha256": "e8bd687371da914185ca714cb1555f4a539c01c5572489fc3bb9edf5dc8afc63",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        3
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "request form blank",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-fluorescence-field",
+      "file": "mission-4/fluorescence-field.svg",
+      "type": "svg",
+      "width": 2528,
+      "height": 1625,
+      "bytes": 1203,
+      "sha256": "be4b61f1b4ff934c47116fbd72e6d9da3876e5e451bb3b8005c89ab2910db370",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "fluorescence field",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-microscope-slide",
+      "file": "mission-4/microscope-slide.svg",
+      "type": "svg",
+      "width": 939,
+      "height": 469,
+      "bytes": 540,
+      "sha256": "0b9c88f159a365f1f2c75c477fbeac4d3b01ea98a7ae6f3e669165a1ec26d742",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "microscope slide",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-processing-bench-background",
+      "file": "mission-4/processing-bench-background.png",
+      "type": "png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2240702,
+      "sha256": "76dd5f84dc73f2b3453620a17fc8213786886b13bcfd5b728c73adcad2aeec3c",
+      "background": "opaque",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "processing bench background",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-sdcc-plate",
+      "file": "mission-4/sdcc-plate.svg",
+      "type": "svg",
+      "width": 939,
+      "height": 758,
+      "bytes": 654,
+      "sha256": "f50761f312865b902b8df2e8323f871c618fa61fb3ee348baeca390ebc119fab",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "sdcc plate",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-skin-scraping-piece",
+      "file": "mission-4/skin-scraping-piece.svg",
+      "type": "svg",
+      "width": 289,
+      "height": 217,
+      "bytes": 452,
+      "sha256": "0edca9b77ccf9fc0df825e4acbc8a7b2f56fca40334d821c1810f955a164c7f5",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "skin scraping piece",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-5-culture-plate-choices",
+      "file": "mission-5/culture-plate-choices.svg",
+      "type": "svg",
+      "width": 2528,
+      "height": 1264,
+      "bytes": 1524,
+      "sha256": "66d9abc221aa51d927d4d3c8171d0777c069dde42e451d8ce2e469b9444375aa",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        5
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "culture plate choices",
+      "registrationFamily": "culture-choices",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-5-incubator",
+      "file": "mission-5/incubator.svg",
+      "type": "svg",
+      "width": 1625,
+      "height": 1264,
+      "bytes": 1359,
+      "sha256": "e6e78824bfd9291da59b0369e8e3af4ba21a1b61f22f174d171db15a1734fcde",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        5
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "incubator",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-6-aspergillus-colony-set",
+      "file": "mission-6/aspergillus-colony-set.svg",
+      "type": "svg",
+      "width": 2528,
+      "height": 1264,
+      "bytes": 1809,
+      "sha256": "a38b9dcb69e7f68f3cafb0d887ad81a83969cf6c2c0225a89b290c088c7c7a5a",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        6
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "aspergillus colony set",
+      "registrationFamily": "aspergillus-reference",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-6-aspergillus-microscopy-set",
+      "file": "mission-6/aspergillus-microscopy-set.svg",
+      "type": "svg",
+      "width": 2528,
+      "height": 1264,
+      "bytes": 2938,
+      "sha256": "94f49e935cd20c72daa33afa6fd09cfeb18e8b3093274ad534c403403bb9bfdd",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        6
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "aspergillus microscopy set",
+      "registrationFamily": "aspergillus-reference",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-6-identification-key-arrows",
+      "file": "mission-6/identification-key-arrows.svg",
+      "type": "svg",
+      "width": 2167,
+      "height": 903,
+      "bytes": 693,
+      "sha256": "48669294ee82415b197d4c2ae1a423d37a8fcb13176586f2e51d159dd5724149",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        6
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "identification key arrows",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-7-mic-plate",
+      "file": "mission-7/mic-plate.svg",
+      "type": "svg",
+      "width": 2167,
+      "height": 1300,
+      "bytes": 10838,
+      "sha256": "e50abbb3f5eab152c472c3ceea6469901a51ebdc28bbaf12f3c4d946b9259be0",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        7
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "mic plate",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-8-detective-board-background",
+      "file": "mission-8/detective-board-background.png",
+      "type": "png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 3521711,
+      "sha256": "570af2d2cb7483f2558f8646a4c5dd5540ed3d714bf6ca57af1edf748a9dc33a",
+      "background": "opaque",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "detective board background",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-8-journey-icons",
+      "file": "mission-8/journey-icons.svg",
+      "type": "svg",
+      "width": 2167,
+      "height": 722,
+      "bytes": 1204,
+      "sha256": "e17cf9c40858eb0cec4359fe1c616bfdc7b2e1e5b8af2ce03240c47a1d3209ba",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "journey icons",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-dr-mira-neutral",
+      "file": "shared/dr-mira-neutral.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 521361,
+      "sha256": "a6788d53866bfb8abd528cbb683173a4f15568becfd9ceddb7591f79703afb00",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "dr mira neutral",
+      "registrationFamily": "dr-mira",
+      "anchor": {
+        "x": 512,
+        "y": 930
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-dr-mira-pointing",
+      "file": "shared/dr-mira-pointing.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 522821,
+      "sha256": "2e359184f0a8ea038e5c889ac6d12541b5180ef6be5465af3cf8a7ade81dfb80",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "dr mira pointing",
+      "registrationFamily": "dr-mira",
+      "anchor": {
+        "x": 512,
+        "y": 930
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-dr-mira-success",
+      "file": "shared/dr-mira-success.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 482915,
+      "sha256": "50169ecdd798704d9277c0e1ad1f88c3b48b5b0298650b3e73b6026544783b55",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "dr mira success",
+      "registrationFamily": "dr-mira",
+      "anchor": {
+        "x": 512,
+        "y": 930
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-hint-icon",
+      "file": "shared/hint-icon.svg",
+      "type": "svg",
+      "width": 87,
+      "height": 87,
+      "bytes": 419,
+      "sha256": "61078a98e9154f346e17ad70e11e60ed7e1695671b2da3f6d56ed82d8a1500af",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "hint icon",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-mycology-game-icon",
+      "file": "shared/mycology-game-icon.svg",
+      "type": "svg",
+      "width": 231,
+      "height": 231,
+      "bytes": 758,
+      "sha256": "672cfaee0e30b68c04b8c8d73bbb761c4b8da0d41325d49073bc55b2aec5b7a3",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "mycology game icon",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-mycology-lab-background",
+      "file": "shared/mycology-lab-background.png",
+      "type": "png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 2793949,
+      "sha256": "3d77093a54bcafe71ffd2c14020d2c390f163f78a0debab9e18bd2826c1822e8",
+      "background": "opaque",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "mycology lab background",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-reduced-motion-process",
+      "file": "shared/reduced-motion-process.svg",
+      "type": "svg",
+      "width": 2167,
+      "height": 469,
+      "bytes": 812,
+      "sha256": "11b1c8bcf30b3e9a1ce7eb87dba37d813b5d9edd3f68ac8db7b45a5e2ff75961",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "reduced motion process",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-rotate-device",
+      "file": "shared/rotate-device.svg",
+      "type": "svg",
+      "width": 433,
+      "height": 289,
+      "bytes": 568,
+      "sha256": "3ca8be6236aa981bfc3d9306e2b7e650defae69ad771ea6596fedadc2f76bf75",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "rotate device",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "shared-success-check",
+      "file": "shared/success-check.svg",
+      "type": "svg",
+      "width": 87,
+      "height": 87,
+      "bytes": 382,
+      "sha256": "125b15da5f3fc21ee119958ec6e9b092c3b9c52843bc4b5da3deae8265f4a0c8",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "success check",
+      "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    }
+  ]
+}

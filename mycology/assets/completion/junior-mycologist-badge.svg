@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-labelledby="title" >
+  <title id="title">Junior mycologist completion badge</title>
+  <circle cx="150" cy="150" r="138" fill="#FFC83D" stroke="#073C63" stroke-width="12"/><circle cx="150" cy="150" r="105" fill="white" stroke="#21C9DC" stroke-width="8"/><path d="M86 190h130M105 180h90M145 72v90c0 22-16 36-38 36" fill="none" stroke="#073C63" stroke-width="14" stroke-linecap="round"/><path d="M130 65h55v24h-55z" fill="#21C9DC" stroke="#073C63" stroke-width="8"/><path d="M205 83c30 0 50 19 50 42H155c0-23 20-42 50-42zM196 125h18v46h-18z" fill="#FFC83D" stroke="#073C63" stroke-width="8" stroke-linejoin="round"/>
+</svg>

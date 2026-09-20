@@ -2,10 +2,10 @@
 
 ## Product definition
 
-**Title:** The Mycology Journey  
-**Player promise:** Become a Junior Mycologist by following one fictional skin-scraping investigation through the laboratory.  
-**Audience:** ages 8–14, with optional adult/educator guidance.  
-**Tone:** curious, encouraging, calm, colourful, scientifically respectful, and never frightening.  
+**Title:** The Mycology Journey
+**Player promise:** Become a Junior Mycologist by following one fictional skin-scraping investigation through the laboratory.
+**Audience:** ages 8–14, with optional adult/educator guidance.
+**Tone:** curious, encouraging, calm, colourful, scientifically respectful, and never frightening.
 **Architecture:** static HTML, CSS, JavaScript, SVG, and PNG; no build step; all runtime paths relative to `/SiTC-Games/mycology/`.
 
 The game is an educational simulation. It does not teach specimen collection, prescribe treatment, reproduce a clinical method, or produce a diagnosis. The player only makes reasoning and observation choices in a fictional laboratory.
@@ -100,9 +100,9 @@ The six questions and choices appear in source order:
    - Throw everything into the recycling bin.
    - Just turn off the lights and walk out.
 
-Correct: **Correct.**  
-Incorrect: **Try again.**  
-Hint: **Look for the answer that protects people, specimens, and the workspace.**  
+Correct: **Correct.**
+Incorrect: **Try again.**
+Hint: **Look for the answer that protects people, specimens, and the workspace.**
 Completion: **Safety check complete. Let’s match each patient with the right sample.**
 
 ### Mission 2 Match the Sample
@@ -111,10 +111,10 @@ Instruction: **Fungal infections can occur all over the body. Can you match the 
 
 Pairs: ear discomfort ↔ ear swab; skin rash ↔ skin scrapings; changed nail ↔ nail clippings; urinary symptoms ↔ urine sample; sore mouth ↔ mouth swab. These are complaints under investigation, not confirmed infections.
 
-Correct: **Well done! This sample is needed for this patient.**  
-Incorrect: **Not this one. Look closely at what the patient is complaining of and try again.**  
-Hint: **Match the sample name to the body area shown on the patient card.**  
-Learning: **Fungal infections can affect many areas of the body. Collecting the right sample is important for the scientist investigating what may be present.**  
+Correct: **Well done! This sample is needed for this patient.**
+Incorrect: **Not this one. Look closely at what the patient is complaining of and try again.**
+Hint: **Match the sample name to the body area shown on the patient card.**
+Learning: **Fungal infections can affect many areas of the body. Collecting the right sample is important for the scientist investigating what may be present.**
 Completion: **All five samples are matched. Jamie’s skin scraping will continue through our journey.**
 
 ### Mission 3 Detail Checking
@@ -128,35 +128,35 @@ Decision buttons:
 
 Exactly two cases mismatch: one ID number and one surname. The other three match all displayed fields.
 
-Correct match feedback: **Excellent! The details match. We can continue with the next specimen.**  
-Correct rejection feedback: **Excellent! You found the mismatch. This specimen must not be processed in our simulation.**  
-Incorrect: **Something doesn’t match. Check the information again.**  
-Hint: **Compare the surname, ID number, and specimen type one field at a time.**  
-Learning: **Specimen reception is the first laboratory step. Correct identification helps ensure that results are linked to the correct patient.**  
+Correct match feedback: **Excellent! The details match. We can continue with the next specimen.**
+Correct rejection feedback: **Excellent! You found the mismatch. This specimen must not be processed in our simulation.**
+Incorrect: **Something doesn’t match. Check the information again.**
+Hint: **Compare the surname, ID number, and specimen type one field at a time.**
+Learning: **Specimen reception is the first laboratory step. Correct identification helps ensure that results are linked to the correct patient.**
 Completion: **Jamie’s skin scraping is correctly identified and ready for the next stage.**
 
 ### Mission 4 Process the Dermatology Sample
 
 Instruction: **Let’s use the skin scraping sample for fluorescent microscopy and culture.**
 
-Transfer prompt: **Place three pieces on the microscope slide and three pieces on the SDCC fungal agar plate.**  
-Balanced success: **Good work. Three pieces are ready for microscopy and three are ready for culture.**  
-Unbalanced attempt: **Keep the sample balanced: three pieces for each laboratory method.**  
-Microscope prompt: **Place the prepared slide on the microscope, adjust the focus, then explore the field to find bright fungal structures.**  
-Success: **You found them! The bright structures are fungal elements. Fluorescence makes it easier for us to find them.**  
-Incorrect region: **Look carefully through the microscope and try finding a different area.**  
-Hint: **Look for bright branching, tube-like hyphae with cross-walls and small spore shapes.**  
-Learning: **Microscopy can examine a clinical specimen directly for fungal structures. This is a laboratory simulation, not an activity to perform yourself.**  
+Transfer prompt: **Place three pieces on the microscope slide and three pieces on the SDCC fungal agar plate.**
+Balanced success: **Good work. Three pieces are ready for microscopy and three are ready for culture.**
+Unbalanced attempt: **Keep the sample balanced: three pieces for each laboratory method.**
+Microscope prompt: **Place the prepared slide on the microscope, adjust the focus, then explore the field to find bright fungal structures.**
+Success: **You found them! The bright structures are fungal elements. Fluorescence makes it easier for us to find them.**
+Incorrect region: **Look carefully through the microscope and try finding a different area.**
+Hint: **Look for bright branching, tube-like hyphae with cross-walls and small spore shapes.**
+Learning: **Microscopy can examine a clinical specimen directly for fungal structures. This is a laboratory simulation, not an activity to perform yourself.**
 Completion: **Microscopy clue saved. The culture plate is now in the simulated incubator.**
 
 ### Mission 5 Check the Culture
 
-Time-lapse label: **One simulated week later…**  
-Instruction: **The culture has been given time to grow. Can you find the plate showing fungal growth?**  
-Correct: **Excellent! We found fungal growth. Now we need to work out what it is.**  
-Incorrect: **Not this one. Look for the plate showing fungal or mould-like growth.**  
-Hint: **Look for a fluffy or powdery colony spreading across the agar surface.**  
-Learning: **After fungal growth is detected, the laboratory can examine its appearance and use further tests to investigate the organism.**  
+Time-lapse label: **One simulated week later…**
+Instruction: **The culture has been given time to grow. Can you find the plate showing fungal growth?**
+Correct: **Excellent! We found fungal growth. Now we need to work out what it is.**
+Incorrect: **Not this one. Look for the plate showing fungal or mould-like growth.**
+Hint: **Look for a fluffy or powdery colony spreading across the agar surface.**
+Learning: **After fungal growth is detected, the laboratory can examine its appearance and use further tests to investigate the organism.**
 Completion: **Culture clue saved. Let’s compare the colony and microscopic appearance.**
 
 ### Mission 6 Mystery Fungi
@@ -170,23 +170,23 @@ Reference pathways:
 - black colony + biseriate phialides + rough black spores → *Aspergillus niger*;
 - cinnamon-brown colony + uniseriate phialides + small smooth spores → *Aspergillus terreus*.
 
-The continuing mystery shows the first path.  
-Correct: **You have matched the clues! Identification complete: Aspergillus fumigatus.**  
-Incorrect: **Not quite. Go back to the last clue and compare the colony and microscopic appearance again.**  
-Hint: **Start with colony colour, then check the shape of the conidial head.**  
-Learning: **Identification keys use observable characteristics to help distinguish organisms. Hyphae are branching filaments; a conidiophore bears conidia, which are asexual spores. Real laboratories use validated methods and may need more evidence than appearance alone.**  
+The continuing mystery shows the first path.
+Correct: **You have matched the clues! Identification complete: Aspergillus fumigatus.**
+Incorrect: **Not quite. Go back to the last clue and compare the colony and microscopic appearance again.**
+Hint: **Start with colony colour, then check the shape of the conidial head.**
+Learning: **Identification keys use observable characteristics to help distinguish organisms. Hyphae are branching filaments; a conidiophore bears conidia, which are asexual spores. Real laboratories use validated methods and may need more evidence than appearance alone.**
 Completion: **Identification clue saved. Next we will inspect a simulated antifungal test.**
 
 ### Mission 7 The Antifungal Challenge
 
 Instruction: **We have identified our fungus. But which concentration first stops visible growth? Let’s investigate!**
 
-Safety line: **This is a simplified, supervised laboratory simulation. It does not show how to prepare or perform the test.**  
-Read prompt: **Start at the lowest concentration and move upward. Select the first blue well with no visible growth after the pink growth wells.**  
-Correct: **Excellent! You found the MIC — the Minimum Inhibitory Concentration.**  
-Incorrect: **Look from the lower concentrations upwards. Find the first concentration where visible growth is inhibited.**  
-Hint: **Pink means visible growth in this simulation. Blue means no visible growth. Find the first blue well in order.**  
-Learning: **Antifungal susceptibility testing investigates how a fungus responds to antifungal agents. MIC means Minimum Inhibitory Concentration. The result is not a treatment recommendation.**  
+Safety line: **This is a simplified, supervised laboratory simulation. It does not show how to prepare or perform the test.**
+Read prompt: **Start at the lowest concentration and move upward. Select the first blue well with no visible growth after the pink growth wells.**
+Correct: **Excellent! You found the MIC — the Minimum Inhibitory Concentration.**
+Incorrect: **Look from the lower concentrations upwards. Find the first concentration where visible growth is inhibited.**
+Hint: **Pink means visible growth in this simulation. Blue means no visible growth. Find the first blue well in order.**
+Learning: **Antifungal susceptibility testing investigates how a fungus responds to antifungal agents. MIC means Minimum Inhibitory Concentration. The result is not a treatment recommendation.**
 Completion: **MIC clue saved. You now have every clue needed to reconstruct the journey.**
 
 The simulated row uses arbitrary display units and never names a drug or applies a susceptible/resistant category.
@@ -197,10 +197,10 @@ Instruction: **You’ve collected all the clues. Can you put the laboratory jour
 
 Required order: **sample arrives → check details → microscopy → culture → check growth → identification → antifungal susceptibility testing → laboratory result**.
 
-Correct: **Fantastic! You followed the specimen through the mycology laboratory.**  
-Incorrect: **Almost! Think about what the laboratory needs to do first, and what information becomes available later.**  
-Hint: **The sample must arrive and be checked before testing begins. Identification follows visible growth.**  
-Learning: **Different laboratory methods provide different pieces of information. Together they help the mycologist investigate the specimen.**  
+Correct: **Fantastic! You followed the specimen through the mycology laboratory.**
+Incorrect: **Almost! Think about what the laboratory needs to do first, and what information becomes available later.**
+Hint: **The sample must arrive and be checked before testing begins. Identification follows visible growth.**
+Learning: **Different laboratory methods provide different pieces of information. Together they help the mycologist investigate the specimen.**
 Completion action label: **Complete my journey**
 
 ## Final screen and hub award
