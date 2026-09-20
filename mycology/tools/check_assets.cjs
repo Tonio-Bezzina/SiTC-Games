@@ -31,8 +31,13 @@ async function main() {
     const p = path.join(root, asset.file);
     if (!fs.existsSync(p)) { errors.push(`Missing ${asset.file}`); continue; }
     const buffer = fs.readFileSync(p);
+    // Git may materialise text assets with CRLF on Windows even though the
+    // repository blob and production manifest use canonical LF bytes.
+    const canonicalBuffer = asset.file.endsWith(".svg")
+      ? Buffer.from(buffer.toString("utf8").replace(/\r\n/g, "\n"), "utf8")
+      : buffer;
     let meta = await sharp(p, { density: 130 }).metadata();
-    const hash = crypto.createHash("sha256").update(buffer).digest("hex");
+    const hash = crypto.createHash("sha256").update(canonicalBuffer).digest("hex");
     if (asset.file.endsWith(".svg")) {
       const text = buffer.toString("utf8");
       meta = {...meta,width:Number(text.match(/<svg[^>]*\bwidth="([0-9.]+)"/)?.[1]),height:Number(text.match(/<svg[^>]*\bheight="([0-9.]+)"/)?.[1])};
@@ -41,7 +46,7 @@ async function main() {
       if (/<script|(?:href|src)=["']https?:\/\//i.test(text)) errors.push(`External/script content ${asset.file}`);
     }
     if (asset.width !== meta.width || asset.height !== meta.height) errors.push(`Dimension mismatch ${asset.file}`);
-    if (asset.bytes !== buffer.length) errors.push(`Byte mismatch ${asset.file}`);
+    if (asset.bytes !== canonicalBuffer.length) errors.push(`Byte mismatch ${asset.file}`);
     if (asset.sha256 !== hash) errors.push(`Hash mismatch ${asset.file}`);
     if (asset.file.includes("dr-mira") && !meta.hasAlpha) errors.push(`Guide lacks alpha ${asset.file}`);
   }
