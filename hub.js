@@ -192,11 +192,11 @@ const labs = [
         icon: "🔎",
 
         description:
-            "Look closely at tissues and discover the patterns scientists investigate.",
+            "Follow a skin specimen from patient checks to a finished H&E microscope slide.",
 
         href: "histology/",
 
-        available: false,
+        available: true,
 
         mainCase: "main",
 
@@ -204,7 +204,7 @@ const labs = [
 
             {
                 id: "main",
-                name: "Main Histology Mission",
+                name: "The Histology Journey",
                 main: true
             }
 
