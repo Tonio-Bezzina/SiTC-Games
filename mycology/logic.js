@@ -4,7 +4,7 @@
   else root.MycologyLogic = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  const VERSION = 2;
+  const VERSION = 3;
   const DIFFICULTIES = ["junior", "explorer", "challenge"];
   const QUESTIONS = [
     { q:"Why is it important to wear a lab coat while doing experiments?", a:["It keeps you warm when the room gets chilly.","It keeps your clothes clean and protects your skin.","It helps you spot microscopic mould spores easier.","It helps you run faster around the workbench."], correct:1 },
@@ -21,14 +21,21 @@
     {key:"urinary",patient:"Sam — urinary symptoms",specimen:"Urine sample"},
     {key:"mouth",patient:"Alex — sore mouth",specimen:"Mouth swab"}
   ];
+  const RECEPTION_CASES = [
+    {key:"case-1",sample:["Nadia","MYC-1103","Ear swab"],form:["Nadia","MYC-1103","Ear swab"],match:true},
+    {key:"case-2",sample:["Ellis","MYC-1639","Nail clippings"],form:["Ellis","MYC-1649","Nail clippings"],match:false},
+    {key:"case-3",sample:["Jamie Borg","MYC-2048","Skin scrapings"],form:["Jamie Borg","MYC-2048","Skin scrapings"],match:true},
+    {key:"case-4",sample:["Morgan","MYC-2710","Mouth swab"],form:["Moran","MYC-2710","Mouth swab"],match:false},
+    {key:"case-5",sample:["Riley","MYC-3186","Urine sample"],form:["Riley","MYC-3186","Urine sample"],match:true}
+  ];
   function caseId(seed=Date.now()) { return `MYC-${String(Math.abs(Number(seed))%10000).padStart(4,"0")}`; }
   function freshState(difficulty, seed) {
     if (!DIFFICULTIES.includes(difficulty)) throw new Error("Invalid difficulty");
-    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false},2:{matched:[],selected:null,attempts:0,hintShown:false}},completed:false,updatedAt:new Date().toISOString()};
+    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false},2:{matched:[],selected:null,attempts:0,hintShown:false},3:{caseIndex:0,decisions:[],attempts:0,hintShown:false}},completed:false,updatedAt:new Date().toISOString()};
   }
   function earliestIncomplete(flags={}) { for(let i=1;i<=8;i+=1) if(flags[i]!==true) return i; return 8; }
   function sanitize(raw) {
-    if (!raw || typeof raw!=="object" || ![1,VERSION].includes(raw.version) || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
+    if (!raw || typeof raw!=="object" || ![1,2,VERSION].includes(raw.version) || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
     const flags={}; let gap=false;
     for(let i=1;i<=8;i+=1){ if(raw.missionFlags?.[i]===true && !gap) flags[i]=true; else gap=true; }
     const mission=Math.min(Number(raw.currentMission)||1,earliestIncomplete(flags));
@@ -37,7 +44,8 @@
     const attempts=Array.from({length:6},(_,i)=>Math.max(0,Number(source.attempts?.[i])||0));
     const m2=raw.missionState?.[2]||{};
     const matched=Array.isArray(m2.matched)?m2.matched.filter(k=>MATCHES.some(x=>x.key===k)).filter((k,i,a)=>a.indexOf(k)===i):[];
-    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)},2:{matched,selected:null,attempts:Math.max(0,Number(m2.attempts)||0),hintShown:Boolean(m2.hintShown)}},completed:false};
+    const m3=raw.missionState?.[3]||{};const decisions=Array.isArray(m3.decisions)?m3.decisions.filter(k=>RECEPTION_CASES.some(x=>x.key===k)).filter((k,i,a)=>a.indexOf(k)===i):[];
+    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)},2:{matched,selected:null,attempts:Math.max(0,Number(m2.attempts)||0),hintShown:Boolean(m2.hintShown)},3:{caseIndex:Math.min(decisions.length,4),decisions,attempts:Math.max(0,Number(m3.attempts)||0),hintShown:Boolean(m3.hintShown)}},completed:false};
   }
   function answerQuestion(index,choice){ return Number.isInteger(index)&&QUESTIONS[index]&&QUESTIONS[index].correct===choice; }
   function shouldAutoHint(difficulty,attempts){ return difficulty==="junior"?attempts>=1:difficulty==="explorer"?attempts>=2:false; }
@@ -45,6 +53,8 @@
   function finishMission1(state){ if(!canCompleteMission1(state)) return false; state.missionFlags[1]=true; state.clues.safety="complete"; state.currentMission=2; state.updatedAt=new Date().toISOString(); return true; }
   function matchSample(specimenKey,patientKey){return specimenKey===patientKey&&MATCHES.some(x=>x.key===specimenKey);}
   function finishMission2(state){if(state?.missionState?.[2]?.matched?.length!==MATCHES.length)return false;state.missionFlags[2]=true;state.clues.matching="five correct sample-to-site matches";state.clues.patient="Jamie Borg";state.clues.specimen="skin scrapings";state.currentMission=3;return true;}
+  function receptionDecision(index,saysMatch){return Boolean(RECEPTION_CASES[index]?.match)===Boolean(saysMatch);}
+  function finishMission3(state){if(state?.missionState?.[3]?.decisions?.length!==5)return false;state.missionFlags[3]=true;state.clues.reception="accepted MYC-2048 skin scraping";state.currentMission=4;return true;}
   function canAwardHub(){ return false; }
-  return {VERSION,DIFFICULTIES,QUESTIONS,MATCHES,caseId,freshState,sanitize,answerQuestion,shouldAutoHint,canCompleteMission1,finishMission1,matchSample,finishMission2,canAwardHub,earliestIncomplete};
+  return {VERSION,DIFFICULTIES,QUESTIONS,MATCHES,RECEPTION_CASES,caseId,freshState,sanitize,answerQuestion,shouldAutoHint,canCompleteMission1,finishMission1,matchSample,finishMission2,receptionDecision,finishMission3,canAwardHub,earliestIncomplete};
 });
