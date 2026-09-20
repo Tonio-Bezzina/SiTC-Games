@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="520" height="260" viewBox="0 0 520 260" role="img" aria-labelledby="title" >
   <title id="title">Blank microscope slide</title>
-  <rect x="25" y="55" width="470" height="150" rx="18" fill="#DDF6FA" fill-opacity=".72" stroke="#073C63" stroke-width="8"/><rect x="55" y="75" width="105" height="110" rx="10" fill="white" stroke="#087FC1" stroke-width="5"/><ellipse cx="328" cy="130" rx="78" ry="50" fill="#BFEAF1" stroke="#21C9DC" stroke-width="5"/>
+<rect x="25" y="55" width="470" height="150" rx="18" fill="#DDF6FA" fill-opacity=".72" stroke="#073C63" stroke-width="8"/><rect x="55" y="75" width="105" height="110" rx="10" fill="white" stroke="#087FC1" stroke-width="5"/><ellipse cx="328" cy="130" rx="78" ry="50" fill="#BFEAF1" stroke="#21C9DC" stroke-width="5"/>
 </svg>

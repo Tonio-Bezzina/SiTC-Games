@@ -17,7 +17,7 @@ dirs.forEach((dir) => fs.mkdirSync(path.join(root, dir), { recursive: true }));
 const svg = (title, width, height, body, extra = "") => `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="title" ${extra}>
   <title id="title">${title}</title>
-  ${body}
+${body.trim()}
 </svg>\n`;
 
 const writeSvg = (file, title, width, height, body, extra) => {

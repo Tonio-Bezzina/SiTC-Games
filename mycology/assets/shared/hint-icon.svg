@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img" aria-labelledby="title" >
   <title id="title">Hint light bulb</title>
-  <circle cx="24" cy="21" r="14" fill="#FFC83D" stroke="#073C63" stroke-width="4"/><path d="M18 35h12M20 41h8M24 3v5M7 10l4 4M41 10l-4 4" fill="none" stroke="#073C63" stroke-width="4" stroke-linecap="round"/>
+<circle cx="24" cy="21" r="14" fill="#FFC83D" stroke="#073C63" stroke-width="4"/><path d="M18 35h12M20 41h8M24 3v5M7 10l4 4M41 10l-4 4" fill="none" stroke="#073C63" stroke-width="4" stroke-linecap="round"/>
 </svg>
