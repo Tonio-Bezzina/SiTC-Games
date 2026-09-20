@@ -119,7 +119,11 @@ async function main() {
   const usage={};
   const sourceNotes={};
   for(const file of all){
-    const p=path.join(root,file); const buf=fs.readFileSync(p); const meta=await sharp(p,{density:130}).metadata();
+    const p=path.join(root,file); const buf=fs.readFileSync(p); let meta=await sharp(p,{density:130}).metadata();
+    if(file.endsWith(".svg")){
+      const source=buf.toString("utf8");
+      meta={...meta,width:Number(source.match(/<svg[^>]*\bwidth="([0-9.]+)"/)?.[1]),height:Number(source.match(/<svg[^>]*\bheight="([0-9.]+)"/)?.[1])};
+    }
     const missionMatch=file.match(/mission-(\d)/);
     usage[file]=missionMatch?[Number(missionMatch[1])]:file.startsWith("completion/")?[8]:[1,2,3,4,5,6,7,8];
     sourceNotes[file]=file.endsWith(".png")?"OpenAI generated raster, resized and registered with Sharp":"Repository-native SVG";

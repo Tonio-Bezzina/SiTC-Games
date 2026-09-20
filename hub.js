@@ -212,6 +212,37 @@ const labs = [
 
         masterTitle:
             "Histology Master"
+    },
+
+
+    {
+        id: "mycology",
+
+        name: "Mycology",
+
+        icon: "🍄",
+
+        description:
+            "Follow a specimen through the laboratory and solve a fungal mystery.",
+
+        href: "mycology/",
+
+        available: true,
+
+        mainCase: "main",
+
+        cases: [
+
+            {
+                id: "main",
+                name: "The Mycology Journey",
+                main: true
+            }
+
+        ],
+
+        masterTitle:
+            "Mycology Master"
     }
 
 ];

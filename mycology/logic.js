@@ -1,0 +1,39 @@
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === "object" && module.exports) module.exports = api;
+  else root.MycologyLogic = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+  const VERSION = 1;
+  const DIFFICULTIES = ["junior", "explorer", "challenge"];
+  const QUESTIONS = [
+    { q:"Why is it important to wear a lab coat while doing experiments?", a:["It keeps you warm when the room gets chilly.","It keeps your clothes clean and protects your skin.","It helps you spot microscopic mould spores easier.","It helps you run faster around the workbench."], correct:1 },
+    { q:"Why must you check sample details before opening containers?", a:["To practice reading out loud to your friends.","To make sure the container is shiny enough to use.","To make sure that the patient details match those on the request form.","To guess how heavy the container will be when lifted."], correct:2 },
+    { q:"What is the best way to clean your workspace?", a:["Cover the dirt with clean sheets of paper.","Blow gently across the table to clear away dust.","Wipe the bench with a clean disinfectant cloth.","Dust the bench using your bare hands."], correct:2 },
+    { q:"Why should long hair be tied back before working in the lab?", a:["To make sure your lab coat fits better.","To help you hear instructions better.","To be more stylish.","To keep hair out of flames and off agar plates."], correct:3 },
+    { q:"What is the primary reason for wearing disposable gloves in a lab?", a:["To allow you to touch hot glass safely.","To make your hands look like colorful balloons.","To prevent hand germs from contaminating samples.","To avoid washing your hands after finishing."], correct:2 },
+    { q:"What is the proper way to leave your lab station when you finish an experiment?", a:["Leave everything on the desk for the next person.","Dispose of waste in the proper bin, clean surfaces, wash your hands, and remove your PPE.","Throw everything into the recycling bin.","Just turn off the lights and walk out."], correct:1 }
+  ];
+  function caseId(seed=Date.now()) { return `MYC-${String(Math.abs(Number(seed))%10000).padStart(4,"0")}`; }
+  function freshState(difficulty, seed) {
+    if (!DIFFICULTIES.includes(difficulty)) throw new Error("Invalid difficulty");
+    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false}},completed:false,updatedAt:new Date().toISOString()};
+  }
+  function earliestIncomplete(flags={}) { for(let i=1;i<=8;i+=1) if(flags[i]!==true) return i; return 8; }
+  function sanitize(raw) {
+    if (!raw || typeof raw!=="object" || raw.version!==VERSION || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
+    const flags={}; let gap=false;
+    for(let i=1;i<=8;i+=1){ if(raw.missionFlags?.[i]===true && !gap) flags[i]=true; else gap=true; }
+    const mission=Math.min(Number(raw.currentMission)||1,earliestIncomplete(flags));
+    const source=raw.missionState?.[1]||{};
+    const completedQuestions=Array.isArray(source.completedQuestions)?source.completedQuestions.filter((n)=>Number.isInteger(n)&&n>=0&&n<6).filter((n,i,a)=>a.indexOf(n)===i):[];
+    const attempts=Array.from({length:6},(_,i)=>Math.max(0,Number(source.attempts?.[i])||0));
+    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)}},completed:false};
+  }
+  function answerQuestion(index,choice){ return Number.isInteger(index)&&QUESTIONS[index]&&QUESTIONS[index].correct===choice; }
+  function shouldAutoHint(difficulty,attempts){ return difficulty==="junior"?attempts>=1:difficulty==="explorer"?attempts>=2:false; }
+  function canCompleteMission1(state){ return state?.missionState?.[1]?.completedQuestions?.length===QUESTIONS.length; }
+  function finishMission1(state){ if(!canCompleteMission1(state)) return false; state.missionFlags[1]=true; state.clues.safety="complete"; state.currentMission=2; state.updatedAt=new Date().toISOString(); return true; }
+  function canAwardHub(){ return false; }
+  return {VERSION,DIFFICULTIES,QUESTIONS,caseId,freshState,sanitize,answerQuestion,shouldAutoHint,canCompleteMission1,finishMission1,canAwardHub,earliestIncomplete};
+});

@@ -1,0 +1,61 @@
+:root {
+  color-scheme: light;
+  --navy:#073c63; --blue:#087fc1; --cyan:#21c9dc; --gold:#ffc83d;
+  --ink:#153344; --muted:#4b6675; --soft:#dff9fc; --white:#fff;
+  --success:#08784f; --success-soft:#e1f7ed; --error:#b51f3c; --error-soft:#fff0f2;
+  --shadow:0 14px 34px rgba(3,40,66,.2);
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{background:#def4f7;color:var(--ink)}
+button,a,input{font:inherit}
+button{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.skip-link{position:fixed;z-index:1000;top:8px;left:8px;padding:10px 14px;background:white;color:var(--navy);font-weight:900;transform:translateY(-160%)}
+.skip-link:focus{transform:none}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.eyebrow{margin:0 0 7px;color:var(--blue);font-size:.78rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase}
+h1,h2,h3,p{margin-top:0}
+.primary-button,.secondary-button,.hint-button{min-height:48px;padding:11px 18px;border-radius:14px;font-weight:900;cursor:pointer}
+.primary-button{border:2px solid var(--navy);background:var(--navy);color:white}
+.primary-button:hover{background:var(--blue)}
+.secondary-button,.hint-button{border:2px solid var(--navy);background:white;color:var(--navy)}
+.button-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.level-screen{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr);gap:clamp(20px,4vw,64px);align-items:center;min-height:100vh;padding:clamp(58px,7vw,96px) clamp(22px,6vw,86px) 36px;overflow:hidden}
+.level-backdrop{position:absolute;z-index:-2;inset:0;background:url("assets/shared/mycology-lab-background.png") center/cover}
+.level-backdrop::after{position:absolute;inset:0;background:linear-gradient(90deg,rgba(239,253,255,.98),rgba(239,253,255,.76));content:""}
+.level-back{position:absolute;top:20px;left:clamp(22px,6vw,86px);color:var(--navy);font-weight:900;text-underline-offset:4px}
+.level-copy h1{max-width:720px;margin:0 0 16px;color:var(--navy);font-size:clamp(2.8rem,6vw,6rem);line-height:.92;letter-spacing:-.045em}
+.level-copy>p:not(.eyebrow){max-width:680px;font-size:clamp(1.03rem,1.8vw,1.3rem);line-height:1.52}
+.level-guide{height:min(42vh,430px);display:flex;align-items:end}
+.level-guide img{height:100%;max-width:100%;object-fit:contain;filter:drop-shadow(0 15px 18px rgba(7,60,99,.22));animation:guide-in .55s ease both}
+.level-picker{padding:clamp(22px,3vw,36px);border:2px solid rgba(71,160,179,.35);border-radius:28px;background:rgba(255,255,255,.95);box-shadow:var(--shadow)}
+.level-picker h2{margin-bottom:8px;color:var(--navy);font-size:clamp(1.7rem,3vw,2.45rem)}
+.level-grid{display:grid;gap:11px}
+.level-card{display:grid;grid-template-columns:54px 1fr;gap:3px 13px;width:100%;min-height:98px;padding:14px 16px;border:3px solid transparent;border-left-color:var(--cyan);border-radius:17px;background:#f5fcfd;color:var(--ink);text-align:left;cursor:pointer}
+.level-card:hover{border-color:var(--cyan);transform:translateX(4px)}
+.level-dots{grid-row:1/span 3;align-self:center;color:var(--blue);letter-spacing:-3px}
+.level-card strong{color:var(--navy);font-size:1.12rem}.level-card span:not(.level-dots){line-height:1.3}.level-card em{color:var(--success);font-size:.82rem;font-style:normal;font-weight:900}
+.reassurance{margin:15px 0 0;color:var(--navy);font-weight:800}
+.game-shell{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto}
+.game-bar{display:grid;grid-template-columns:1fr auto auto 1fr;gap:clamp(8px,2vw,22px);align-items:center;min-height:68px;padding:9px clamp(14px,3vw,38px);background:var(--navy);color:white;box-shadow:0 4px 14px rgba(3,38,62,.25)}
+.back-link{color:white;font-weight:900;text-underline-offset:4px}.game-heading{display:grid;text-align:center}.game-heading span{color:#a9edf4;font-size:.72rem;font-weight:900;letter-spacing:.12em}.game-heading strong{white-space:nowrap}.mission-progress{display:flex;gap:7px;align-items:baseline;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.13)}.mission-progress span{font-size:.74rem}.level-control{justify-self:end;min-height:44px;padding:7px 12px;border:2px solid rgba(255,255,255,.6);border-radius:999px;background:transparent;color:white;font-weight:900;cursor:pointer}
+.mission-scene{position:relative;isolation:isolate;min-height:calc(100vh - 158px);padding:clamp(16px,2.5vw,34px);overflow:hidden}.mission-scene::before{position:absolute;z-index:-2;inset:0;background:url("assets/shared/mycology-lab-background.png") center/cover;content:""}.mission-scene::after{position:absolute;z-index:-1;inset:0;background:rgba(229,249,252,.88);content:""}
+.mission-title{max-width:1250px;margin:0 auto 15px}.mission-title h1{margin:0 0 7px;color:var(--navy);font-size:clamp(1.9rem,3.8vw,3.4rem)}.mission-title p:last-child{margin:0;line-height:1.45;font-weight:800}
+.mission-workspace{display:grid;grid-template-columns:minmax(190px,.58fr) minmax(0,1.42fr);gap:clamp(14px,2vw,26px);max-width:1250px;margin:auto;align-items:stretch}
+.guide-panel,.question-panel{border:2px solid rgba(68,151,172,.35);border-radius:24px;background:rgba(255,255,255,.96);box-shadow:var(--shadow)}
+.guide-panel{display:grid;place-items:end center;min-height:460px;padding:14px 14px 0}.guide-panel img{width:100%;height:430px;object-fit:contain;object-position:center bottom}
+.question-panel{padding:clamp(18px,3vw,32px)}
+.question-progress{display:flex;gap:7px;margin-bottom:14px}.question-dot{width:32px;height:10px;border-radius:999px;background:#c9dce2}.question-dot.done{background:var(--success)}.question-dot.current{background:var(--gold)}
+.question-panel h2{color:var(--navy);font-size:clamp(1.35rem,2.5vw,2rem);line-height:1.2}
+.answer-grid{display:grid;gap:9px}.answer-button{min-height:52px;padding:11px 14px;border:2px solid #aed8e3;border-radius:14px;background:#f8fdff;color:var(--ink);text-align:left;font-weight:800;cursor:pointer}.answer-button:hover{border-color:var(--blue);background:var(--soft)}.answer-button[disabled]{cursor:default;opacity:.7}.answer-button.correct{border-color:var(--success);background:var(--success-soft);color:var(--success)}
+.feedback{min-height:48px;margin:14px 0 0;padding:12px 14px;border-left:7px solid var(--blue);border-radius:12px;background:white;font-weight:900;line-height:1.35}.feedback:empty{visibility:hidden}.feedback.good{border-color:var(--success);background:var(--success-soft);color:var(--success)}.feedback.try{border-color:var(--error);background:var(--error-soft);color:var(--error)}
+.hint-text{margin:10px 0 0;padding:11px 13px;border-radius:11px;background:#fff7cf;color:#5e4c00;font-weight:800}.question-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.question-actions .primary-button{margin-left:auto}
+.guide-strip{display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;min-height:90px;padding:9px clamp(14px,3vw,38px);border-left:8px solid var(--gold);background:var(--navy);color:white}.guide-strip img{width:54px;height:54px;object-fit:contain}.guide-strip p{margin:3px 0 0;line-height:1.35}.hint-button{display:flex;gap:7px;align-items:center;border-color:white;background:transparent;color:white}.hint-button img{width:22px;height:22px}
+.mission-complete{display:grid;place-items:center;min-height:calc(100vh - 68px);padding:24px;background:linear-gradient(rgba(223,249,252,.86),rgba(255,255,255,.94)),url("assets/shared/mycology-lab-background.png") center/cover}.complete-card{display:grid;grid-template-columns:minmax(180px,300px) 1fr;gap:24px;align-items:center;width:min(900px,100%);padding:clamp(22px,4vw,42px);border:3px solid var(--cyan);border-radius:28px;background:white;box-shadow:var(--shadow)}.complete-card>img{width:100%;max-height:380px;object-fit:contain}.complete-card h1{color:var(--navy)}
+dialog{width:min(760px,94vw);padding:0;border:0;border-radius:25px;background:transparent;box-shadow:0 24px 60px rgba(0,24,36,.55)}dialog::backdrop{background:rgba(0,26,41,.72);backdrop-filter:blur(3px)}.dialog-card{padding:clamp(22px,4vw,36px);background:white}.orientation-card{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:center}.orientation-card img{width:100%}
+@keyframes guide-in{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@media (max-width:800px){.level-screen{grid-template-columns:1fr;padding-top:70px}.level-guide{display:none}.mission-workspace{grid-template-columns:1fr}.guide-panel{min-height:210px}.guide-panel img{height:230px}.game-bar{grid-template-columns:1fr auto}.game-heading{display:none}.mission-progress{justify-self:end}.level-control{grid-column:1/-1;justify-self:stretch}.complete-card{grid-template-columns:1fr;text-align:center}.complete-card>img{max-height:230px}.orientation-card{grid-template-columns:1fr;text-align:center}.orientation-card img{max-height:160px}}
+@media (max-height:520px) and (orientation:landscape){.game-bar{min-height:54px;padding:5px 12px}.mission-scene{min-height:calc(100vh - 134px);padding:10px 16px}.mission-title{margin-bottom:8px}.mission-title h1{font-size:1.55rem}.guide-panel{min-height:300px}.guide-panel img{height:290px}.question-panel{padding:14px}.answer-grid{grid-template-columns:1fr 1fr}.answer-button{min-height:46px;padding:7px 10px}.feedback{margin-top:8px;padding:8px 11px}.guide-strip{min-height:80px;padding:6px 15px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
