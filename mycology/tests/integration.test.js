@@ -23,6 +23,6 @@ for(let i=1;i<=8;i+=1){
   assert.strictEqual(read(path.join(mycology,"missions",source)),read(path.join(mycology,"docs",copy)),`mission ${i} copy changed`);
 }
 assert(hub.includes('id: "mycology"')&&hub.includes('href: "mycology/"'),"hub Mycology card missing");
-for(const copy of ["CONGRATULATIONS, JUNIOR MYCOLOGIST!","You solved the fungal mystery!","JUNIOR MYCOLOGIST — MISSION COMPLETE!","Complete my journey"])assert(game.includes(copy),`completion copy missing: ${copy}`);
+for(const copy of ["CONGRATULATIONS, JUNIOR MYCOLOGIST!","You solved the fungal mystery!","JUNIOR MYCOLOGIST — MISSION COMPLETE!","Complete my journey","Start a fresh fictional case?","Your SiTC laboratory badge will stay safe."])assert(game.includes(copy)||html.includes(copy),`completion copy missing: ${copy}`);
 assert(game.includes('localStorage.setItem("sitcGameProgressV2"'),"hub award integration missing");
 console.log("PASS Mycology static integration, docs, assets, hub, and completion copy");
