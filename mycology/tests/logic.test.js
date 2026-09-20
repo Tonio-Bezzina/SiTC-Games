@@ -11,4 +11,6 @@ const raw=L.freshState("junior",2048);raw.missionFlags={1:true,3:true};raw.curre
 const s=L.freshState("explorer",2048);assert.equal(L.finishMission1(s),false);s.missionState[1].completedQuestions=[0,1,2,3,4,5];assert.equal(L.finishMission1(s),true);assert.equal(s.missionFlags[1],true);assert.equal(s.currentMission,2);assert.equal(s.clues.safety,"complete");
 assert.equal(L.canAwardHub(s),false);
 assert.equal(L.sanitize({version:99}),null);
-console.log("PASS mycology logic mission 1");
+for(const a of L.MATCHES)for(const b of L.MATCHES)assert.equal(L.matchSample(a.key,b.key),a.key===b.key);
+const s2=L.freshState("junior",2048);s2.missionFlags[1]=true;s2.currentMission=2;s2.missionState[2].matched=L.MATCHES.map(x=>x.key);assert(L.finishMission2(s2));assert.equal(s2.clues.patient,"Jamie Borg");assert.equal(s2.clues.specimen,"skin scrapings");assert.equal(L.canAwardHub(),false);
+console.log("PASS mycology logic missions 1-2");
