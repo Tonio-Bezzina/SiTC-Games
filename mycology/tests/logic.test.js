@@ -19,4 +19,5 @@ assert.deepEqual(L.allocationCounts({1:"slide",2:"slide",3:"slide",4:"culture",5
 const s4=L.freshState("challenge",2048);s4.missionState[4].destinations={1:"slide",2:"slide",3:"slide",4:"culture",5:"culture",6:"culture"};s4.missionState[4].found=true;assert(L.finishMission4(s4));assert.equal(s4.clues.microscopy,"fungal elements seen");
 assert.deepEqual(L.plateOrder("MYC-2048"),["mould","none","bacteria","yeast"]);assert.deepEqual(L.plateOrder("MYC-2049"),["none","bacteria","yeast","mould"]);const s5=L.freshState("junior",2048);assert(!L.finishMission5(s5));s5.missionState[5].selected="mould";assert(L.finishMission5(s5));assert.equal(s5.clues.culture,"growth-positive fluffy powdery colony");
 assert(L.keyChoice(0,"blue-green"));assert(L.keyChoice(1,"columnar"));assert(L.keyChoice(2,"fumigatus"));assert(!L.keyChoice(2,"niger"));const s6=L.freshState("junior",2048);s6.missionState[6].selections=["blue-green","columnar","fumigatus"];assert(L.finishMission6(s6));assert.equal(s6.clues.identification,"Aspergillus fumigatus");
-console.log("PASS mycology logic missions 1-6");
+for(let i=1;i<=8;i++)assert.equal(L.isMicWell(i),i===5);const s7=L.freshState("junior",2048);s7.missionState[7].selectedWell=5;assert(L.finishMission7(s7));assert.equal(s7.clues.mic,"well 5, first no-visible-growth endpoint");
+console.log("PASS mycology logic missions 1-7");
