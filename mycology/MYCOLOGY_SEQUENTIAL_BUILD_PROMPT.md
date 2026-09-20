@@ -1,11 +1,11 @@
 # Build The Mycology Journey Sequentially
 
-Repository: `C:\Users\User\Documents\ChatGPT\SiTC games\work\SiTC-Games-publish-m1-oneclick`  
-Remote: `https://github.com/Tonio-Bezzina/SiTC-Games.git`  
-Branch: `codex/mycology-complete-game`  
-Source: `mycology/source/The Mycology Journey Game.docx`  
-Base authority: `mycology/MYCOLOGY_GAME.md`  
-Assets: `mycology/assets/asset-manifest.json`  
+Repository: `C:\Users\User\Documents\ChatGPT\SiTC games\work\SiTC-Games-publish-m1-oneclick`
+Remote: `https://github.com/Tonio-Bezzina/SiTC-Games.git`
+Branch: `codex/mycology-complete-game`
+Source: `mycology/source/The Mycology Journey Game.docx`
+Base authority: `mycology/MYCOLOGY_GAME.md`
+Assets: `mycology/assets/asset-manifest.json`
 Mission specs: `mycology/missions/`
 
 Build prompts, in mandatory order:

@@ -26,4 +26,3 @@ The comparison uses a semantic definition list/table with accessible row labels.
 ## Verification gate
 
 Verify exactly five cases and exactly the specified mismatch types; field-by-field copy; both correct feedback variants; incorrect retry; refresh on cases 2 and 4; keyboard-only and touch; no real data; persistence repair; and Mission 4 receives only the accepted `MYC-2048` skin-scraping lineage. No hub award.
-
