@@ -26,3 +26,13 @@ test("Mission 5 rejects a drop when neither pointer nor swab tip touches", () =>
     false
   );
 });
+
+test("Mission 10 starts with a clean MALDI-TOF workflow state", () => {
+  assert.deepEqual(logic.initialState().mission10, {
+    step: 0,
+    selected: null,
+    analysisStarted: false,
+    analysisPhase: 0,
+    complete: false
+  });
+});

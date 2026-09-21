@@ -119,7 +119,9 @@
       mission9: {
         selected: false, placed: false, transitionStarted: false, focusComplete: false,
         focusSkipped: false, attempts: [], selectedAnswer: null, complete: false
-      }, mission10: { step: 0 }, selectedAnswers: {},
+      }, mission10: {
+        step: 0, selected: null, analysisStarted: false, analysisPhase: 0, complete: false
+      }, selectedAnswers: {},
       matching: { carrierOpen: false, clueSeen: false, expanded: null, mismatch: [], accepted: null, racked: false, sampleSelected: false }
     };
   }

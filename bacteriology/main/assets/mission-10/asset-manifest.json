@@ -1,0 +1,14 @@
+{
+  "mission": 10,
+  "canvas": { "width": 1254, "height": 1254 },
+  "assets": [
+    { "filename": "matrix-solution-bottle.png", "purpose": "Matrix solution source", "transparent": true, "alignmentGroup": "matrix-bottle" },
+    { "filename": "pipette-empty.png", "purpose": "Clean empty micropipette", "transparent": true, "alignmentGroup": "pipette" },
+    { "filename": "pipette-with-matrix.png", "purpose": "Micropipette after drawing matrix", "transparent": true, "alignmentGroup": "pipette" },
+    { "filename": "maldi-target-plate-empty.png", "purpose": "Empty MALDI target plate", "transparent": true, "alignmentGroup": "target-plate" },
+    { "filename": "maldi-target-plate-bacteria.png", "purpose": "Target plate with one bacterial spot", "transparent": true, "alignmentGroup": "target-plate" },
+    { "filename": "maldi-target-plate-matrix.png", "purpose": "Target plate with matrix over the bacterial spot", "transparent": true, "alignmentGroup": "target-plate" },
+    { "filename": "maldi-tof-open.png", "purpose": "MALDI-TOF with open loading port", "transparent": true, "alignmentGroup": "maldi-instrument" },
+    { "filename": "maldi-tof-active.png", "purpose": "MALDI-TOF closed and active", "transparent": true, "alignmentGroup": "maldi-instrument" }
+  ]
+}

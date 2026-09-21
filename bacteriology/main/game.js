@@ -16,6 +16,7 @@
   let mission6Timer = null;
   let mission7Timer = null;
   let mission9Timer = null;
+  let mission10Timer = null;
   let gramAutoTimer = null;
   let openSampleInfo = null;
   let openAgarInfo = null;
@@ -102,10 +103,19 @@
     state.mission9.selectedAnswer = "chains";
     state.mission9.complete = true;
   }
+  const m10Defaults = L.initialState().mission10;
+  state.mission10 = { ...m10Defaults, ...(state.mission10 || {}) };
+  if (state.mission10.step >= 8 || state.completed.includes(10)) {
+    state.mission10.step = 8;
+    state.mission10.analysisStarted = false;
+    state.mission10.complete = true;
+  }
   const M8_ASSETS = ["crystal-violet-bottle.png","lugols-iodine-bottle.png","decolorizer-bottle.png","carbol-fuchsin-bottle.png","wash-bottle.png","reagent-drop-clear.png","reagent-drop-violet.png","reagent-drop-iodine.png","reagent-drop-decolorizer.png","reagent-drop-fuchsin.png","slide-heat-fixed.png","slide-crystal-violet.png","slide-crystal-violet-rinsed.png","slide-iodine.png","slide-iodine-rinsed.png","slide-decolorizing.png","slide-decolorized-rinsed.png","slide-carbol-fuchsin.png","slide-gram-stain-complete.png"];
   M8_ASSETS.forEach(file=>{const image=new Image();image.src=`assets/mission-8/${file}`;image.decode?.().catch(()=>{});});
   const M9_ASSETS = ["compound-microscope-empty.png","compound-microscope-with-slide.png","microscope-stage-closeup-empty.png","microscope-stage-closeup-with-slide.png","gram-stained-slide-draggable.png","microscope-eyepiece-overlay.png","microscopy-field-pink-rods.png","microscopy-field-purple-rods.png","microscopy-field-purple-cocci-chains.png","microscopy-field-purple-cocci-clusters.png","microscope-focus-soft.png","microscope-focus-sharp.png"];
   M9_ASSETS.forEach(file=>{const image=new Image();image.src=`assets/mission-9/${file}`;image.decode?.().catch(()=>{});});
+  const M10_ASSETS = ["matrix-solution-bottle.png","pipette-empty.png","pipette-with-matrix.png","maldi-target-plate-empty.png","maldi-target-plate-bacteria.png","maldi-target-plate-matrix.png","maldi-tof-open.png","maldi-tof-active.png"];
+  M10_ASSETS.forEach(file=>{const image=new Image();image.src=`assets/mission-10/${file}`;image.decode?.().catch(()=>{});});
   let orientationBlocked = matchMedia("(orientation: portrait) and (max-width: 900px)").matches;
 
   function save() { localStorage.setItem(STORAGE, JSON.stringify(state)); }
@@ -154,7 +164,7 @@
     const progress = state.mission ? Math.min(100, state.completed.length * 10) : 0;
     const footerText = state.feedback || guide;
     const footerType = state.feedback ? state.feedbackType : "";
-    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : state.mission === 8 ? "screen mission-eight-screen" : state.mission === 9 ? "screen mission-nine-screen" : "screen";
+    const screenClass = state.mission === 1 ? "screen mission-one-screen" : state.mission === 2 ? "screen mission-two-screen" : state.mission === 3 ? "screen mission-three-screen" : state.mission === 4 ? "screen mission-four-screen" : state.mission === 5 ? "screen mission-five-screen" : state.mission === 6 ? "screen mission-six-screen" : state.mission === 7 ? "screen mission-seven-screen" : state.mission === 8 ? "screen mission-eight-screen" : state.mission === 9 ? "screen mission-nine-screen" : state.mission === 10 ? "screen mission-ten-screen" : "screen";
     const transition = missionTransition ? `<div class="mission-door-transition" aria-hidden="true"><img src="assets/mission-1/preparation-room-background.png" alt=""></div>` : "";
     return `<div id="gameShell" class="shell"><div id="gameStage"><header class="topbar"><div class="brand"><span class="brand-mark">🦠</span><span>Bacteriology Journey</span></div><div class="progress-track" aria-label="Journey ${progress}% complete"><div class="progress-fill" style="width:${progress}%"></div></div><div class="age-chip">${state.age ? ageConfig().label : "Junior lab"}</div></header><main class="screen-host"><section class="${screenClass}"><div class="screen-scroll">${content}</div></section>${transition}</main><footer class="guide game-footer ${footerType}" aria-label="Scientist guide"><div class="guide-avatar" aria-hidden="true">👩🏽‍🔬</div><div><h2>Dr Mira says</h2><p>${footerText}</p></div></footer></div></div>`;
   }
@@ -354,16 +364,27 @@
       ["chains","Purple cocci in chains","microscopy-field-purple-cocci-chains.png"],
       ["clusters","Purple cocci in clusters","microscopy-field-purple-cocci-clusters.png"]
     ];
+    const microscopyHints={
+      junior:"After the Gram stain, the bacteria we want appear purple. Find the little circles joined together like pearls on a string.",
+      explorer:"The target is Gram-positive. Look for purple, round cells arranged in chains rather than clusters.",
+      challenge:"Look for cells that retained the crystal-violet complex, have coccal morphology and form chains rather than clusters."
+    };
+    const microscopyHint=microscopyHints[state.age]||microscopyHints.junior;
     const completion=m.complete?`<div class="m9-completion" role="dialog" aria-modal="true" aria-labelledby="m9-complete-title"><div class="m9-completion-card"><p id="m9-complete-title"><strong>Excellent!</strong> These Gram-positive cocci in chains are consistent with streptococci.</p><div class="m9-clues" aria-label="Microscopy clues"><span><b>Purple</b> colour</span><span><b>Round</b> shape</span><span><b>Chain</b> arrangement</span></div>${learning("These are Gram-positive cocci arranged in chains. This appearance is consistent with streptococci.","Their purple colour, round shape and chain arrangement help us recognise them as streptococci, but species identification needs another test.")}<div class="actions">${btn("Identify the species →","m9-next","coral")}</div></div></div>`:"";
-    return shell(`<div class="mission-nine-scene comparison" aria-label="Microscope field comparison"><div class="m9-micro-background"></div><div class="mission-nine-title"><div class="mission-label">Mission 9 of 10</div><h1>Look under the microscope</h1><p>Compare colour, shape and arrangement.</p></div><div class="mission-nine-prompt" role="status" aria-live="polite"><strong>Step 2 of 2</strong><span>Which picture shows the bacteria we are looking for?</span></div><div class="m9-field-grid" role="group" aria-label="Microscopic appearance choices">${opts.map(([value,label,file])=>{const wrong=m.attempts.includes(value),selected=m.selectedAnswer===value;return `<button class="m9-field-choice ${wrong?"wrong":""} ${selected?"selected":""}" data-action="m9-answer" data-value="${value}" aria-pressed="${selected}" aria-label="${label}"><img src="assets/mission-9/${file}" alt=""><strong>${label}</strong>${wrong?'<small>Try again</small>':""}</button>`;}).join("")}</div><p class="m9-comparison-hint">Look carefully at all three clues: colour, shape and arrangement.</p>${completion}</div>`, "Look carefully at all three clues: purple colour, round shape and chain arrangement.");
+    return shell(`<div class="mission-nine-scene comparison" aria-label="Microscope field comparison"><div class="m9-micro-background"></div><div class="mission-nine-title"><div class="mission-label">Mission 9 of 10</div><h1>Look under the microscope</h1><p>Compare colour, shape and arrangement.</p></div><div class="mission-nine-prompt" role="status" aria-live="polite"><strong>Step 2 of 2</strong><span>Which picture shows the bacteria we are looking for?</span></div><p class="m9-comparison-hint"><strong>Hint:</strong> ${microscopyHint}</p><div class="m9-field-grid" role="group" aria-label="Microscopic appearance choices">${opts.map(([value,label,file])=>{const wrong=m.attempts.includes(value),selected=m.selectedAnswer===value;return `<button class="m9-field-choice ${wrong?"wrong":""} ${selected?"selected":""}" data-action="m9-answer" data-value="${value}" aria-pressed="${selected}" aria-label="${label}"><img src="assets/mission-9/${file}" alt=""><strong>${label}</strong>${wrong?'<small>Try again</small>':""}</button>`;}).join("")}</div>${completion}</div>`, microscopyHint);
   }
 
   function mission10() {
-    const s=state.mission10.step;
-    const steps=["Select the 1 µL loop.","Choose one colony.","Place the bacteria onto a spot on the MALDI target plate.","Select the pipette.","Draw matrix solution into the pipette.","Place matrix over the bacteria spot.","Load the MALDI target plate into the MALDI-TOF.","Analysing the bacterial protein pattern…","Identification complete"];
-    const actions=["Select 1 µL loop","Pick a single colony","Spot the MALDI target plate","Select pipette","Draw matrix solution","Add matrix to spot","Load MALDI target plate","Start analysis"];
-    const complete=s>=8;
-    return shell(`${missionHeader(10,"The final mystery","Microscopy gave us clues. Now use MALDI-TOF to identify the bacterium to species level.")}<div class="instruction"><strong>${complete?"Result":`Step ${s+1}`}:</strong> ${steps[s]}</div><div class="maldi"><div class="maldi-screen"><strong>MALDI-TOF</strong>${complete?`<h2>IDENTIFICATION COMPLETE</h2><p>Bacterial identification: MATCH FOUND</p><h2><i>Streptococcus pyogenes</i></h2>`:`<div class="target" aria-label="MALDI target plate">${Array.from({length:12},(_,i)=>`<span class="spot ${s>=3&&i===5?"filled":""}"></span>`).join("")}</div><p>${s>=7?"Comparing bacterial protein pattern…":"Instrument ready"}</p>`}</div></div><div class="actions">${!complete?btn(actions[s],"maldi-step",s>=6?"coral":""):btn("Complete the journey","complete-10","coral")}</div>${feedback()}`, "Use one colony, spot it on the MALDI target plate, add matrix, then load the target plate into the instrument.");
+    const m=state.mission10,s=m.step;
+    const prompts=["Select the sterile 1 µL loop.","Choose one isolated colony from the culture plate.","Place the bacteria onto the highlighted spot on the MALDI target plate.","Select the pipette with a clean tip.","Draw matrix solution into the pipette.","Place one drop of matrix over the bacteria spot.","Load the prepared target plate into the MALDI-TOF.","Start the MALDI-TOF analysis.","Identification complete"];
+    const guideLabels=["Select the loop","Choose one colony","Spot the target plate","Select the pipette","Draw up matrix","Add matrix to the spot","Load the target plate","Start analysis",""];
+    const targetFile=s<3?"maldi-target-plate-empty.png":s<6?"maldi-target-plate-bacteria.png":"maldi-target-plate-matrix.png";
+    const pipetteFile=s>=5?"pipette-with-matrix.png":"pipette-empty.png";
+    const machineFile=s>=7?"maldi-tof-active.png":"maldi-tof-open.png";
+    const analysisText=m.analysisPhase===0?"Analysing sample…":"Comparing bacterial protein pattern…";
+    const guide=s<8?`<div class="m10-guidance guide-${s}" aria-hidden="true"><span>${guideLabels[s]}</span></div>`:"";
+    const result=m.complete?`<div class="m10-completion" role="dialog" aria-modal="true" aria-labelledby="m10-result-title"><div class="m10-completion-card"><div class="mission-label">MALDI-TOF result</div><h2 id="m10-result-title">IDENTIFICATION COMPLETE</h2><p>Bacterial identification: <strong>MATCH FOUND</strong></p><h3><i>Streptococcus pyogenes</i></h3>${learning("MALDI-TOF identifies bacteria by comparing their protein pattern with reference patterns.","Microscopy suggested streptococci, while MALDI-TOF provided the species-level identification.")}<div class="actions">${btn("Complete the journey","complete-10","coral")}</div></div></div>`:"";
+    return shell(`<div class="mission-ten-scene step-${s} ${m.analysisStarted?"analysing":""}" aria-label="MALDI-TOF bacterial identification workstation"><img class="mission-ten-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-ten-title"><div class="mission-label">Mission 10 of 10</div><h1>The final mystery</h1><p>We found the bacteria. Now identify exactly what they are.</p></div><div class="mission-ten-prompt" role="status" aria-live="polite"><strong>${m.complete?"Result":`Step ${Math.min(s+1,8)} of 8`}</strong><span>${prompts[s]}</span></div><div class="m10-countertop" aria-hidden="true"></div><div class="m10-progress" aria-label="Mission 10 progress">${Array.from({length:8},(_,i)=>`<i class="${i<s?"done":i===s&&!m.complete?"current":""}">${i<s?"✓":i+1}</i>`).join("")}</div><div class="m10-culture" aria-label="Incubated blood agar culture"><img src="assets/mission-7/incubated-blood-agar-plate.png" alt=""><img src="assets/mission-7/selectable-colony-overlay.png" alt="Visible bacterial colonies">${s===1?`<button class="m10-colony-target active" data-action="m10-colony" aria-label="Choose one isolated colony"><span>Choose one colony</span></button>`:""}</div><button class="m10-loop ${s===0?"active":""} ${m.selected==="loop"?"selected":""}" data-action="m10-loop" data-value="loop" draggable="${s===2}" data-drag="m10-spot" data-drag-image="assets/mission-7/${s>=2?"loop-with-colony.png":"sterile-loop-1ul.png"}" data-drag-tip-x=".94" data-drag-tip-y=".92" aria-pressed="${m.selected==="loop"}" aria-label="${s>=2?"One microlitre loop carrying a bacterial colony":"Sterile one microlitre loop"}"><img src="assets/mission-7/${s>=2?"loop-with-colony.png":"sterile-loop-1ul.png"}" alt=""><span>1 µL loop</span></button><button class="m10-target-plate ${s===6?"active":""} ${m.selected==="plate"?"selected":""} ${s>=7?"loaded":""}" data-action="m10-plate" data-value="plate" draggable="${s===6}" data-drag="m10-load" data-drag-image="assets/mission-10/${targetFile}" ${s===2||s===5?'data-drop="m10-spot"':""} aria-pressed="${m.selected==="plate"}" aria-label="MALDI target plate${s>=6?" prepared with bacteria and matrix":""}"><img src="assets/mission-10/${targetFile}" alt=""><span>MALDI target plate</span>${s===2||s===5?`<i class="m10-spot-target active" aria-hidden="true"></i>`:""}</button><button class="m10-pipette ${s===3?"active":""} ${m.selected==="pipette"?"selected":""}" data-action="m10-pipette" data-value="pipette" draggable="${s===4||s===5}" data-drag="${s===4?"m10-matrix":s===5?"m10-spot":""}" data-drag-image="assets/mission-10/${pipetteFile}" data-drag-tip-x=".91" data-drag-tip-y=".91" aria-pressed="${m.selected==="pipette"}" aria-label="${s>=5?"Pipette containing matrix solution":"Pipette with a clean tip"}"><img src="assets/mission-10/${pipetteFile}" alt=""><span>${s>=5?"Matrix loaded":"Pipette"}</span></button><button class="m10-matrix ${s===4?"active":""}" data-action="m10-matrix" ${s===4?'data-drop="m10-matrix"':""} aria-label="Bottle of matrix solution"><img src="assets/mission-10/matrix-solution-bottle.png" alt=""><span>Matrix solution</span></button><button class="m10-machine ${s===6||s===7?"active":""} ${s>=7?"running":""}" data-action="m10-machine" ${s===6?'data-drop="m10-load"':""} aria-label="${s>=7?"Active MALDI-TOF instrument":"MALDI-TOF instrument with open loading port"}"><img src="assets/mission-10/${machineFile}" alt=""><span>MALDI-TOF</span></button>${s===7&&!m.analysisStarted?`<button class="m10-start" data-action="m10-start">Start analysis</button>`:""}${m.analysisStarted&&!m.complete?`<div class="m10-analysis" role="status" aria-live="polite"><strong>MALDI-TOF</strong><span>${analysisText}</span><div aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>${btn("Skip analysis animation","m10-skip","secondary")}</div>`:""}${guide}${result}</div>`, m.complete?"MALDI-TOF identified Streptococcus pyogenes.":prompts[s]);
   }
 
   function summary() {
@@ -377,6 +398,7 @@
     clearTimeout(mission6Timer);
     clearTimeout(mission7Timer);
     clearTimeout(mission9Timer);
+    clearTimeout(mission10Timer);
     if (!state.age || state.mission===0) app.innerHTML=startScreen();
     else if(state.mission===11) app.innerHTML=summary();
     else app.innerHTML=({1:mission1,2:mission2,3:mission3,4:mission4,5:mission5,6:mission6,7:mission7,8:mission8,9:mission9,10:mission10}[state.mission]||mission1)();
@@ -386,6 +408,7 @@
     if(!orientationBlocked&&state.mission===6&&state.mission6.incubationStarted&&!state.mission6.incubationComplete) scheduleMission6Incubation();
     if(!orientationBlocked&&state.mission===7&&state.mission7.dryingStarted&&!state.mission7.dryingComplete) scheduleMission7Drying();
     if(!orientationBlocked&&state.mission===9&&state.mission9.transitionStarted&&!state.mission9.focusComplete) scheduleMission9Focus();
+    if(!orientationBlocked&&state.mission===10&&state.mission10.analysisStarted&&!state.mission10.complete) scheduleMission10Analysis();
   }
 
   function resetGram(mode) { clearTimeout(timer);clearTimeout(gramAutoTimer);state.gram={...L.initialState().gram,mode};timerCounter=0;state.feedback="";state.feedbackType="";save();render(); }
@@ -457,6 +480,80 @@
     m9Update("Not quite. Look carefully at the colour, shape and arrangement. Try again!","try");
   }
 
+  function m10Update(message,type="good"){
+    state.feedback=message;state.feedbackType=type;save();announce(message);render();
+  }
+  function m10Wrong(message="Follow the highlighted equipment and complete the MALDI-TOF steps in order."){
+    m10Update(message||"Follow the highlighted equipment and complete the MALDI-TOF steps in order.","try");
+  }
+  function m10SelectLoop(){
+    const m=state.mission10;
+    if(m.step!==0){m10Wrong(m.step===2?"The loop is loaded. Place the colony onto the highlighted target spot.":"");return;}
+    m.step=1;m.selected="loop";m10Update("The sterile 1 µL loop is ready. Choose one isolated colony.");
+  }
+  function m10ChooseColony(){
+    const m=state.mission10;
+    if(m.step!==1||m.selected!=="loop"){m10Wrong("Select the sterile 1 µL loop before choosing a colony.");return;}
+    m.step=2;m.selected="loop";m10Update("One isolated colony is on the loop. Place it on the highlighted target spot.");
+  }
+  function m10Spot(fromDrag=false,value=""){
+    const m=state.mission10;
+    if(m.step===2&&(fromDrag?value==="loop":m.selected==="loop")){
+      m.step=3;m.selected=null;m10Update("The bacterial colony is on the MALDI target spot.");return;
+    }
+    if(m.step===5&&(fromDrag?value==="pipette":m.selected==="pipette")){
+      m.step=6;m.selected=null;m10Update("Matrix now covers the bacteria. It will help the MALDI-TOF analyse the bacterial proteins.");return;
+    }
+    m10Wrong(m.step<2?"Pick one isolated colony first.":m.step<5?"Draw matrix solution into the pipette first.":"Use the highlighted target spot.");
+  }
+  function m10SelectPipette(){
+    const m=state.mission10;
+    if(m.step!==3){m10Wrong(m.step===5?"The pipette contains matrix. Add one drop to the highlighted target spot.":"");return;}
+    m.step=4;m.selected="pipette";m10Update("The clean pipette is selected. Draw up matrix solution.");
+  }
+  function m10DrawMatrix(fromDrag=false,value=""){
+    const m=state.mission10;
+    if(m.step!==4||(fromDrag?value!=="pipette":m.selected!=="pipette")){m10Wrong("Select the clean pipette before drawing matrix solution.");return;}
+    m.step=5;m.selected="pipette";m10Update("The pipette now contains matrix solution. Add one drop over the bacteria spot.");
+  }
+  function m10SelectPlate(){
+    const m=state.mission10;
+    if(m.step===2||m.step===5){m10Spot();return;}
+    if(m.step!==6){m10Wrong();return;}
+    m.selected=m.selected==="plate"?null:"plate";
+    m10Update(m.selected?"The prepared target plate is selected. Load it into the highlighted MALDI-TOF port.":"Target plate deselected.",m.selected?"good":"");
+  }
+  function m10Load(fromDrag=false,value=""){
+    const m=state.mission10;
+    if(m.step!==6||(fromDrag?value!=="plate":m.selected!=="plate")){m10Wrong("Select the prepared target plate, then load it into the MALDI-TOF.");return;}
+    m.step=7;m.selected=null;m10Update("The target plate is loaded and the instrument is ready. Start the analysis.");
+  }
+  function m10StartAnalysis(){
+    const m=state.mission10;
+    if(m.step!==7||m.complete){m10Wrong("Load the prepared target plate before starting the analysis.");return;}
+    if(m.analysisStarted)return;
+    m.analysisStarted=true;m.analysisPhase=0;m10Update("MALDI-TOF is analysing the sample.");
+  }
+  function m10CompleteAnalysis(){
+    const m=state.mission10;
+    clearTimeout(mission10Timer);m.analysisStarted=false;m.analysisPhase=2;m.step=8;m.complete=true;
+    m10Update("Identification complete: MALDI-TOF found a match for Streptococcus pyogenes.");
+  }
+  function scheduleMission10Analysis(){
+    clearTimeout(mission10Timer);
+    mission10Timer=setTimeout(()=>{
+      const m=state.mission10;
+      if(state.mission!==10||orientationBlocked||!m.analysisStarted||m.complete)return;
+      if(m.analysisPhase===0){m.analysisPhase=1;m10Update("Comparing the bacterial protein pattern with reference patterns.");}
+      else m10CompleteAnalysis();
+    },reducedMotion?60:state.mission10.analysisPhase===0?1200:1650);
+  }
+  function handleM10Drop(value,targetType){
+    if(targetType==="m10-spot")m10Spot(true,value);
+    else if(targetType==="m10-matrix")m10DrawMatrix(true,value);
+    else if(targetType==="m10-load")m10Load(true,value);
+  }
+
   function findDragTarget(source,dropType,clientX,clientY,visualWidth=110,visualHeight=110){
     const tipX=Number(source.dataset.dragTipX),tipY=Number(source.dataset.dragTipY);
     const tip=Number.isFinite(tipX)&&Number.isFinite(tipY)?{x:tipX,y:tipY}:null;
@@ -479,6 +576,7 @@
     if(dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);
     if(dropType==="m8-slide")startGramStep(value);
     if(dropType==="m9-stage")m9PlaceSlide(true,value);
+    if(dropType.startsWith("m10-"))handleM10Drop(value,target.dataset.drop);
   }
   function bindDrag(){
     document.querySelectorAll("[draggable=true]").forEach(el=>{
@@ -508,6 +606,7 @@
         const target=findDragTarget(el,dropType,clientX,clientY,drag.width,drag.height);
         completeDrop(el.dataset.value,dropType,target);
         if(!target&&dropType==="m9-stage")m9Wrong();
+        if(!target&&dropType?.startsWith("m10-"))m10Wrong("Move the selected item onto the highlighted target.");
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
@@ -525,7 +624,7 @@
     const finish=event=>{
       source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);
       const ghostRect=ghost?.getBoundingClientRect();ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=findDragTarget(source,dropType,event.clientX,event.clientY,ghostRect?.width||110,ghostRect?.height||110);completeDrop(value,dropType,target);if(!target&&dropType==="m9-stage")m9Wrong();}
+      if(moved){const dropType=source.dataset.drag;const target=findDragTarget(source,dropType,event.clientX,event.clientY,ghostRect?.width||110,ghostRect?.height||110);completeDrop(value,dropType,target);if(!target&&dropType==="m9-stage")m9Wrong();if(!target&&dropType?.startsWith("m10-"))m10Wrong("Move the selected item onto the highlighted target.");}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -812,7 +911,14 @@
     if(action==="m9-skip-focus"){if(!state.mission9.placed||state.mission9.focusComplete){m9Wrong("Place the slide before focusing the microscope.");return;}clearTimeout(mission9Timer);state.mission9.focusSkipped=true;state.mission9.focusComplete=true;m9Update("The microscopic fields are in focus. Compare the colour, shape and arrangement.");return;}
     if(action==="m9-answer"){m9Answer(value);return;}
     if(action==="m9-next"){if(state.mission9.complete){state.mission=10;state.feedback="Microscopy is consistent with streptococci. Use MALDI-TOF to identify the species.";state.feedbackType="good";save();announce(state.feedback);render();}return;}
-    if(action==="maldi-step"){state.mission10.step=Math.min(8,state.mission10.step+1);state.feedback=state.mission10.step===8?"MALDI-TOF found a species match.":"Correct—continue the MALDI-TOF preparation.";state.feedbackType="good";save();render();return;}
+    if(action==="m10-loop"){m10SelectLoop();return;}
+    if(action==="m10-colony"){m10ChooseColony();return;}
+    if(action==="m10-plate"){m10SelectPlate();return;}
+    if(action==="m10-pipette"){m10SelectPipette();return;}
+    if(action==="m10-matrix"){m10DrawMatrix();return;}
+    if(action==="m10-machine"){if(state.mission10.step===6)m10Load();else if(state.mission10.step===7)m10StartAnalysis();else m10Wrong();return;}
+    if(action==="m10-start"){m10StartAnalysis();return;}
+    if(action==="m10-skip"){if(state.mission10.analysisStarted&&!state.mission10.complete)m10CompleteAnalysis();else m10Wrong();return;}
     if(action==="complete-10"){if(state.mission10.step>=8){if(!state.completed.includes(10))state.completed.push(10);state.mission=11;save();saveHubCompletion();render();}return;}
     if(action==="review"){state.mission=1;save();render();return;}
     if(action==="new-case"){localStorage.removeItem(STORAGE);state=L.initialState();render();return;}
