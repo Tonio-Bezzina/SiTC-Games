@@ -28,7 +28,21 @@
       }
     ],
     "chemistry": [],
-    "bacteriology": [],
+    "bacteriology": [
+      {
+        "id": "case-01",
+        "title": "Case 01",
+        "thumbnail": "bacteriology/cases/case-01/image 1.png",
+        "slides": [
+          "bacteriology/cases/case-01/image 1.png",
+          "bacteriology/cases/case-01/image 2.png",
+          "bacteriology/cases/case-01/image 3.png",
+          "bacteriology/cases/case-01/image 4.png",
+          "bacteriology/cases/case-01/image 5.png"
+        ],
+        "slideCount": 5
+      }
+    ],
     "haematology": [],
     "histology": [],
     "mycology": []
