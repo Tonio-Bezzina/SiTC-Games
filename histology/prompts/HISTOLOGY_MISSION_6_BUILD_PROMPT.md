@@ -50,16 +50,17 @@ Reuse the Mission 5 unstained slide and existing shared shell/guide/progress/suc
 2. Show **Mission 6 of 7**, **Add Colour to the Tissue**, and **Histological Staining**.
 3. Display both exact instruction lines and one clearly labelled **Staining Machine** with an obvious, generous loading area.
 4. Support drag, tap/select-then-target, and keyboard placement of the slide. A missed drop returns it to its safe position and is not a scientific error.
-5. Start automatically only after valid placement; lock the slide into the supplied loaded state.
-6. Show the active machine, carrier, colour-stream, or process-diagram states in a brief sequence that communicates staining without flashing.
-7. Display visible **WHOOSH…** during the process, then visible **DING!** when it ends. No information may depend on sound.
+5. After valid placement, lock the slide into the supplied loaded state and wait for the player to press **NEXT**.
+6. On **NEXT**, show the active machine, carrier, colour-stream, or process-diagram staining state without flashing, then wait for another **NEXT** press.
+7. On the next press, display visible **DING!** and the finished state. No information may depend on sound.
 8. Reveal the stained-slide output tray and the exact scientist explanation, followed by **“Your stained slides are ready!”**
 9. Enable **NEXT: Can you find the H&E slide?** only after staining is complete.
 
 ## State, motion, and integration
 
 - Safely extend the versioned save with slide position, machine loaded/started state, staining step, ready state, completion, and safe screen.
-- On interruption, restore either the unstained slide safely on the bench or the completed stained-slide state; never duplicate or lose it.
+- On interruption, restore the exact player-controlled stage; never duplicate or lose the slide.
+- Never advance a teaching state on a timer. The player must press **NEXT** after reading and inspecting each state.
 - Do not replay the sequence on every resume after completion.
 - Reduced motion must preserve the same teaching content through static labelled states: unstained → machine → stained slides ready.
 - Preserve patient/case/tissue continuity and earlier mission review paths.
@@ -78,7 +79,7 @@ Reuse the Mission 5 unstained slide and existing shared shell/guide/progress/suc
 Do not move to Mission 7 until:
 
 - Missions 1–5 regression tests and browser smoke paths pass.
-- The staining machine is the only destination and starts only after valid placement.
+- The staining machine is the only destination, accepts only valid placement, and each later state requires **NEXT**.
 - Drag, tap/select, and keyboard placement all work and persist identically.
 - Missed drops preserve the safe starting state.
 - **WHOOSH…** precedes **DING!** and both are visible/announced.

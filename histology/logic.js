@@ -158,11 +158,11 @@
     }
     if (action === "advance") {
       if (state.step === "slide_in_machine") return { ...state, step: "staining", slideInMachine: true, machineStarted: true };
-      if (state.step === "staining") return { ...state, step: "stained_slides_ready", slideInMachine: true, machineStarted: true, stainingComplete: true };
-      if (state.step === "stained_slides_ready") return { ...state, step: "complete", slideInMachine: true, machineStarted: true, stainingComplete: true, complete: true };
+      if (state.step === "staining") return { ...state, step: "stained_slides_ready", slideInMachine: true, machineStarted: true, stainingComplete: true, complete: true };
+      if (state.step === "stained_slides_ready") return { ...state, slideInMachine: true, machineStarted: true, stainingComplete: true, complete: true };
     }
-    if (action === "resume-safe" && ["slide_in_machine", "staining"].includes(state.step)) {
-      return { ...state, step: "stained_slides_ready", slideSelected: false, slideInMachine: true, machineStarted: true, stainingComplete: true };
+    if (action === "resume-safe" && ["stained_slides_ready", "complete"].includes(state.step)) {
+      return { ...state, step: "stained_slides_ready", slideSelected: false, slideInMachine: true, machineStarted: true, stainingComplete: true, complete: true };
     }
     return state;
   }
@@ -176,6 +176,7 @@
   function applyMission7Action(current, action, value) {
     const state = { ...createMission7State(), ...(current || {}) };
     if (action === "toggle-hint" && !state.correctSelected) return { ...state, hintOpen: !state.hintOpen };
+    if (action === "show-hint" && !state.correctSelected) return { ...state, hintOpen: true };
     if (action === "choose" && !state.correctSelected) {
       return value === MISSION7_CORRECT_CHOICE
         ? { ...state, selectedSlide: value, correctSelected: true }

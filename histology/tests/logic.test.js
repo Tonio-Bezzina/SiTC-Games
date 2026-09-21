@@ -239,26 +239,32 @@ test("Mission 6 starts only after a valid slide placement and preserves order", 
   state = logic.applyMission6Action(state, "advance");
   assert.equal(state.step, "stained_slides_ready");
   assert.equal(state.stainingComplete, true);
-  assert.equal(state.complete, false);
+  assert.equal(state.complete, true);
   state = logic.applyMission6Action(state, "advance");
-  assert.equal(state.step, "complete");
+  assert.equal(state.step, "stained_slides_ready");
   assert.equal(state.complete, true);
 });
 
-test("Mission 6 drop and interrupted staining restore one completed output", () => {
+test("Mission 6 drop and resume preserve each player-controlled stage", () => {
   let state = logic.createMission6State();
   state = logic.applyMission6Action(state, "place-slide", "drop");
   assert.equal(state.step, "slide_in_machine");
   const resumedLoaded = logic.applyMission6Action(state, "resume-safe");
-  assert.equal(resumedLoaded.step, "stained_slides_ready");
-  assert.equal(resumedLoaded.stainingComplete, true);
+  assert.equal(resumedLoaded.step, "slide_in_machine");
+  assert.equal(resumedLoaded.stainingComplete, false);
   assert.equal(resumedLoaded.complete, false);
 
   state = logic.applyMission6Action(state, "advance");
   const resumedStaining = logic.applyMission6Action(state, "resume-safe");
-  assert.equal(resumedStaining.step, "stained_slides_ready");
+  assert.equal(resumedStaining.step, "staining");
   assert.equal(resumedStaining.slideInMachine, true);
-  assert.equal(resumedStaining.stainingComplete, true);
+  assert.equal(resumedStaining.stainingComplete, false);
+
+  state = logic.applyMission6Action(state, "advance");
+  const resumedReady = logic.applyMission6Action(state, "resume-safe");
+  assert.equal(resumedReady.step, "stained_slides_ready");
+  assert.equal(resumedReady.stainingComplete, true);
+  assert.equal(resumedReady.complete, true);
 });
 
 test("Mission 7 hint is repeatable and only Slide B unlocks completion", () => {
@@ -268,6 +274,8 @@ test("Mission 7 hint is repeatable and only Slide B unlocks completion", () => {
   assert.equal(state.selectedSlide, null);
   state = logic.applyMission7Action(state, "toggle-hint");
   assert.equal(state.hintOpen, false);
+  state = logic.applyMission7Action(state, "show-hint");
+  assert.equal(state.hintOpen, true);
 
   state = logic.applyMission7Action(state, "choose", "slide-a");
   assert.equal(state.selectedSlide, "slide-a");

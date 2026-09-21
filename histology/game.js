@@ -697,7 +697,7 @@
         </div>`;
     }
     if (step === "slide_in_machine") {
-      return `<div class="staining-stage"><div class="staining-machine-stack"><img src="assets/mission-6/staining-machine-slide-loaded.png" alt="Unstained slide locked safely inside the staining machine"><img class="carrier-overlay" src="assets/mission-6/slide-carrier-loaded.png" alt="Carrier holding the patient slide"></div><div><h2>Slide loaded</h2><p>The machine starts only after the slide is safely in place.</p></div></div>`;
+      return `<div class="staining-stage"><div class="staining-machine-stack"><img src="assets/mission-6/staining-machine-slide-loaded.png" alt="Unstained slide locked safely inside the staining machine"><img class="carrier-overlay" src="assets/mission-6/slide-carrier-loaded.png" alt="Carrier holding the patient slide"></div><div><h2>Slide loaded</h2><p>The machine is ready. Press NEXT when you have finished looking.</p></div></div>`;
     }
     if (step === "staining") {
       return `<div class="staining-stage active"><div class="staining-machine-stack"><img src="assets/mission-6/staining-machine-active.png" alt="Staining machine active with the patient slide inside"><img class="colour-streams" src="assets/mission-6/stain-colour-streams.png" alt="Gentle purple, pink, green, yellow, blue and violet colour streams inside the machine"></div><div><p class="process-word" aria-label="Whoosh">WHOOSH…</p><h2>Histological staining</h2><p>Colour is added so the different tissue parts can be seen more clearly.</p></div></div>`;
@@ -708,8 +708,8 @@
   function mission6GuideText() {
     const step = state.mission6.step;
     if (step === "transfer_ready") return state.mission6.slideSelected ? "Now choose the Staining Machine loading area." : "Select or drag the unstained slide into the Staining Machine.";
-    if (step === "slide_in_machine") return "The slide is safely loaded and the staining sequence is starting.";
-    if (step === "staining") return "WHOOSH… Colour is moving through the staining machine.";
+    if (step === "slide_in_machine") return "The slide is safely loaded. Press NEXT when you are ready to start staining.";
+    if (step === "staining") return "WHOOSH… Colour is moving through the staining machine. Press NEXT when you are ready to see the result.";
     return "Great! Staining adds colour to the tissue so we can see its different parts more clearly. Your stained slides are ready!";
   }
 
@@ -722,7 +722,7 @@
         <div class="mission-title-card"><p class="eyebrow">HISTOLOGICAL STAINING</p><h1>Add Colour to the Tissue</h1><p>“Our tissue is on the slide, but we need to add colour so we can see the cells more clearly.”</p><p>“Drag the slide into the Staining Machine!”</p></div>
         ${caseIdentityChip()}
         ${mission6ProcessView()}
-        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission6-next" ${state.mission6.complete ? "" : "disabled"}>NEXT: Can you find the H&amp;E slide?</button></div>
+        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission6-next" ${state.mission6.step === "transfer_ready" ? "disabled" : ""}>${state.mission6.step === "stained_slides_ready" ? "NEXT: Can you find the H&amp;E slide?" : "NEXT →"}</button></div>
         ${mission2Feedback()}
       </div></main>
       <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission6GuideText()}</p></div></footer>`;
@@ -740,9 +740,9 @@
     const selected = state.mission7.selectedSlide === id;
     const correct = state.mission7.correctSelected && id === L.MISSION7_CORRECT_CHOICE;
     const hint = state.mission7.hintOpen && id === "slide-b" && !state.mission7.correctSelected;
-    return `<button class="he-slide-card ${correct ? "correct" : ""}" type="button" data-action="mission7-choice" data-value="${id}" ${state.mission7.correctSelected ? "disabled" : ""} aria-pressed="${selected}">
+    return `<button class="he-slide-card ${hint ? "hinted" : ""} ${correct ? "correct" : ""}" type="button" data-action="mission7-choice" data-value="${id}" ${state.mission7.correctSelected ? "disabled" : ""} aria-pressed="${selected}">
       <span class="he-image-wrap"><img class="he-tissue-image" src="assets/mission-7/${image}" alt="${alt}">${hint ? `<span class="he-callout nuclei"><img src="assets/mission-7/he-hint-nuclei-callout.svg" alt="Callout pointing to representative blue-purple nuclei"></span><span class="he-callout pink"><img src="assets/mission-7/he-hint-pink-tissue-callout.svg" alt="Callout pointing to representative pink surrounding tissue"></span>` : ""}</span>
-      <strong>${label}</strong>${correct ? `<span class="correct-label">✓ Correct — H&amp;E</span>` : ""}
+      <strong>${label}</strong>${hint ? `<span class="hint-match">★ Matches both H&amp;E colour clues</span>` : ""}${correct ? `<span class="correct-label">✓ Correct — H&amp;E</span>` : ""}
     </button>`;
   }
 
@@ -753,7 +753,7 @@
         <div class="scene-shade" aria-hidden="true"></div>
         <div class="mission-title-card"><p class="eyebrow">HAEMATOXYLIN &amp; EOSIN (H&amp;E) STAINING</p><h1>Find the H&amp;E Slide</h1><p>“Which one is the H&amp;E slide?”</p></div>
         ${caseIdentityChip()}
-        <div class="he-toolbar"><button class="hint-button" type="button" data-action="mission7-hint" aria-expanded="${state.mission7.hintOpen}">${state.mission7.hintOpen ? "Hide Hint" : "Hint"}</button>${state.mission7.hintOpen ? `<p class="he-hint" role="note">H&amp;E usually makes the nuclei blue-purple and much of the surrounding tissue pink.</p>` : ""}</div>
+        <div class="he-toolbar"><div class="he-clue-guide" role="note"><strong>H&amp;E clue:</strong><span>Blue-purple nuclei</span><span>Lots of pink surrounding tissue</span><em>Find the slide with both clues.</em></div><button class="hint-button" type="button" data-action="mission7-hint" aria-expanded="${state.mission7.hintOpen}">${state.mission7.hintOpen ? "Hide slide hint" : "Show hint on slides"}</button>${state.mission7.hintOpen ? `<p class="he-hint" role="note">H&amp;E usually makes the nuclei blue-purple and much of the surrounding tissue pink. The highlighted slide has both clues.</p>` : ""}</div>
         <div class="he-slide-grid" aria-label="Choose the H and E stained slide">
           ${mission7SlideCard("slide-a", "slide-a-green-yellow.png", "Slide A – Green + Yellow", "Green-dominant skin tissue with yellow structures")}
           ${mission7SlideCard("slide-b", "slide-b-he-purple-pink.png", "Slide B – Purple + Pink", "Skin tissue with blue-purple nuclei and abundant pink surrounding tissue")}
@@ -855,7 +855,6 @@
       requestAnimationFrame(() => app.querySelector(selector)?.focus());
     }
     scheduleMission5Sequence();
-    scheduleMission6Sequence();
   }
 
   function scheduleMission5Sequence() {
@@ -869,22 +868,6 @@
       state.feedbackType = "good";
       save(); announce(state.feedback); render();
     }, reduced ? 40 : 700);
-  }
-
-  function scheduleMission6Sequence() {
-    if (state.screen !== "mission6" || !["slide_in_machine", "staining", "stained_slides_ready"].includes(state.mission6.step)) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    sequenceTimer = setTimeout(() => {
-      state.mission6 = L.applyMission6Action(state.mission6, "advance");
-      const messages = {
-        staining: "WHOOSH… The slide is travelling through the staining machine.",
-        stained_slides_ready: "DING! Great! Staining adds colour to the tissue so we can see its different parts more clearly.",
-        complete: "Your stained slides are ready!"
-      };
-      state.feedback = messages[state.mission6.step] || state.feedback;
-      state.feedbackType = "good";
-      save(); announce(state.feedback); render();
-    }, reduced ? 50 : 900);
   }
 
   function setFeedback(message, type = "") {
@@ -1226,10 +1209,21 @@
       state.feedbackType = "good";
       save(); announce(state.feedback); render(); return;
     }
-    if (action === "mission6-next" && state.mission6.complete) {
-      state.mission6Complete = true;
-      state.screen = "mission6-complete";
-      save(); announce("Mission 6 complete."); render(); return;
+    if (action === "mission6-next" && state.mission6.step !== "transfer_ready") {
+      if (state.mission6.complete || state.mission6.step === "stained_slides_ready") {
+        state.mission6Complete = true;
+        state.screen = "mission6-complete";
+        save(); announce("Mission 6 complete."); render(); return;
+      }
+      state.mission6 = L.applyMission6Action(state.mission6, "advance");
+      const messages = {
+        staining: "WHOOSH… The slide is travelling through the staining machine.",
+        stained_slides_ready: "DING! Great! Staining adds colour to the tissue so we can see its different parts more clearly. Your stained slides are ready!"
+      };
+      state.feedback = messages[state.mission6.step] || state.feedback;
+      state.feedbackType = "good";
+      pendingFocus = '[data-action="mission6-next"]';
+      save(); announce(state.feedback); render(); return;
     }
     if (action === "review-mission6") {
       state.currentMission = 6;
@@ -1251,6 +1245,7 @@
     }
     if (action === "mission7-choice") {
       state.mission7 = L.applyMission7Action(state.mission7, "choose", value);
+      if (value !== L.MISSION7_CORRECT_CHOICE) state.mission7 = L.applyMission7Action(state.mission7, "show-hint");
       if (value === "slide-a") state.feedback = "Not this one. H&E doesn't normally look green and yellow. Try again!";
       if (value === "slide-c") state.feedback = "Nearly! Look for the slide that also has lots of pink. Try again!";
       if (value === L.MISSION7_CORRECT_CHOICE) state.feedback = "YES! You found the H&E slide!";

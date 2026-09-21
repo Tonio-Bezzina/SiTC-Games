@@ -32,9 +32,9 @@ Show the unstained slide on a clean laboratory bench beside a clearly labelled *
 1. Display both instruction lines.
 2. Activate the unstained slide and the staining-machine drop zone.
 3. The player drags the slide into the machine, or uses tap/select-then-target or keyboard controls.
-4. Once correctly placed, lock the slide in the machine and begin automatically.
-5. Display **WHOOSH…** while a short, colourful staining sequence shows the slide travelling through the machine.
-6. End with visible **DING!** and reveal the finished stained-slide state or the tray that will lead to Mission 7.
+4. Once correctly placed, lock the slide in the machine and pause so the player can inspect the loaded state. Enable **NEXT**.
+5. When the player presses **NEXT**, display **WHOOSH…** while a colourful staining state shows the slide travelling through the machine. Pause again until the player presses **NEXT**.
+6. On the next press, show visible **DING!** and reveal the finished stained-slide state or the tray that will lead to Mission 7.
 7. Show the scientist explanation, followed by **“Your stained slides are ready!”**
 8. Enable **NEXT: Can you find the H&E slide?**
 
@@ -45,13 +45,14 @@ Dropping outside the machine returns the slide to its safe starting position wit
 - Use colour movement to communicate staining, but do not flash or rapidly alternate the entire screen.
 - Keep **WHOOSH…** and **DING!** as visible words even if optional sound is ever added later.
 - Sound is not required and no information may depend on it.
+- Never move to the next teaching state automatically. Each transition after loading is controlled by the visible **NEXT** button so the player has time to read and inspect the scene.
 - Reduced motion uses static labelled states or a gentle crossfade:
 
 ```text
 Unstained slide → Inside staining machine → Stained slides ready
 ```
 
-- If interrupted, restore either the unstained slide at the bench or the completed stained-slide state. Never lose or duplicate the case slide.
+- If interrupted, restore the exact player-controlled stage. Never lose or duplicate the case slide.
 
 ## State model
 
@@ -81,7 +82,7 @@ Reserve vivid purple, pink, green, yellow, blue, and violet for the staining vis
 ## Completion criteria and checks
 
 - The only required action is putting the unstained slide into the staining machine.
-- The machine starts automatically only after a valid placement.
+- The machine can advance only after a valid placement, and every later state change requires the player to press **NEXT**.
 - **WHOOSH…** and **DING!** appear visibly in the correct order.
 - Both scientist messages appear after completion.
 - The output is ready for the three-choice H&E recognition mission.

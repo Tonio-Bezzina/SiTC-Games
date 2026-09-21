@@ -65,8 +65,8 @@ Reuse `shared/journey-down-arrow.svg`, the scientist success state, and only the
    - Slide B – Purple + Pink
    - Slide C – Blue + Violet
 4. Keep each label attached to its image through responsive reflow. Use semantic choice controls with descriptive alt text that does not reveal correctness.
-5. Provide an optional, repeatable, non-submitting Hint at every level. Announce the exact hint and point to representative nuclei and pink tissue within Slide B using the supplied callouts without writing “correct.”
-6. Slide A and Slide C each use their own exact retry feedback and preserve all choices.
+5. Keep an always-visible clue guide that tells the player to look for both blue-purple nuclei and lots of pink surrounding tissue. Provide an optional, repeatable, non-submitting **Show hint on slides** control at every level. When opened, announce the exact hint, visibly highlight Slide B, point to representative nuclei and pink tissue with the supplied callouts, and label it **“Matches both H&E colour clues”** without writing “correct.”
+6. Slide A and Slide C each use their own exact retry feedback, preserve all choices, and automatically open the stronger visual hint.
 7. Only Slide B is correct. Show **“YES! You found the H&E slide!”**, mark it with text/icon and success color, and lock the answer.
 8. Enable **FINISH** only after Slide B is selected.
 
@@ -96,7 +96,7 @@ Do not declare the game complete until:
 - All Missions 1–6 regression tests and browser smoke paths pass.
 - Slide B is the only correct answer and contains the required blue-purple nuclei/pink tissue appearance.
 - A and C each show their exact distinct retry feedback.
-- Hint never submits, never penalizes, and works repeatedly with accessible callouts.
+- The always-visible clue is clear, and the stronger visual hint never submits, never penalizes, works repeatedly with accessible callouts, and opens automatically after a wrong answer.
 - FINISH is disabled until the correct slide is selected.
 - The full completion screen exactly reproduces the supplied journey and messages.
 - Refresh works before selection, after wrong answers, after correct selection, and on the final screen.

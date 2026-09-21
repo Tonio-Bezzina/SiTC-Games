@@ -39,9 +39,9 @@ The three options must share the same specimen framing, magnification style, car
 ## Interaction flow
 
 1. Present the question and all three slide cards.
-2. Provide an optional **Hint** control at every level.
-3. Selecting Slide A displays its exact feedback and keeps all cards available.
-4. Selecting Slide C displays its exact feedback and keeps all cards available.
+2. Keep a short clue guide visible: look for both blue-purple nuclei and lots of pink surrounding tissue. Provide an optional **Show hint on slides** control at every level.
+3. Selecting Slide A displays its exact feedback, opens the visual hint automatically, and keeps all cards available.
+4. Selecting Slide C displays its exact feedback, opens the visual hint automatically, and keeps all cards available.
 5. Selecting Slide B displays **“YES! You found the H&E slide!”**, marks it correct with text/icon and colour, and locks the answer.
 6. Enable **FINISH**.
 7. Activating **FINISH** opens the mission-complete screen described below.
@@ -50,7 +50,7 @@ Do not shuffle the labels away from their supplied colours. If the visual card o
 
 ## Hint behaviour
 
-The hint is optional and may be opened repeatedly without penalty. It must not submit an answer. On open, announce the exact hint text and visually point to representative blue-purple nuclei and pink tissue within Slide B without revealing it through a word such as “correct.”
+The clue guide is always visible and the stronger visual hint is optional. It may be opened repeatedly without penalty and must not submit an answer. Open it automatically after an incorrect choice. On open, announce the exact hint text, visibly highlight Slide B, point to representative blue-purple nuclei and pink tissue within it, and label it **“Matches both H&E colour clues”** without revealing it through a word such as “correct.”
 
 In reduced motion, use static outlines and callouts rather than pulsing.
 
@@ -124,7 +124,7 @@ Scientific slide colours must remain clear and distinct. In the correct slide, u
 - Slide B is the only correct answer.
 - Slide B visibly contains blue-purple nuclei and abundant pink tissue.
 - Each distractor triggers its own exact supplied feedback.
-- The hint is optional, non-submitting, and accessible.
+- The always-visible clue and optional visual hint are non-submitting and accessible; an incorrect answer opens the visual hint automatically.
 - Incorrect answers preserve all three choices.
 - **FINISH** remains disabled until Slide B is selected.
 - The completion screen reproduces the supplied journey, messages, and buttons.
