@@ -210,6 +210,18 @@ a {
     border-radius: 50%;
 }
 
+.blood-drop-icon {
+    display: block;
+
+    width: 1em;
+    height: 1.2em;
+}
+
+.large-lab-icon .blood-drop-icon {
+    width: 62px;
+    height: 74px;
+}
+
 .header-kicker {
     margin:
         0 0 5px;
@@ -351,6 +363,11 @@ main {
         filter 0.25s ease,
         opacity 0.25s ease,
         transform 0.25s ease;
+}
+
+.transfusion-badge .blood-drop-icon {
+    width: 48px;
+    height: 58px;
 }
 
 
@@ -611,6 +628,11 @@ main {
         #fff0f3;
 
     border-radius: 22px;
+}
+
+.mission-art .blood-drop-icon {
+    width: clamp(50px, 7vw, 76px);
+    height: auto;
 }
 
 .mission-content h3 {

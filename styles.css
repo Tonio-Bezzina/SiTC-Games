@@ -567,6 +567,11 @@ main {
 }
 
 .lab-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
     font-size: 3.4rem;
 
     filter: grayscale(1);
@@ -576,6 +581,13 @@ main {
     transition:
         filter 0.2s ease,
         opacity 0.2s ease;
+}
+
+.lab-icon-image {
+    display: block;
+
+    width: 54px;
+    height: 54px;
 }
 
 

@@ -47,7 +47,7 @@ const labs = [
 
         name: "Transfusion",
 
-        icon: "🩸",
+        iconAsset: "assets/icons/transfusion-blood-drop.svg",
 
         description:
             "Discover how biomedical scientists find safe blood for patients.",
@@ -479,9 +479,14 @@ function createLabCard(
         "lab-badge";
 
 
+    const iconMarkup = lab.iconAsset
+        ? `<img class="lab-icon-image" src="${lab.iconAsset}" alt="">`
+        : lab.icon;
+
+
     badge.innerHTML = `
         <span class="lab-icon">
-            ${lab.icon}
+            ${iconMarkup}
         </span>
 
         <span class="badge-mark">

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 120" role="img" aria-labelledby="title">
+  <title id="title">Blood drop</title>
+  <defs>
+    <linearGradient id="drop" x1="24" y1="18" x2="78" y2="104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff6574"/>
+      <stop offset="0.52" stop-color="#e62f4a"/>
+      <stop offset="1" stop-color="#ad1733"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#drop)" d="M50 4C43 20 14 51 14 76a36 36 0 0 0 72 0C86 51 57 20 50 4Z"/>
+  <path fill="none" stroke="#ffb4bd" stroke-linecap="round" stroke-width="7" d="M32 68c1-10 7-20 15-31" opacity="0.72"/>
+</svg>

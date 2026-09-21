@@ -1316,6 +1316,11 @@ a:focus-visible {
     font-size: clamp(2.5rem, 7vw, 5rem);
     animation: badge-spin 1.25s cubic-bezier(.2,.8,.2,1) both, badge-float 2.2s 1.3s ease-in-out infinite;
 }
+.badge-reveal .blood-drop-icon {
+    display: block;
+    width: 52%;
+    height: auto;
+}
 @keyframes badge-spin { from { transform: rotateY(900deg) scale(.2); opacity: 0; } to { transform: rotateY(0) scale(1); opacity: 1; } }
 @keyframes badge-float { 50% { transform: translateY(-7px) rotate(-2deg); } }
 .completion-screen h1 { z-index: 2; margin: clamp(11px, 2vh, 20px) 0 4px; color: var(--navy); font-size: clamp(1.45rem, 3vw, 2.7rem); }

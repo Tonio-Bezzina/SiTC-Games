@@ -2,7 +2,11 @@
   "use strict";
 
   const LABS = {
-    transfusion: { name: "Transfusion", icon: "🩸", home: "../transfusion/" },
+    transfusion: {
+      name: "Transfusion",
+      iconAsset: "../assets/icons/transfusion-blood-drop.svg",
+      home: "../transfusion/"
+    },
     chemistry: { name: "Clinical Chemistry", icon: "🧪", home: "../chemistry/" },
     bacteriology: { name: "Bacteriology", icon: "🦠", home: "../bacteriology/main/" },
     haematology: { name: "Haematology", icon: "🔬", home: "../haematology/" },
@@ -141,7 +145,14 @@
 
     elements.title.textContent = `${lab.name} Cases`;
     elements.description.textContent = "Scientist-guided cases are always available and do not affect game progress.";
-    elements.icon.textContent = lab.icon;
+    if (lab.iconAsset) {
+      const iconImage = document.createElement("img");
+      iconImage.src = lab.iconAsset;
+      iconImage.alt = "";
+      elements.icon.replaceChildren(iconImage);
+    } else {
+      elements.icon.textContent = lab.icon;
+    }
     elements.labBack.href = lab.home;
     elements.labBack.textContent = `← ${lab.name} Laboratory`;
 

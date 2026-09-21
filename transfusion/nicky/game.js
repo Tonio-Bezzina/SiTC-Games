@@ -1333,7 +1333,9 @@ function renderCompletion() {
     screenHost.innerHTML = `
         <section class="screen completion-screen">
             <div class="confetti" aria-hidden="true">${confetti}</div>
-            <div class="badge-reveal" aria-label="Transfusion Laboratory badge">🩸</div>
+            <div class="badge-reveal" aria-label="Transfusion Laboratory badge">
+                <img class="blood-drop-icon" src="../../assets/icons/transfusion-blood-drop.svg" alt="">
+            </div>
             <h1>Transfusion Badge Earned!</h1>
             <p>You identified ${state.patient.name}'s ${bloodGroupName(state.bloodGroup)} group and issued compatible red cells.</p>
             <div class="completion-actions">
