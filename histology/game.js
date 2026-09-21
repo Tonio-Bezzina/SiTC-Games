@@ -556,7 +556,7 @@
           ${caseIdentityChip()}
           <img class="processing-path" src="assets/mission-3/processing-path-diagram.svg" alt="Tissue in cassette, then processing and embedding, then FFPE wax block">
           ${mission3ProcessView()}
-          <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission3-next" ${state.mission3.complete ? "" : "disabled"}>NEXT →</button></div>
+          <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission3-next" ${state.mission3.step === "question" ? "disabled" : ""}>NEXT →</button></div>
           ${mission2Feedback()}
         </div>
       </main>
@@ -854,26 +854,9 @@
       pendingFocus = null;
       requestAnimationFrame(() => app.querySelector(selector)?.focus());
     }
-    scheduleMission3Sequence();
     scheduleMission4Sequence();
     scheduleMission5Sequence();
     scheduleMission6Sequence();
-  }
-
-  function scheduleMission3Sequence() {
-    if (state.screen !== "mission3" || !["processing", "embedding", "reveal"].includes(state.mission3.step)) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    sequenceTimer = setTimeout(() => {
-      state.mission3 = L.applyMission3Action(state.mission3, "advance");
-      const messages = {
-        embedding: "The tissue is prepared. Now it is positioned in an embedding mould and surrounded with wax.",
-        reveal: "The wax has set and one FFPE block has been created.",
-        complete: "Look! We've made a wax block!"
-      };
-      state.feedback = messages[state.mission3.step] || state.feedback;
-      state.feedbackType = "good";
-      save(); announce(state.feedback); render();
-    }, reduced ? 40 : 850);
   }
 
   function scheduleMission4Sequence() {
@@ -1128,10 +1111,21 @@
       }
       save(); announce(state.feedback); render(); return;
     }
-    if (action === "mission3-next" && state.mission3.complete) {
-      state.mission3Complete = true;
-      state.screen = "mission3-complete";
-      save(); announce("Mission 3 complete."); render(); return;
+    if (action === "mission3-next" && state.mission3.step !== "question") {
+      if (state.mission3.complete || state.mission3.step === "reveal") {
+        state.mission3Complete = true;
+        state.screen = "mission3-complete";
+        save(); announce("Mission 3 complete."); render(); return;
+      }
+      state.mission3 = L.applyMission3Action(state.mission3, "advance");
+      const messages = {
+        embedding: "The tissue is prepared. Now it is positioned in an embedding mould and surrounded with wax.",
+        reveal: "Look! We've made a wax block!"
+      };
+      state.feedback = messages[state.mission3.step] || state.feedback;
+      state.feedbackType = "good";
+      pendingFocus = '[data-action="mission3-next"]';
+      save(); announce(state.feedback); render(); return;
     }
     if (action === "review-mission3") {
       state.currentMission = 3;

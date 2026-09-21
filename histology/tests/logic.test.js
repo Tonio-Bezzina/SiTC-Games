@@ -120,17 +120,24 @@ test("Mission 3 accepts only the processor and embedding centre", () => {
   state = logic.applyMission3Action(state, "advance");
   assert.equal(state.step, "reveal");
   assert.equal(state.blockCreated, true);
+  assert.equal(state.complete, true);
   state = logic.applyMission3Action(state, "advance");
-  assert.equal(state.step, "complete");
+  assert.equal(state.step, "reveal");
   assert.equal(state.complete, true);
 });
 
-test("Mission 3 interrupted processing resumes at one safe wax-block reveal", () => {
+test("Mission 3 preserves player-controlled steps and restores a completed reveal", () => {
   const processing = { ...logic.createMission3State(), choice: logic.MISSION3_CORRECT_CHOICE, step: "processing" };
-  const resumed = logic.applyMission3Action(processing, "resume-safe");
-  assert.equal(resumed.step, "reveal");
-  assert.equal(resumed.blockCreated, true);
-  assert.equal(resumed.complete, false);
+  const resumedProcessing = logic.applyMission3Action(processing, "resume-safe");
+  assert.equal(resumedProcessing.step, "processing");
+  assert.equal(resumedProcessing.blockCreated, false);
+  assert.equal(resumedProcessing.complete, false);
+
+  const reveal = { ...logic.createMission3State(), choice: logic.MISSION3_CORRECT_CHOICE, step: "reveal", blockCreated: true };
+  const resumedReveal = logic.applyMission3Action(reveal, "resume-safe");
+  assert.equal(resumedReveal.step, "reveal");
+  assert.equal(resumedReveal.blockCreated, true);
+  assert.equal(resumedReveal.complete, true);
 });
 
 test("Mission 4 accepts only the microtome and reveals a section in order", () => {

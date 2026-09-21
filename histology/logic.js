@@ -62,11 +62,11 @@
     }
     if (action === "advance") {
       if (state.step === "processing") return { ...state, step: "embedding" };
-      if (state.step === "embedding") return { ...state, step: "reveal", blockCreated: true };
-      if (state.step === "reveal") return { ...state, step: "complete", blockCreated: true, complete: true };
+      if (state.step === "embedding") return { ...state, step: "reveal", blockCreated: true, complete: true };
+      if (state.step === "reveal") return { ...state, blockCreated: true, complete: true };
     }
-    if (action === "resume-safe" && ["processing", "embedding"].includes(state.step)) {
-      return { ...state, step: "reveal", blockCreated: true };
+    if (action === "resume-safe" && ["reveal", "complete"].includes(state.step)) {
+      return { ...state, step: "reveal", blockCreated: true, complete: true };
     }
     return state;
   }

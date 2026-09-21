@@ -42,7 +42,7 @@ Equipment silhouettes must be distinct, but the player must still use the visibl
 1. Present the question, cassette, and three equipment choices.
 2. Selecting the microtome or staining machine shows the exact incorrect feedback and keeps all options available.
 3. Selecting **Processor & Embedding Centre** locks the equipment choice and shows the exact correct feedback.
-4. Run a short explanatory sequence:
+4. Show the explanatory sequence one stage at a time. Do not advance on a timer. At each stage, leave the content on screen until the player has finished reading and presses **NEXT**:
    1. cassette enters the tissue processor;
    2. a compact processing indicator shows that the tissue is prepared;
    3. tissue is positioned in an embedding mould;
@@ -50,13 +50,13 @@ Equipment silhouettes must be distinct, but the player must still use the visibl
    5. the wax sets;
    6. a completed FFPE block appears.
 5. Show the reveal heading, expansion of **FFPE**, and scientist line.
-6. Enable **NEXT** only after the block reveal is complete.
+6. Pause on the completed FFPE block. Keep **NEXT** available so the player decides when to leave Mission 3.
 
 This sequence is a simplified educational representation. Do not introduce chemical recipes, durations, temperatures, or additional procedural steps not supplied in the brief.
 
-## Animation behaviour
+## Player-controlled sequence behaviour
 
-The animation should last only long enough to explain the transformation. Use gentle movement, a progress path, and before/after states. Do not use flashing or require interaction during the animation.
+Use gentle transitions, a progress path, and clear before/after states. Never move to the next scientific stage automatically. The player must press **NEXT** after reading each stage.
 
 Reduced-motion mode must show three static labelled panels or an immediate crossfade:
 
@@ -64,7 +64,7 @@ Reduced-motion mode must show three static labelled panels or an immediate cross
 Tissue in cassette → Process and embed in wax → FFPE wax block
 ```
 
-If interrupted, restore either the unprocessed cassette state or the completed wax-block state; never duplicate or lose the tissue.
+If interrupted, restore the exact player-controlled stage; never duplicate or lose the tissue.
 
 ## State model
 
@@ -73,7 +73,7 @@ question → equipment_selected → processing
   → embedding → wax_block_reveal → complete
 ```
 
-Persist selected equipment, animation step, reduced-motion preference, whether the wax block has been created, and completion. Reloading after the correct choice may safely resume at the reveal rather than replaying a partial animation.
+Persist selected equipment, the current player-controlled step, reduced-motion preference, whether the wax block has been created, and completion. Reloading must restore the same stage without advancing it.
 
 ## Visual and interface specification
 
@@ -88,7 +88,7 @@ The tissue block should use pale translucent cream paraffin with a clearly visib
 - Announce answer feedback and the final wax-block reveal with `aria-live`.
 - Provide a text alternative for every visual processing step.
 - Do not rely on movement, sound, or colour to explain the transformation.
-- No input is required while the animation runs.
+- Every explanatory stage remains available until the player activates **NEXT**.
 
 ## Completion criteria and checks
 
@@ -97,4 +97,4 @@ The tissue block should use pale translucent cream paraffin with a clearly visib
 - The transformation visibly begins with the cassette and ends with one FFPE wax block.
 - The full term **Formalin-Fixed Paraffin-Embedded Tissue** is displayed.
 - Reduced-motion mode conveys the same scientific sequence.
-- **NEXT** is disabled until the wax-block reveal.
+- **NEXT** advances each explanatory stage only when activated by the player, then remains available on the final wax-block reveal.

@@ -53,19 +53,19 @@ Reuse existing shared shell, guide, progress, hint, success, and orientation ass
 3. Present the exact question and three labelled equipment choices.
 4. Microtome and Staining Machine use the exact retry feedback and preserve all options.
 5. **Processor & Embedding Centre** is the only correct answer and uses the exact correct feedback.
-6. After selection, run the specified explanatory sequence: cassette enters the processor, preparation is indicated, tissue enters an embedding mould, wax fills the mould, wax sets, and one FFPE block is revealed.
+6. After selection, show the specified explanatory sequence one stage at a time: cassette enters the processor, preparation is indicated, tissue enters an embedding mould, wax fills the mould, wax sets, and one FFPE block is revealed. Never advance on a timer; require the player to press **NEXT** after reading each stage.
 7. Use the supplied processing path and equipment-state assets so every scientific transformation has a clear labelled visual state.
 8. Do not introduce chemical recipes, temperatures, durations, or unsupported procedural detail.
 9. Reveal **WAX BLOCK**, **FFPE Block – Formalin-Fixed Paraffin-Embedded Tissue**, and **“Look! We've made a wax block!”**
-10. Enable **NEXT** only after the final block is visible and announced.
+10. Pause on the final FFPE block with **NEXT** available. The game must not leave this reveal until the player presses **NEXT**.
 
 ## State, motion, and integration
 
 - Extend the versioned save schema without breaking earlier saves.
-- Persist the choice, safe animation step, reduced-motion path, block creation, completion, and current screen.
-- An interrupted animation must restore either the intact cassette before processing or the completed block; never duplicate or lose tissue.
+- Persist the choice, exact player-controlled step, reduced-motion path, block creation, completion, and current screen.
+- An interrupted sequence must restore the same stage without automatically advancing; never duplicate or lose tissue.
 - Reduced motion must show the full teaching sequence as static labelled states: cassette → process/embed → FFPE block.
-- Do not require interaction during animation.
+- Require an explicit **NEXT** activation to advance each explanatory stage.
 - Keep earlier missions reviewable and their tests passing.
 - Until Mission 4 exists, route **NEXT** to an honest Mission 3-complete panel naming **Cut Very Thin Sections** as the future mission. Replace only that placeholder when Mission 4 is built.
 - Do not award full Histology completion.
@@ -88,8 +88,8 @@ Do not move to Mission 4 until:
 - The visual sequence begins with one cassette and ends with one FFPE block.
 - Every intermediate state has visible explanatory text and an accessible announcement.
 - FFPE is expanded exactly as specified.
-- **NEXT** stays disabled until reveal completion.
-- Refresh is safe before selection, during the sequence, and after reveal.
+- **NEXT** advances processing to embedding, embedding to the FFPE reveal, and the reveal to Mission 3 completion only when the player activates it.
+- Refresh restores the exact stage before selection, during the sequence, and after reveal.
 - Reduced motion communicates the same scientific sequence.
 - Keyboard navigation, focus, layouts, console, and all asset requests pass.
 
