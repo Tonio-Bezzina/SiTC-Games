@@ -105,7 +105,7 @@
   function initialState() {
     return {
       version: 1, age: null, mission: 0, completed: [], patientCase: null,
-      feedback: "", ppe: [], selectedPpe: null,
+      feedback: "", ppe: [], selectedPpe: null, mission4SolutionShown: false,
       mission5: { step:0, swabOpen:false, plateOpen:false, inoculated:false, swabClosed:false, loopLoaded:false, streakStage:0, selected:null },
       mission6: { step:0, incubatorOpen:false, platePlaced:false, incubatorClosed:false, incubationStarted:false, incubationComplete:false, reopened:false, inspected:false, selected:null, complete:false },
       mission7: {
@@ -129,5 +129,25 @@
     return state.completed.includes(mission - 1);
   }
 
-  return { LEVELS, GRAM_STEPS, randomInteger, createDob, createPatientId, isPatientIdValid, identityMismatchFields, createCase, initialState, canEnterMission };
+  function dragContactPoints(pointer, visual = {}, tip = null) {
+    const points = [{ x: pointer.x, y: pointer.y }];
+    if (tip && Number.isFinite(tip.x) && Number.isFinite(tip.y)) {
+      const width = Number(visual.width) || 0;
+      const height = Number(visual.height) || 0;
+      points.push({
+        x: pointer.x + (tip.x - 0.5) * width,
+        y: pointer.y + (tip.y - 0.5) * height
+      });
+    }
+    return points;
+  }
+
+  function dragTouchesRect(pointer, rect, visual, tip) {
+    return dragContactPoints(pointer, visual, tip).some(point =>
+      point.x >= rect.left && point.x <= rect.right &&
+      point.y >= rect.top && point.y <= rect.bottom
+    );
+  }
+
+  return { LEVELS, GRAM_STEPS, randomInteger, createDob, createPatientId, isPatientIdValid, identityMismatchFields, createCase, initialState, canEnterMission, dragContactPoints, dragTouchesRect };
 });

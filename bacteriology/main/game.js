@@ -12,6 +12,7 @@
   let missionTransitionTimer = null;
   let mission5Animating = false;
   let mission5AnimationTimer = null;
+  let activeNativeDrag = null;
   let mission6Timer = null;
   let mission7Timer = null;
   let mission9Timer = null;
@@ -38,6 +39,7 @@
   }
   let state = load();
   if (!("selectedPpe" in state)) state.selectedPpe = null;
+  if (!("mission4SolutionShown" in state)) state.mission4SolutionShown = false;
   if (!("sampleSelected" in state.matching)) state.matching.sampleSelected = false;
   const m5Defaults = L.initialState().mission5;
   const legacyM5 = state.mission5 || {};
@@ -138,6 +140,10 @@
     const current = state.mission;
     if (!state.completed.includes(current)) return;
     state.mission = current + 1;
+    if (state.mission === 3) {
+      state.matching.carrierOpen = true;
+      state.matching.clueSeen = true;
+    }
     state.feedback = ""; state.feedbackType = "";
     save(); render();
   }
@@ -168,7 +174,7 @@
     const controls = state.completed.includes(1)
       ? `<div class="mission-one-result" role="status" aria-live="polite"><div class="mission-one-result-card">${result}<div class="actions">${btn("Mission 2 →","continue","coral")}</div></div></div>`
       : ready ? `<div class="mission-one-result" role="status" aria-live="polite"><div class="mission-one-result-card">${result}<div class="actions">${btn("Enter the laboratory →","complete-1","coral")}</div></div></div>` : "";
-    return shell(`<div class="mission-one-title">${missionHeader(1,"Enter the lab",younger("Help Dr Mira prepare to enter the laboratory safely.","Choose the PPE needed for this task.","Select the appropriate PPE for handling this specimen."))}<div class="instruction">Drag an item to the scientist, or select it and then choose the scientist.</div></div><div class="ppe-scene" aria-label="Laboratory preparation room"><img class="ppe-background" src="assets/mission-1/preparation-room-background.png" alt="Laboratory preparation room"><button class="scientist-stack" data-action="apply-ppe" data-drop="ppe" aria-label="Scientist, PPE drop target. Select to apply the chosen item."><img class="scientist-state" src="assets/mission-1/${scientistFile}" alt="${scientistLabel}"></button>${item("coat","Lab coat","lab-coat-on-hook.png","ppe-coat")}${coatProxy}${item("hat","Hard hat","hard-hat-on-hook.png","ppe-hat")}<img class="ppe-countertop" src="assets/mission-1/ppe-countertop.png" alt="" aria-hidden="true">${item("gloves","Glove box; select a pair of blue gloves","gloves-box.png","ppe-gloves")}${item("glasses","Safety glasses","safety-glasses-container.png","ppe-glasses")}${item("visor","Face visor","face-visor-container.png","ppe-visor")}${controls}</div>`, "The right protection depends on the laboratory task. For this one, choose exactly two items.");
+    return shell(`<div class="mission-one-title">${missionHeader(1,"Enter the lab",younger("Help Dr Mira prepare to enter the laboratory safely.","Choose the PPE needed for this task.","Select the appropriate PPE for handling this specimen."))}<div class="instruction">Drag an item to the scientist, or select it and then choose the scientist.</div></div><div class="ppe-scene" aria-label="Laboratory preparation room"><img class="ppe-background" src="assets/mission-1/preparation-room-background.png" alt="Laboratory preparation room"><button class="scientist-stack" data-action="apply-ppe" data-drop="ppe" aria-label="Scientist, PPE drop target. Select to apply the chosen item."><img class="scientist-state" src="assets/mission-1/${scientistFile}" alt="${scientistLabel}"></button>${item("coat","Lab coat","lab-coat-on-hook.png","ppe-coat")}${coatProxy}${item("hat","Hard hat","hard-hat.png","ppe-hat")}<img class="ppe-countertop" src="assets/mission-1/ppe-countertop.png" alt="" aria-hidden="true">${item("gloves","Glove box; select a pair of blue gloves","gloves-box.png","ppe-gloves")}${item("glasses","Safety glasses","safety-glasses-container.png","ppe-glasses")}${item("visor","Face visor","face-visor-container.png","ppe-visor")}${controls}</div>`, "The right protection depends on the laboratory task. For this one, choose exactly two items.");
   }
 
   function mission2() {
@@ -181,7 +187,7 @@
     const info = SAMPLE_INFO[openSampleInfo];
     const infoDialog = info ? `<div class="sample-info-backdrop" data-action="close-sample-info"><section class="sample-info-dialog" role="dialog" aria-modal="true" aria-labelledby="sample-info-title"><button class="sample-info-close" data-action="close-sample-info" aria-label="Close sample information">×</button><img src="assets/mission-2/${info.file}" alt=""><div><div class="mission-label">Sample guide</div><h2 id="sample-info-title">${info.title}</h2><p><strong>What it is:</strong> ${info.what}</p><p><strong>Where it is used:</strong> ${info.use}</p></div></section></div>` : "";
     const completion = state.completed.includes(2) ? learning("Different infections require samples from different parts of the body.")+`<div class="actions">${btn("Mission 3 →","continue")}</div>` : "";
-    return shell(`<div class="mission-two-scene" aria-label="Inside the bacteriology laboratory"><img class="mission-two-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-two-title">${missionHeader(2,"What sample do we need?","Our patient has a sore throat. Which sample should the doctor take to look for bacteria that may be causing the infection?")}</div><div class="mission-two-feedback">${feedback()}${completion}</div><div class="mission-two-choices">${options.map(specimen).join("")}</div>${infoDialog}</div>`, "Think about where the patient's infection is. You can retry any choice.");
+    return shell(`<div class="mission-two-scene" aria-label="Inside the bacteriology laboratory"><img class="mission-two-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-two-title">${missionHeader(2,"What sample do we need?","Our patient has a <strong><u>sore throat</u></strong>. Which sample should the doctor take to look for bacteria that may be causing the infection?")}</div><div class="mission-two-feedback">${feedback()}${completion}</div><div class="mission-two-choices">${options.map(specimen).join("")}</div>${infoDialog}</div>`, "Think about where the patient's infection is. You can retry any choice.");
   }
 
   function fieldRows(person, mismatch = [], source = "") {
@@ -208,13 +214,13 @@
     const rejectedIndex = c.candidates.findIndex((_,index)=>index!==state.matching.accepted);
     const selected = state.matching.sampleSelected;
     const complete = state.matching.racked;
-    return `<div class="m3-transfer" aria-label="Accepted sample transfer"><div class="m3-transfer-heading"><div class="mission-label">Mission 3 of 10</div><h1>Matched! This sample belongs to Amelia.</h1><p>Move the accepted throat swab to the receiving and scanning rack.</p></div><aside class="m3-rejected" aria-label="Rejected sample set ${rejectedIndex+1} remains at reception"><strong>Rejected set ${rejectedIndex+1}</strong><span>Remains at reception</span><div><img src="assets/mission-2/throat-swab.png" alt="Rejected throat swab"><span class="m3-mini-paper" aria-hidden="true"></span></div></aside><button class="m3-accepted-sample ${selected?"selected":""}" data-action="toggle-accepted-sample" data-value="accepted" draggable="true" data-drag="rack" data-drag-image="assets/mission-2/throat-swab.png" aria-pressed="${selected}" aria-label="Accepted throat swab for ${e(accepted.name)}. Select it, or drag it to the receiving rack."><img src="assets/mission-2/throat-swab.png" alt="">${sampleLabel(accepted,[])}</button><button class="m3-rack ${selected?"active":""} ${complete?"ready":""}" data-action="rack-sample" data-drop="rack" aria-label="Bacteriology receiving and scanning rack${complete?", accepted sample scanned":". Select after choosing the accepted swab, or drop it here."}"><span>${complete?"✓ Accepted sample scanned":"Receiving / scanning rack"}</span><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i></button>${complete?`<div class="m3-complete-card" role="status"><p>Patient matched and sample received safely.</p>${learning("Patient details must be checked carefully so that results are reported for the correct patient.")}<div class="actions">${btn("Mission 4 →","complete-3","coral")}</div></div>`:""}</div>`;
+    const guidance = complete ? "" : `<div class="m3-transfer-guidance ${selected?"sample-selected":""}" aria-hidden="true"><svg viewBox="0 0 220 90"><path d="M12 63 C74 8 137 13 198 55"/><path d="M179 37 L201 56 L172 63"/></svg><span>Place the tube in the tube holder</span></div>`;
+    return `<div class="m3-transfer" aria-label="Accepted sample transfer"><div class="m3-transfer-heading"><div class="mission-label">Mission 3 of 10</div><h1>Matched! This sample belongs to Amelia.</h1><p>Move the accepted throat swab to the receiving and scanning rack.</p></div><aside class="m3-rejected" aria-label="Rejected sample set ${rejectedIndex+1} remains at reception"><strong>Rejected set ${rejectedIndex+1}</strong><span>Remains at reception</span><div><img src="assets/mission-2/throat-swab.png" alt="Rejected throat swab"><span class="m3-mini-paper" aria-hidden="true"></span></div></aside><button class="m3-accepted-sample ${selected?"selected":""}" data-action="toggle-accepted-sample" data-value="accepted" draggable="true" data-drag="rack" data-drag-image="assets/mission-2/throat-swab.png" aria-pressed="${selected}" aria-label="Accepted throat swab for ${e(accepted.name)}. Select it, or drag it to the receiving rack."><img src="assets/mission-2/throat-swab.png" alt="">${sampleLabel(accepted,[])}</button>${guidance}<button class="m3-rack ${selected?"active":""} ${complete?"ready":""}" data-action="rack-sample" data-drop="rack" aria-label="Bacteriology receiving and scanning rack${complete?", accepted sample scanned":". Select after choosing the accepted swab, or drop it here."}"><span>${complete?"✓ Accepted sample scanned":"Tube holder / scanning rack"}</span><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i><i aria-hidden="true"></i></button>${complete?`<div class="m3-complete-card" role="status"><p>Patient matched and sample received safely.</p>${learning("Patient details must be checked carefully so that results are reported for the correct patient.")}<div class="actions">${btn("Mission 4 →","complete-3","coral")}</div></div>`:""}</div>`;
   }
   function mission3() {
     const c = state.patientCase;
     const monitorMismatch = state.matching.mismatch;
     const background = `<img class="mission-three-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside the bacteriology laboratory">`;
-    if (!state.matching.carrierOpen) return shell(`<div class="mission-three-scene">${background}<div class="m3-opening-title">${missionHeader(3,"Match the patient","A specimen carrier has arrived at bacteriology reception.")}<div class="instruction">Compare the patient details on the monitor, sample label and request form.</div></div><button class="m3-carrier" data-action="open-carrier" aria-label="Open specimen carrier and reveal two complete sample sets"><span aria-hidden="true">↗</span><strong>SPECIMEN CARRIER</strong><small>Open carrier</small></button></div>`, "At reception, every sample must be matched before it can enter the laboratory.");
     if (state.matching.accepted != null) return shell(`<div class="mission-three-scene">${background}${mission3Transfer(c)}</div>`, state.matching.racked?"The accepted swab is safely linked to Amelia’s laboratory request.":"Drag the accepted sample to the rack, or select the sample and then select the rack.");
     const stations = c.candidates.map(candidate).join("");
     const reviewing = Number.isInteger(state.matching.expanded);
@@ -228,11 +234,13 @@
       ["salmonella","Salmonella chromogenic agar","For Salmonella detection","salmonella-chromogenic-agar.png"],
       ["cled","CLED agar","Commonly used for urine","cled-agar.png"]
     ];
-    const plate = ([value,title,sub,file]) => `<div class="agar-option"><button class="choice agar-choice" data-action="agar" data-value="${value}" aria-label="Choose ${title}"><img src="assets/mission-4/${file}" alt=""><strong>${title}</strong>${state.age==="junior"?"":`<small>${sub}</small>`}</button><button class="agar-info-button" data-action="agar-info" data-value="${value}" aria-label="Learn about ${title}">?</button></div>`;
+    const plate = ([value,title,sub,file]) => `<div class="agar-option"><button class="choice agar-choice ${state.mission4SolutionShown&&value==="blood"?"solution-correct":""}" data-action="agar" data-value="${value}" aria-label="Choose ${title}"><img src="assets/mission-4/${file}" alt=""><strong>${title}</strong>${state.age==="junior"?"":`<small>${sub}</small>`}</button><button class="agar-info-button" data-action="agar-info" data-value="${value}" aria-label="Learn about ${title}">?</button></div>`;
     const info = AGAR_INFO[openAgarInfo];
     const infoDialog = info ? `<div class="sample-info-backdrop" data-action="close-agar-info"><section class="sample-info-dialog" role="dialog" aria-modal="true" aria-labelledby="agar-info-title"><button class="sample-info-close" data-action="close-agar-info" aria-label="Close agar information">×</button><img src="assets/mission-4/${info.file}" alt=""><div><div class="mission-label">Agar guide</div><h2 id="agar-info-title">${info.title}</h2><p><strong>What it is:</strong> ${info.what}</p><p><strong>Where it is used:</strong> ${info.use}</p></div></section></div>` : "";
     const completion = state.completed.includes(4) ? learning("Different culture media are used for different organisms and specimens.")+`<div class="actions">${btn("Mission 5 →","continue")}</div>` : "";
-    return shell(`<div class="mission-four-scene" aria-label="Agar selection inside the bacteriology laboratory"><img class="mission-four-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-four-title">${missionHeader(4,"Choose the correct agar","Which agar plate should we use to grow bacteria from this throat swab?")}</div><div class="mission-four-feedback">${feedback()}${completion}</div><div class="mission-four-choices">${plates.map(plate).join("")}</div>${infoDialog}</div>`, "The sample is a throat swab. Choose the medium specified for this investigation.");
+    const solution = state.mission4SolutionShown && !state.completed.includes(4) ? `<div class="m4-solution" role="status"><strong>Solution: Blood agar</strong><p>Blood agar supports the bacteria being investigated and lets the laboratory observe haemolysis.</p><ul><li><b>Chocolate agar</b> is used for other fastidious organisms.</li><li><b>Salmonella chromogenic agar</b> is designed for suspected Salmonella.</li><li><b>CLED agar</b> is mainly used for urine cultures.</li></ul></div>` : "";
+    const solutionButton = !state.completed.includes(4) && !state.mission4SolutionShown ? `<div class="m4-solution-action">${btn("Show me the solution","show-agar-solution","secondary")}</div>` : "";
+    return shell(`<div class="mission-four-scene" aria-label="Agar selection inside the bacteriology laboratory"><img class="mission-four-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-four-title">${missionHeader(4,"Choose the correct agar","Which agar plate should we use to grow bacteria from this throat swab?")}</div><div class="mission-four-feedback">${solution||feedback()}${solutionButton}${completion}</div><div class="mission-four-choices">${plates.map(plate).join("")}</div>${infoDialog}</div>`, "The sample is a throat swab. Choose the medium specified for this investigation.");
   }
 
   function mission5() {
@@ -247,16 +255,16 @@
       "Now streak across the rest of the agar.",
       "The plate is ready for the incubator."
     ];
-    const arrowLabels = ["Open the swab","Lift the lid","Start here","Close the swab","Touch the starting area","Follow the arrows",""];
+    const arrowLabels = ["Open the swab","Lift the lid","Start here","Tap to close the swab","Touch the starting area","Follow the arrows",""];
     const swabFile = m.swabOpen && !m.swabClosed ? "throat-swab-open.png" : "throat-swab-closed.png";
     const swabActive = phase === 0 || phase === 2 || phase === 3;
-    const loopActive = phase === 4 || phase === 5;
+    const loopActive = (phase === 4 || phase === 5) && !mission5Animating;
     const streakFile = m.streakStage === 1 ? "streak-pattern-stage-1.png" : m.streakStage === 2 ? "streak-pattern-stage-2.png" : m.streakStage >= 3 ? "streak-pattern-complete.png" : "";
     const zones = [1,2,3].map(zone => `<button class="m5-streak-zone zone-${zone} ${phase===5&&!mission5Animating&&zone===m.streakStage+1?"active":""} ${zone<=m.streakStage?"done":""}" data-action="m5-streak-zone" data-value="${zone}" data-drop="m5-streak" aria-label="Streak section ${zone}${zone<=m.streakStage?", complete":zone===m.streakStage+1?", next":""}" aria-disabled="${phase!==5||mission5Animating||zone!==m.streakStage+1}" ${mission5Animating?"disabled":""}><span>${zone}</span></button>`).join("");
     const streakMotion = mission5Animating && m.streakStage > 0 ? `<img class="m5-streak-motion motion-${m.streakStage}" src="assets/mission-5/sterile-loop-10ul.png" alt="" aria-hidden="true">` : "";
-    const arrow = phase < 6 ? `<div class="m5-guidance arrow-${phase}" aria-hidden="true"><svg viewBox="0 0 180 80"><path d="M8 58 C55 8 110 8 158 46"/><path d="M145 30 L160 47 L137 51"/></svg><span>${arrowLabels[phase]}</span></div>` : "";
+    const arrow = phase < 6 && !mission5Animating ? `<div class="m5-guidance arrow-${phase}" aria-hidden="true"><svg viewBox="0 0 180 80"><path d="M8 58 C55 8 110 8 158 46"/><path d="M145 30 L160 47 L137 51"/></svg><span>${arrowLabels[phase]}</span></div>` : "";
     const completion = phase === 6 && !mission5Animating ? `<div class="m5-completion" role="status" aria-live="polite"><div class="m5-completion-card"><p><strong>Excellent!</strong> The blood agar plate has been inoculated and streaked correctly.</p>${learning("Streaking spreads bacteria across the agar so that separate colonies can grow.","Each visible colony may grow from a single bacterium or a small group of bacteria.")}<div class="actions">${btn("Place in the incubator →","m5-next","coral")}</div></div></div>` : "";
-    return shell(`<div class="mission-five-scene" aria-label="Blood agar inoculation workstation"><img class="mission-five-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-five-title"><div class="mission-label">Mission 5 of 10</div><h1>Streak the plate</h1><p>Create the starting area, then spread the material so separate colonies can grow.</p></div><div class="mission-five-prompt" role="status"><strong>Step ${Math.min(phase+1,6)} of 6</strong><span>${prompts[phase]}</span></div><div class="m5-countertop" aria-hidden="true"></div><button class="m5-swab ${swabActive?"active":""} ${m.selected==="swab"?"selected":""} ${m.swabClosed?"put-away":""}" data-action="${phase===0?"m5-open-swab":phase===3?"m5-close-swab":"m5-select-tool"}" data-value="swab" draggable="${phase===2}" data-drag="m5-pool" data-drag-image="assets/mission-5/throat-swab-applicator.png" aria-pressed="${m.selected==="swab"}" aria-label="${phase===0?"Open the throat-swab container":phase===3?"Return and close the throat swab":"Throat-swab applicator"}"><img src="assets/mission-5/${swabFile}" alt="">${m.swabOpen&&!m.swabClosed?`<img class="m5-swab-stick" src="assets/mission-5/throat-swab-applicator.png" alt="">`:""}<span>${phase===0?"Open the swab":phase===3?"Close the swab":"Throat swab"}</span></button><div class="m5-plate ${m.plateOpen?"open":""}"><button class="m5-plate-control ${phase===1?"active":""}" data-action="m5-open-plate" aria-label="Open the blood agar plate"><img class="m5-plate-base" src="assets/mission-5/${m.plateOpen?"blood-agar-plate-open.png":"blood-agar-plate-closed.png"}" alt="Blood agar plate"><img class="m5-plate-lid" src="assets/mission-5/blood-agar-lid.png" alt="" aria-hidden="true"></button>${m.inoculated?`<img class="m5-plate-overlay m5-pool" src="assets/mission-5/inoculation-pool-overlay.png" alt="">`:""}${streakFile?`<img class="m5-plate-overlay m5-streak-overlay" src="assets/mission-5/${streakFile}" alt="">`:""}${streakMotion}<button class="m5-pool-target ${phase===2||phase===4?"active":""}" data-action="m5-pool-target" data-drop="m5-pool" aria-label="${phase===2?"Starting area for the throat swab":phase===4?"Starting area for the 10 microlitre loop":"Starting inoculation area"}" ${phase===2||phase===4?"":"disabled"}><span>${phase===2?"Start here":phase===4?"Touch the starting area":"✓"}</span></button>${phase===5?`<div class="m5-streak-zones">${zones}</div>`:""}</div><button class="m5-loop ${loopActive?"active":""} ${m.selected==="loop"?"selected":""}" data-action="m5-select-tool" data-value="loop" draggable="${loopActive&&!mission5Animating}" data-drag="${phase===4?"m5-pool":"m5-streak"}" data-drag-image="assets/mission-5/sterile-loop-10ul.png" aria-pressed="${m.selected==="loop"}" aria-label="10 microlitre sterile loop"><img src="assets/mission-5/sterile-loop-10ul.png" alt=""><span>10 µL loop</span></button>${arrow}${completion}</div>`, prompts[phase]);
+    return shell(`<div class="mission-five-scene ${mission5Animating?"is-streaking":""}" aria-label="Blood agar inoculation workstation"><img class="mission-five-background" src="assets/mission-2/laboratory-interior-background.png" alt="Inside a modern bacteriology laboratory"><div class="mission-five-title"><div class="mission-label">Mission 5 of 10</div><h1>Streak the plate</h1><p>Create the starting area, then spread the material so separate colonies can grow.</p></div><div class="mission-five-prompt" role="status"><strong>Step ${Math.min(phase+1,6)} of 6</strong><span>${prompts[phase]}</span></div><div class="m5-countertop" aria-hidden="true"></div><button class="m5-swab ${swabActive?"active":""} ${m.selected==="swab"?"selected":""} ${m.swabClosed?"put-away":""}" data-action="${phase===0?"m5-open-swab":phase===3?"m5-close-swab":"m5-select-tool"}" data-value="swab" draggable="${phase===2}" data-drag="m5-pool" data-drag-image="assets/mission-5/throat-swab-applicator.png" data-drag-tip-x="0.15" data-drag-tip-y="0.86" aria-pressed="${m.selected==="swab"}" aria-label="${phase===0?"Open the throat-swab container":phase===3?"Return and close the throat swab":"Throat-swab applicator"}"><img src="assets/mission-5/${swabFile}" alt="">${m.swabOpen&&!m.swabClosed?`<img class="m5-swab-stick" src="assets/mission-5/throat-swab-applicator.png" alt="">`:""}<span>${phase===0?"Open the swab":phase===3?"Close the swab":"Throat swab"}</span></button><div class="m5-plate ${m.plateOpen?"open":""}"><button class="m5-plate-control ${phase===1?"active":""}" data-action="m5-open-plate" aria-label="Open the blood agar plate"><img class="m5-plate-base" src="assets/mission-5/${m.plateOpen?"blood-agar-plate-open.png":"blood-agar-plate-closed.png"}" alt="Blood agar plate"><img class="m5-plate-lid" src="assets/mission-5/blood-agar-lid.png" alt="" aria-hidden="true"></button>${m.inoculated?`<img class="m5-plate-overlay m5-pool" src="assets/mission-5/inoculation-pool-overlay.png" alt="">`:""}${streakFile?`<img class="m5-plate-overlay m5-streak-overlay" src="assets/mission-5/${streakFile}" alt="">`:""}${streakMotion}<button class="m5-pool-target ${phase===2||phase===4?"active":""}" data-action="m5-pool-target" data-drop="m5-pool" aria-label="${phase===2?"Starting area for the throat swab":phase===4?"Starting area for the 10 microlitre loop":"Starting inoculation area"}" ${phase===2||phase===4?"":"disabled"}><span>${phase===2?"Start here":phase===4?"Touch the starting area":"✓"}</span></button>${phase===5?`<div class="m5-streak-zones">${zones}</div>`:""}</div><button class="m5-loop ${loopActive?"active":""} ${m.selected==="loop"?"selected":""}" data-action="m5-select-tool" data-value="loop" draggable="${loopActive&&!mission5Animating}" data-drag="${phase===4?"m5-pool":"m5-streak"}" data-drag-image="assets/mission-5/sterile-loop-10ul.png" aria-pressed="${m.selected==="loop"}" aria-label="10 microlitre sterile loop"><img src="assets/mission-5/sterile-loop-10ul.png" alt=""><span>10 µL loop</span></button>${arrow}${completion}</div>`, prompts[phase]);
   }
 
   function mission6() {
@@ -449,6 +457,29 @@
     m9Update("Not quite. Look carefully at the colour, shape and arrangement. Try again!","try");
   }
 
+  function findDragTarget(source,dropType,clientX,clientY,visualWidth=110,visualHeight=110){
+    const tipX=Number(source.dataset.dragTipX),tipY=Number(source.dataset.dragTipY);
+    const tip=Number.isFinite(tipX)&&Number.isFinite(tipY)?{x:tipX,y:tipY}:null;
+    return [...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{
+      const rect=el.getBoundingClientRect();
+      return L.dragTouchesRect(
+        {x:clientX,y:clientY},
+        {left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom},
+        {width:visualWidth,height:visualHeight},
+        tip
+      );
+    });
+  }
+  function completeDrop(value,dropType,target){
+    if(!target)return;
+    if(dropType==="ppe")handlePpe(value);
+    if(dropType==="rack")rackSample(true);
+    if(dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);
+    if(dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);
+    if(dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);
+    if(dropType==="m8-slide")startGramStep(value);
+    if(dropType==="m9-stage")m9PlaceSlide(true,value);
+  }
   function bindDrag(){
     document.querySelectorAll("[draggable=true]").forEach(el=>{
       el.addEventListener("dragstart",ev=>{
@@ -457,11 +488,30 @@
         const ghost=document.createElement("img");
         ghost.src=el.dataset.dragImage||el.querySelector("img")?.src||"";
         ghost.className="native-drag-image"; document.body.appendChild(ghost);
-        ev.dataTransfer.setDragImage(ghost,55,55); setTimeout(()=>ghost.remove(),0);
+        ev.dataTransfer.setDragImage(ghost,55,55);
+        activeNativeDrag={source:el,handled:false,x:ev.clientX,y:ev.clientY,width:110,height:110};
+        setTimeout(()=>ghost.remove(),0);
+      });
+      el.addEventListener("drag",ev=>{
+        if(activeNativeDrag?.source===el&&(ev.clientX!==0||ev.clientY!==0)){
+          activeNativeDrag.x=ev.clientX;activeNativeDrag.y=ev.clientY;
+        }
+      });
+      el.addEventListener("dragend",ev=>{
+        if(activeNativeDrag?.source!==el)return;
+        const drag=activeNativeDrag;
+        const clientX=ev.clientX!==0||ev.clientY!==0?ev.clientX:drag.x;
+        const clientY=ev.clientX!==0||ev.clientY!==0?ev.clientY:drag.y;
+        activeNativeDrag=null;
+        if(drag.handled)return;
+        const dropType=el.dataset.drag;
+        const target=findDragTarget(el,dropType,clientX,clientY,drag.width,drag.height);
+        completeDrop(el.dataset.value,dropType,target);
+        if(!target&&dropType==="m9-stage")m9Wrong();
       });
       el.addEventListener("pointerdown",beginTouchDrag);
     });
-    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(el.dataset.drop==="ppe")handlePpe(v);if(el.dataset.drop==="rack")rackSample(true);if(el.dataset.drop.startsWith("m5-"))handleM5Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop.startsWith("m6-"))handleM6Drop(v,el.dataset.drop);if(el.dataset.drop.startsWith("m7-"))handleM7Drop(v,el.dataset.drop,el.dataset.value);if(el.dataset.drop==="m8-slide")startGramStep(v);if(el.dataset.drop==="m9-stage")m9PlaceSlide(true,v);});});
+    document.querySelectorAll("[data-drop]").forEach(el=>{el.addEventListener("dragover",ev=>ev.preventDefault());el.addEventListener("drop",ev=>{ev.preventDefault();const v=ev.dataTransfer.getData("text/plain");if(activeNativeDrag)activeNativeDrag.handled=true;completeDrop(v,el.dataset.drop,el);});});
   }
   function beginTouchDrag(ev){
     if(ev.pointerType==="mouse")return;
@@ -473,8 +523,9 @@
       event.preventDefault();ghost.style.left=`${event.clientX}px`;ghost.style.top=`${event.clientY}px`;
     };
     const finish=event=>{
-      source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);ghost?.remove();
-      if(moved){const dropType=source.dataset.drag;const target=[...document.querySelectorAll(`[data-drop='${dropType}']`)].find(el=>{const r=el.getBoundingClientRect();return event.clientX>=r.left&&event.clientX<=r.right&&event.clientY>=r.top&&event.clientY<=r.bottom;});if(target&&dropType==="ppe")handlePpe(value);if(target&&dropType==="rack")rackSample(true);if(target&&dropType.startsWith("m5-"))handleM5Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType.startsWith("m6-"))handleM6Drop(value,target.dataset.drop);if(target&&dropType.startsWith("m7-"))handleM7Drop(value,target.dataset.drop,target.dataset.value);if(target&&dropType==="m8-slide")startGramStep(value);if(target&&dropType==="m9-stage")m9PlaceSlide(true,value);if(!target&&dropType==="m9-stage")m9Wrong();}
+      source.removeEventListener("pointermove",move);source.removeEventListener("pointerup",finish);source.removeEventListener("pointercancel",finish);
+      const ghostRect=ghost?.getBoundingClientRect();ghost?.remove();
+      if(moved){const dropType=source.dataset.drag;const target=findDragTarget(source,dropType,event.clientX,event.clientY,ghostRect?.width||110,ghostRect?.height||110);completeDrop(value,dropType,target);if(!target&&dropType==="m9-stage")m9Wrong();}
     };
     source.addEventListener("pointermove",move);source.addEventListener("pointerup",finish);source.addEventListener("pointercancel",finish);
   }
@@ -669,7 +720,6 @@
       return;
     }
     if(action==="sample"){if(value==="swab")completeMission(2,"Correct! A throat swab collects a sample from the throat so the laboratory can look for bacteria.");else setFeedback("Not this one! This sample comes from a different part of the body. Think about where the infection is.","try");return;}
-    if(action==="open-carrier"){state.matching.carrierOpen=true;state.matching.clueSeen=true;setFeedback("Carrier open. Inspect a complete bottle-and-paper set before selecting it.","good");return;}
     if(action==="inspect"){state.matching.expanded=state.matching.expanded===Number(value)?null:Number(value);state.matching.mismatch=[];state.feedback="Opening a set is for inspection—it does not submit an answer.";state.feedbackType="";save();render();if(state.matching.expanded!=null)setTimeout(()=>document.querySelector('[data-action="select-candidate"]')?.focus(),0);return;}
     if(action==="compare-other"){state.matching.expanded=state.matching.expanded===0?1:0;state.matching.mismatch=[];save();render();setTimeout(()=>document.querySelector('[data-action="select-candidate"]')?.focus(),0);return;}
     if(action==="select-candidate"){
@@ -688,6 +738,7 @@
       }
       return;
     }
+    if(action==="show-agar-solution"){state.mission4SolutionShown=true;state.feedback="Blood agar is the correct medium for this throat-culture investigation.";state.feedbackType="good";save();announce(state.feedback);render();return;}
     if(action==="agar"){if(value==="blood")completeMission(4,"Excellent! You selected blood agar for this investigation.");else setFeedback("Not this one! This agar is designed for a different investigation. Try again.","try");return;}
     if(action==="m5-open-swab"){
       if(m5Phase()!==0){m5Wrong();return;}
