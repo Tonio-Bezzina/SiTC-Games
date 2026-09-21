@@ -1,0 +1,36 @@
+{
+  "laboratories": {
+    "transfusion": [
+      {
+        "id": "case-01",
+        "title": "Case 01",
+        "thumbnail": "transfusion/cases/case-01/image 1.png",
+        "slides": [
+          "transfusion/cases/case-01/image 1.png",
+          "transfusion/cases/case-01/image 2.png",
+          "transfusion/cases/case-01/image 3.png",
+          "transfusion/cases/case-01/image 4.png",
+          "transfusion/cases/case-01/image 5.png"
+        ],
+        "slideCount": 5
+      },
+      {
+        "id": "case-02",
+        "title": "Case 02",
+        "thumbnail": "transfusion/cases/case-02/image 1.png",
+        "slides": [
+          "transfusion/cases/case-02/image 1.png",
+          "transfusion/cases/case-02/image 2.png",
+          "transfusion/cases/case-02/image 3.png",
+          "transfusion/cases/case-02/image 4.png"
+        ],
+        "slideCount": 4
+      }
+    ],
+    "chemistry": [],
+    "bacteriology": [],
+    "haematology": [],
+    "histology": [],
+    "mycology": []
+  }
+}

@@ -410,6 +410,26 @@ main {
     border-radius: 20px;
 }
 
+.mission-progress-summary {
+    display: grid;
+    gap: 7px;
+    align-content: center;
+}
+
+.mission-progress-summary strong {
+    color: #10245c;
+}
+
+.mission-progress-summary span {
+    color: #59687b;
+    font-size: .88rem;
+    line-height: 1.4;
+}
+
+.cases-library-card .mission-art {
+    background: linear-gradient(145deg, #dff7fb, #9eddec);
+}
+
 .case-progress-heading {
     display: flex;
 

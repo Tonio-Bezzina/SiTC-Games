@@ -5,9 +5,8 @@
    The laboratory cards themselves now act as the player's
    passport. Each card can show:
    - Lab badge status
-   - Case stars
-   - Case completion progress
    - Lab Master title
+   - Separate Main Mission and passive Cases routes
 
    The layout is designed primarily for phones/tablets but
    scales up cleanly for laptops and larger displays.
@@ -511,13 +510,6 @@ main {
 }
 
 
-/* Case counter also follows the mastered colour scheme. */
-
-.lab-card.mastered .case-count {
-    color: #725a16;
-}
-
-
 /* Give the mastered badge itself a stronger gold treatment. */
 
 .lab-card.mastered .lab-badge {
@@ -540,18 +532,6 @@ main {
 
 .lab-card.mastered .lab-badge-status {
     color: #684900;
-}
-
-
-/* Completed case progress becomes a deeper gold. */
-
-.lab-card.mastered .case-progress-fill {
-    background:
-        linear-gradient(
-            90deg,
-            #c58d00,
-            #f3b900
-        );
 }
 
 
@@ -709,80 +689,6 @@ main {
 
 
 /* =========================================================
-   CASE STAR PROGRESS
-   ========================================================= */
-
-.case-stars {
-    min-height: 31px;
-
-    margin-bottom: 3px;
-
-    color: #e6ae00;
-
-    font-size:
-        clamp(1.4rem, 4vw, 1.75rem);
-
-    font-weight: 900;
-
-    letter-spacing: 3px;
-}
-
-.case-count {
-    margin-bottom: 12px;
-
-    color: #59687b;
-
-    font-size: 0.82rem;
-
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   CASE PROGRESS BAR
-   ========================================================= */
-
-.case-progress-track {
-    width: 100%;
-    height: 10px;
-
-    margin-bottom: 22px;
-
-    overflow: hidden;
-
-    background: #e8eef2;
-
-    border-radius: 999px;
-}
-
-.case-progress-fill {
-    width: 0%;
-    height: 100%;
-
-    background:
-        linear-gradient(
-            90deg,
-            #1a9ed5,
-            #33c5e4
-        );
-
-    border-radius: 999px;
-
-    transition:
-        width 0.35s ease;
-}
-
-.lab-card.badge-earned .case-progress-fill {
-    background:
-        linear-gradient(
-            90deg,
-            #e0a900,
-            #f3cb25
-        );
-}
-
-
-/* =========================================================
    ENTER LAB BUTTON
    ========================================================= */
 
@@ -843,6 +749,29 @@ main {
     transform: none;
 
     background: #cad4da;
+}
+
+.lab-actions {
+    width: 100%;
+    margin-top: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.lab-actions .lab-button {
+    max-width: none;
+}
+
+.lab-actions .cases-button {
+    color: #07598b;
+    background: #dff5fb;
+    box-shadow: inset 0 0 0 2px #9ed8ea;
+}
+
+.lab-actions .cases-button:hover {
+    color: #fff;
+    background: #0877cc;
 }
 
 

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#073c63">
+  <title>Laboratory Cases | SiTC Games</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="case-header">
+    <a id="labBackLink" class="back-link" href="../">← Laboratory</a>
+    <div>
+      <p class="eyebrow">SCIENTIST-GUIDED CASES</p>
+      <h1 id="pageTitle">Laboratory Cases</h1>
+      <p id="pageDescription">Choose a case to explore with your scientist guide.</p>
+    </div>
+    <span id="labIcon" class="lab-icon" aria-hidden="true">🔬</span>
+  </header>
+
+  <main id="caseApp" tabindex="-1">
+    <section id="loadingState" class="state-card" aria-live="polite">
+      <div class="state-icon" aria-hidden="true">⏳</div>
+      <h2>Loading cases…</h2>
+    </section>
+
+    <section id="libraryView" class="library-view hidden" aria-labelledby="libraryHeading">
+      <div class="section-heading">
+        <p class="eyebrow">AVAILABLE NOW</p>
+        <h2 id="libraryHeading">Choose a Case</h2>
+        <p id="caseCount" aria-live="polite"></p>
+      </div>
+      <div id="caseGrid" class="case-grid"></div>
+      <div id="emptyState" class="state-card hidden">
+        <div class="state-icon" aria-hidden="true">📂</div>
+        <h2>No cases available yet</h2>
+        <p>Scientists can add cases here later. The Main Mission remains available from the laboratory.</p>
+      </div>
+    </section>
+
+    <section id="viewerView" class="viewer-view hidden" aria-labelledby="viewerTitle">
+      <div class="viewer-toolbar">
+        <button id="returnToLibrary" class="text-button" type="button">← Back to Cases</button>
+        <div>
+          <p class="eyebrow">CASE VIEWER</p>
+          <h2 id="viewerTitle"></h2>
+        </div>
+        <div id="slideCounter" class="slide-counter" aria-live="polite"></div>
+      </div>
+
+      <div id="slideStage" class="slide-stage">
+        <img id="caseImage" alt="">
+      </div>
+
+      <div class="viewer-controls">
+        <button id="previousSlide" class="nav-button" type="button">← Previous</button>
+        <p>Swipe or use the arrow keys</p>
+        <button id="nextSlide" class="nav-button" type="button">Next →</button>
+      </div>
+    </section>
+
+    <section id="errorState" class="state-card hidden" role="alert">
+      <div class="state-icon" aria-hidden="true">⚠️</div>
+      <h2>Cases could not be loaded</h2>
+      <p>Please return to the laboratory and try again.</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

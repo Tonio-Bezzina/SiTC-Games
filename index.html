@@ -8,7 +8,7 @@
     <title>SiTC Games</title>
 
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23076fbd'/%3E%3Cpath d='M15 35h34M21 25h22M27 15h10M25 35v14h14V35' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260921-cases">
 </head>
 
 <body>
@@ -62,7 +62,7 @@
             <div class="overall-progress">
 
                 <strong id="labProgressCount">
-                    0 / 5
+                    0 / 6
                 </strong>
 
                 <span>
@@ -122,8 +122,8 @@
                 </h2>
 
                 <p>
-                    Earn the main badge, then return for more cases
-                    and try to master the laboratory.
+                    Choose a Main Mission or open the always-available,
+                    scientist-guided Cases library.
                 </p>
 
             </div>
@@ -141,7 +141,7 @@
         <!-- =========================================================
              TEMPORARY DEVELOPMENT CONTROLS
 
-             These let us test badge, case and mastery behaviour
+             These let us test Main Mission badge behaviour
              before the real games exist.
 
              This whole section will be removed before launch.
@@ -157,7 +157,7 @@
             </h2>
 
             <p>
-                These buttons simulate completing Transfusion games.
+                These buttons simulate Main Mission progress only.
             </p>
 
 
@@ -165,13 +165,6 @@
             <button id="testMainMission">
                 Complete Transfusion Main Mission
             </button>
-
-
-            <!-- Simulates completing every Transfusion case -->
-            <button id="testAllTransfusion">
-                Complete All Transfusion Cases
-            </button>
-
 
             <!-- Deletes all locally stored progress -->
             <button id="testResetProgress">
@@ -184,7 +177,7 @@
 
 
     <!-- Shared hub / progress system -->
-    <script src="hub.js?v=20260920-histology"></script>
+    <script src="hub.js?v=20260921-cases"></script>
 
 </body>
 </html>

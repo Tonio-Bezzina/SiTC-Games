@@ -8,11 +8,11 @@
    Main Mission
        → earns Lab Badge
        ↓
-   Additional Cases
-       → earn Case Stars
-       ↓
-   Complete every case
-       → earns "Lab Master" title
+   Other interactive missions (when a laboratory has them)
+       → may contribute to "Lab Master"
+
+   Passive scientist-guided Cases are a separate catalogue.
+   They never read or write this progress record.
 
    Complete the main mission in EVERY laboratory
        → earns "SiTC Young Scientist"
@@ -25,10 +25,9 @@
    STORAGE
    ========================================================= */
 
-/* We are using a new key because the original prototype stored
-   only simple true/false lab badges.
-
-   This version stores individual completed cases as well. */
+/* Existing games use completedCases for historical compatibility.
+   Entries in this record are progress-bearing interactive missions,
+   never passive case-library folders. */
 const STORAGE_KEY = "sitcGameProgressV2";
 
 
@@ -37,8 +36,8 @@ const STORAGE_KEY = "sitcGameProgressV2";
 
    This becomes our central list of laboratories and games.
 
-   Later, adding another case usually means adding one entry here
-   rather than redesigning the whole hub.
+   Passive cases are intentionally not registered here. They are
+   discovered by the generated case-library catalogue.
    ========================================================= */
 
 const labs = [
@@ -56,32 +55,22 @@ const labs = [
         /* This will eventually open:
            /SiTC-Games/transfusion/ */
         href: "transfusion/",
+        casesHref: "case-library/?lab=transfusion",
 
         /* Until we build the Transfusion sub-hub,
            keep the Enter Lab button disabled. */
         available: true,
 
-        /* The main case is the one required for the lab badge. */
-        mainCase: "nicky",
+        /* Historical property names are retained for compatibility.
+           Only progress-bearing interactive missions belong here. */
+        mainMission: "nicky",
 
-        cases: [
+        missions: [
 
             {
                 id: "nicky",
                 name: "Nicky's Blood Bank Rescue",
                 main: true
-            },
-
-            {
-                id: "case-2",
-                name: "Future Transfusion Case",
-                main: false
-            },
-
-            {
-                id: "case-3",
-                name: "Future Transfusion Case",
-                main: false
             }
 
         ],
@@ -102,12 +91,13 @@ const labs = [
             "Investigate how laboratory tests reveal what is happening inside the body.",
 
         href: "chemistry/",
+        casesHref: "case-library/?lab=chemistry",
 
         available: true,
 
-        mainCase: "main",
+        mainMission: "main",
 
-        cases: [
+        missions: [
 
             {
                 id: "main",
@@ -133,12 +123,13 @@ const labs = [
             "Follow a patient sample through the laboratory and identify the bacterium causing an infection.",
 
         href: "bacteriology/main/",
+        casesHref: "case-library/?lab=bacteriology",
 
         available: true,
 
-        mainCase: "main",
+        mainMission: "main",
 
-        cases: [
+        missions: [
 
             {
                 id: "main",
@@ -164,12 +155,13 @@ const labs = [
             "Explore blood cells and the clues they can reveal.",
 
         href: "haematology/",
+        casesHref: "case-library/?lab=haematology",
 
         available: true,
 
-        mainCase: "main",
+        mainMission: "main",
 
-        cases: [
+        missions: [
 
             {
                 id: "main",
@@ -195,12 +187,13 @@ const labs = [
             "Follow a skin specimen from patient checks to a finished H&E microscope slide.",
 
         href: "histology/",
+        casesHref: "case-library/?lab=histology",
 
         available: true,
 
-        mainCase: "main",
+        mainMission: "main",
 
-        cases: [
+        missions: [
 
             {
                 id: "main",
@@ -226,12 +219,13 @@ const labs = [
             "Follow a specimen through the laboratory and solve a fungal mystery.",
 
         href: "mycology/",
+        casesHref: "case-library/?lab=mycology",
 
         available: true,
 
-        mainCase: "main",
+        mainMission: "main",
 
-        cases: [
+        missions: [
 
             {
                 id: "main",
@@ -319,23 +313,23 @@ function saveProgress(progress) {
 
 
 /* =========================================================
-   COMPLETE A CASE
+   COMPLETE A PROGRESS-BEARING MISSION
 
    Later, each real game can call:
 
-       completeCase("transfusion", "nicky");
+       completeMission("transfusion", "nicky");
 
    when its final screen is reached.
    ========================================================= */
 
-function completeCase(labId, caseId) {
+function completeMission(labId, missionId) {
 
     const progress =
         loadProgress();
 
 
-    /* Create the laboratory's list if this is the first
-       case completed from that lab. */
+    /* Create the laboratory's legacy storage list if this is
+       its first completed interactive mission. */
     if (!progress.completedCases[labId]) {
 
         progress.completedCases[labId] = [];
@@ -343,14 +337,14 @@ function completeCase(labId, caseId) {
     }
 
 
-    /* Avoid saving the same case more than once. */
+    /* Avoid saving the same mission more than once. */
     if (
         !progress.completedCases[labId]
-            .includes(caseId)
+            .includes(missionId)
     ) {
 
         progress.completedCases[labId]
-            .push(caseId);
+            .push(missionId);
 
     }
 
@@ -363,20 +357,20 @@ function completeCase(labId, caseId) {
 
 
 /* =========================================================
-   CHECK WHETHER A CASE IS COMPLETE
+   CHECK WHETHER A MISSION IS COMPLETE
    ========================================================= */
 
-function isCaseComplete(
+function isMissionComplete(
     progress,
     labId,
-    caseId
+    missionId
 ) {
 
     const completed =
         progress.completedCases[labId] || [];
 
 
-    return completed.includes(caseId);
+    return completed.includes(missionId);
 
 }
 
@@ -384,7 +378,7 @@ function isCaseComplete(
 /* =========================================================
    CHECK WHETHER LAB BADGE IS EARNED
 
-   Only the laboratory's MAIN case is required.
+   Only the laboratory's Main Mission is required.
    ========================================================= */
 
 function isLabBadgeEarned(
@@ -392,10 +386,10 @@ function isLabBadgeEarned(
     lab
 ) {
 
-    return isCaseComplete(
+    return isMissionComplete(
         progress,
         lab.id,
-        lab.mainCase
+        lab.mainMission
     );
 
 }
@@ -404,7 +398,7 @@ function isLabBadgeEarned(
 /* =========================================================
    CHECK WHETHER LAB IS MASTERED
 
-   Every listed case must be completed.
+   Every listed progress-bearing mission must be completed.
    ========================================================= */
 
 function isLabMastered(
@@ -412,77 +406,17 @@ function isLabMastered(
     lab
 ) {
 
-    return lab.cases.every(
-        function (gameCase) {
+    return lab.missions.every(
+        function (mission) {
 
-            return isCaseComplete(
+            return isMissionComplete(
                 progress,
                 lab.id,
-                gameCase.id
+                mission.id
             );
 
         }
     );
-
-}
-
-
-/* =========================================================
-   COUNT COMPLETED CASES
-   ========================================================= */
-
-function countCompletedCases(
-    progress,
-    lab
-) {
-
-    return lab.cases.filter(
-        function (gameCase) {
-
-            return isCaseComplete(
-                progress,
-                lab.id,
-                gameCase.id
-            );
-
-        }
-    ).length;
-
-}
-
-
-/* =========================================================
-   CREATE CASE STAR DISPLAY
-   ========================================================= */
-
-function createCaseStars(
-    completed,
-    total
-) {
-
-    let stars = "";
-
-
-    for (
-        let i = 0;
-        i < total;
-        i++
-    ) {
-
-        if (i < completed) {
-
-            stars += "★";
-
-        } else {
-
-            stars += "☆";
-
-        }
-
-    }
-
-
-    return stars;
 
 }
 
@@ -507,26 +441,6 @@ function createLabCard(
         isLabMastered(
             progress,
             lab
-        );
-
-
-    const completedCases =
-        countCompletedCases(
-            progress,
-            lab
-        );
-
-
-    const totalCases =
-        lab.cases.length;
-
-
-    const percentage =
-        Math.round(
-            (
-                completedCases /
-                totalCases
-            ) * 100
         );
 
 
@@ -624,61 +538,7 @@ function createLabCard(
         lab.description;
 
 
-    /* ---------- CASE STARS ---------- */
-
-    const stars =
-        document.createElement("div");
-
-    stars.className =
-        "case-stars";
-
-    stars.textContent =
-        createCaseStars(
-            completedCases,
-            totalCases
-        );
-
-
-    /* ---------- CASE COUNT ---------- */
-
-    const caseCount =
-        document.createElement("div");
-
-    caseCount.className =
-        "case-count";
-
-    caseCount.textContent =
-        completedCases +
-        " / " +
-        totalCases +
-        " cases completed";
-
-
-    /* ---------- PROGRESS BAR ---------- */
-
-    const progressTrack =
-        document.createElement("div");
-
-    progressTrack.className =
-        "case-progress-track";
-
-
-    const progressFill =
-        document.createElement("div");
-
-    progressFill.className =
-        "case-progress-fill";
-
-    progressFill.style.width =
-        percentage + "%";
-
-
-    progressTrack.appendChild(
-        progressFill
-    );
-
-
-    /* ---------- ENTER LAB BUTTON ---------- */
+    /* ---------- MAIN MISSION BUTTON ---------- */
 
     let button;
 
@@ -695,7 +555,7 @@ function createLabCard(
             "lab-button";
 
         button.textContent =
-            "Enter Lab";
+            "Main Mission";
 
     } else {
 
@@ -714,6 +574,16 @@ function createLabCard(
     }
 
 
+    const actions = document.createElement("div");
+    actions.className = "lab-actions";
+    actions.appendChild(button);
+
+    const casesButton = document.createElement("a");
+    casesButton.href = lab.casesHref;
+    casesButton.className = "lab-button cases-button";
+    casesButton.textContent = "Cases";
+    actions.appendChild(casesButton);
+
     /* ---------- BUILD CARD ---------- */
 
     card.appendChild(badge);
@@ -728,17 +598,7 @@ function createLabCard(
         description
     );
 
-    card.appendChild(stars);
-
-    card.appendChild(
-        caseCount
-    );
-
-    card.appendChild(
-        progressTrack
-    );
-
-    card.appendChild(button);
+    card.appendChild(actions);
 
 
    /* =====================================================
@@ -921,11 +781,7 @@ function resetProgress() {
    ========================================================= */
 
 
-/* Simulate completing Nicky.
-
-   This earns:
-   - Nicky's case star
-   - the Transfusion Lab Badge */
+/* Simulate completing Nicky's progress-bearing Main Mission. */
 document
     .getElementById(
         "testMainMission"
@@ -934,39 +790,9 @@ document
         "click",
         function () {
 
-            completeCase(
+            completeMission(
                 "transfusion",
                 "nicky"
-            );
-
-        }
-    );
-
-
-/* Simulate completing every current Transfusion case.
-
-   This should award the Transfusion Master title. */
-document
-    .getElementById(
-        "testAllTransfusion"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            completeCase(
-                "transfusion",
-                "nicky"
-            );
-
-            completeCase(
-                "transfusion",
-                "case-2"
-            );
-
-            completeCase(
-                "transfusion",
-                "case-3"
             );
 
         }

@@ -1,0 +1,46 @@
+name: Generate passive case catalogue
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "transfusion/cases/**"
+      - "chemistry/cases/**"
+      - "bacteriology/cases/**"
+      - "haematology/cases/**"
+      - "histology/cases/**"
+      - "mycology/cases/**"
+      - "tools/generate-case-catalogue.js"
+      - ".github/workflows/generate-case-catalogue.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: passive-case-catalogue-main
+  cancel-in-progress: true
+
+jobs:
+  catalogue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Generate catalogue
+        run: node tools/generate-case-catalogue.js
+
+      - name: Commit catalogue when it changed
+        run: |
+          git add case-library/catalogue.json
+          if git diff --cached --quiet; then
+            echo "Catalogue is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update passive case catalogue"
+          git push origin main
