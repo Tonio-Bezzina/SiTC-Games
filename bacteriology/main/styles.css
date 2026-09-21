@@ -579,9 +579,7 @@ button.m6-plate-stack { cursor:pointer; pointer-events:auto; }
 .m8-mode { min-height:100px; display:grid; gap:5px; place-items:center; padding:14px; border:3px solid #28718a; border-radius:18px; color:#071b36; background:#e8f9fc; cursor:pointer; }
 .m8-mode strong { font-size:clamp(.82rem,1.3vw,1.08rem); }.m8-mode span { font-size:clamp(.66rem,.95vw,.84rem); }
 .m8-workstation { position:absolute; z-index:20; left:25%; bottom:0; width:53%; height:57%; pointer-events:none; }
-.m8-tray,.m8-rack,.m8-slide-target { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
-.m8-tray { z-index:1; transform:translateY(12%) scale(1.08); }.m8-rack { z-index:3; transform:translateY(1%) scale(.92); }
-.m8-slide-target { z-index:5; inset:18% 25% 15%; width:50%; height:67%; min-width:44px; min-height:44px; padding:0; border:3px dashed transparent; border-radius:18px; background:transparent; pointer-events:auto; cursor:pointer; }
+.m8-slide-target { position:absolute; z-index:5; inset:18% 25% 15%; width:50%; height:67%; min-width:44px; min-height:44px; padding:0; border:3px dashed transparent; border-radius:18px; background:transparent; pointer-events:auto; cursor:pointer; }
 .m8-slide-target img { width:100%; height:100%; object-fit:contain; pointer-events:none; filter:drop-shadow(0 6px 7px rgba(0,0,0,.3)); transition:opacity .22s ease; }
 .m8-slide-target.ready { border-color:#ffd166; background:rgba(255,209,102,.16); animation:m5-target-pulse 1.2s ease-in-out infinite; }
 .m8-bottles { position:absolute; z-index:15; inset:0; pointer-events:none; }
@@ -599,7 +597,7 @@ button.m6-plate-stack { cursor:pointer; pointer-events:auto; }
 .m8-checklist li>span { grid-row:1/3; display:grid; place-items:center; width:18px; height:18px; border-radius:50%; background:#274b69; font-weight:900; }
 .m8-checklist li b { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }.m8-checklist li small { color:#a9c1d2; }
 .m8-checklist li.current { border-color:#ffd166; color:white; background:rgba(255,209,102,.13); }.m8-checklist li.current>span { color:#071b36; background:#ffd166; }.m8-checklist li.done { border-color:#70e1a2; color:#c8ffe0; }.m8-checklist li.done>span { color:#063a28; background:#70e1a2; }
-.m8-guidance { position:absolute; z-index:28; left:44%; top:26%; pointer-events:none; }.m8-guidance svg { width:clamp(100px,14vw,170px); overflow:visible; filter:drop-shadow(0 3px 2px white); }.m8-guidance path { fill:none; stroke:#ff7b47; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:13 9; animation:m5-arrow-flow .7s linear infinite; }.m8-guidance span { display:block; width:max-content; padding:5px 9px; border:2px solid white; border-radius:999px; background:#ffd166; font-size:clamp(.56rem,.8vw,.72rem); font-weight:900; }
+.m8-guidance { position:absolute; z-index:28; left:34%; top:56%; pointer-events:none; }.m8-guidance svg { width:clamp(100px,14vw,170px); overflow:visible; filter:drop-shadow(0 3px 2px white); }.m8-guidance path { fill:none; stroke:#ff7b47; stroke-width:7; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:13 9; animation:m5-arrow-flow .7s linear infinite; }.m8-guidance span { display:block; width:max-content; padding:5px 9px; border:2px solid white; border-radius:999px; background:#ffd166; font-size:clamp(.56rem,.8vw,.72rem); font-weight:900; }
 .m8-drop { position:absolute; z-index:12; left:46%; top:20%; width:9%; height:18%; object-fit:contain; pointer-events:none; animation:m8-drop-fall .75s ease-in infinite; }.m8-water-stream { position:absolute; z-index:11; left:47%; top:28%; width:8%; height:34%; border-radius:50%; border-left:8px solid rgba(190,240,255,.82); transform:rotate(18deg); animation:m8-rinse-flow .6s ease-in-out infinite alternate; }
 .m8-timer { position:absolute; z-index:36; left:39%; top:20%; display:grid; place-items:center; padding:7px 11px; border:2px solid white; border-radius:14px; background:rgba(7,27,54,.95); color:white; box-shadow:0 8px 20px rgba(0,0,0,.35); }.m8-timer>span { color:#ffd166; font-size:clamp(1.4rem,3vw,2.4rem); font-weight:900; line-height:1; font-variant-numeric:tabular-nums; }.m8-timer small { margin-bottom:4px; font-size:clamp(.5rem,.7vw,.64rem); }.m8-timer .btn { min-height:34px; padding:5px 8px; font-size:clamp(.52rem,.72vw,.65rem); }
 .m8-controls { position:absolute; z-index:32; left:2%; top:18%; width:28%; display:flex; flex-wrap:wrap; gap:6px; }.m8-controls .btn { padding:7px 9px; font-size:clamp(.56rem,.78vw,.7rem); }
@@ -851,7 +849,7 @@ button.m6-plate-stack { cursor:pointer; pointer-events:auto; }
   .mission-eight-prompt { left:29.5%; width:49%; gap:3px 6px; }.mission-eight-prompt strong { padding:4px 6px; font-size:.56rem; }.mission-eight-prompt span { font-size:.61rem; }.mission-eight-prompt em { font-size:.55rem; }
   .m8-countertop { height:54%; }.m8-workstation { left:24%; width:54%; height:58%; }.m8-bottles { height:auto; }.m8-bottle span { font-size:.49rem; }
   .m8-checklist-panel { top:17%; right:1%; width:21%; max-height:51%; padding:5px; }.m8-checklist-panel h2 { font-size:.55rem; }.m8-checklist li { grid-template-columns:16px 1fr; padding:2px; font-size:.44rem; }.m8-checklist li>span { width:15px; height:15px; }
-  .m8-guidance { top:23%; }.m8-guidance svg { width:75px; }.m8-guidance span { padding:3px 6px; font-size:.5rem; }
+  .m8-guidance svg { width:75px; }.m8-guidance span { padding:3px 6px; font-size:.5rem; }
   .m8-timer { left:39%; top:17%; padding:4px 7px; }.m8-timer>span { font-size:1.2rem; }.m8-timer small { display:none; }.m8-timer .btn { min-height:28px; padding:3px 6px; }
   .m8-controls { top:16%; left:1%; width:27%; }.m8-controls .btn { min-height:34px; padding:4px 6px; font-size:.5rem; }
   .m8-intro { inset:6% 9%; padding:12px; }.m8-mode { min-height:76px; padding:8px; }
@@ -915,7 +913,7 @@ button.m6-plate-stack { cursor:pointer; pointer-events:auto; }
   .m7-drying strong { font-size:.68rem; }
   .mission-eight-title h1 { font-size:.86rem; }.mission-eight-prompt span { font-size:.55rem; }.mission-eight-prompt em { display:none; }
   .m8-bottle { padding-bottom:14px; }.m8-bottle span { font-size:.43rem; }.m8-checklist-panel { max-height:48%; }.m8-checklist li small { display:none; }
-  .m8-guidance { display:block; left:43%; top:27%; transform:scale(.72); transform-origin:top left; }.m8-timer { left:42%; top:15%; }.m8-controls .btn { font-size:.45rem; }
+  .m8-guidance { display:block; transform:scale(.72); transform-origin:top left; }.m8-timer { left:42%; top:15%; }.m8-controls .btn { font-size:.45rem; }
   .m8-intro { inset:3% 7%; gap:5px; }.m8-intro p { font-size:.7rem; }.m8-mode { min-height:66px; }.m8-mode strong { font-size:.7rem; }.m8-mode span { font-size:.56rem; }
 }
 @media (max-width:900px) and (orientation:landscape) {
