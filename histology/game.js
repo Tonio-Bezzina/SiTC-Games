@@ -242,6 +242,16 @@
       </div>`).join("");
   }
 
+  function specimenLabelFields(identity, mismatches = []) {
+    return [
+      ["name", identity.name],
+      ["id", identity.id]
+    ].map(([field, value]) => `
+      <div class="identity-field ${mismatches.includes(field) ? "mismatch" : ""}" data-field="${field}">
+        <strong>${escapeHtml(value)}</strong>${mismatchIcon(field, mismatches)}
+      </div>`).join("");
+  }
+
   function referencePanel() {
     const mismatches = state.mismatchFields;
     return `
@@ -260,14 +270,14 @@
         <img class="pot-tissue" src="assets/mission-1/skin-specimen-sample.png" alt="">
         <img class="pot-shell" src="assets/mission-1/skin-specimen-container-closed.png" alt="Sealed skin-specimen container">
         <img class="pot-label-art" src="assets/mission-1/specimen-container-label-blank.svg" alt="">
-        <div class="pot-label" aria-label="Specimen container label">${identityFields(identity, mismatches, true)}</div>
+        <div class="pot-label" aria-label="Specimen container label">${specimenLabelFields(identity, mismatches)}</div>
       </div>`;
   }
 
   function requestPaper(identity, mismatches) {
     return `
       <div class="paper-request">
-        <img src="assets/mission-1/paper-request-blank.png" alt="Histology paper request form">
+        <img src="assets/mission-1/paper-request-blank.png?v=2" alt="Histology paper request form">
         <div class="paper-fields">${identityFields(identity, mismatches, true)}</div>
       </div>`;
   }
@@ -307,7 +317,7 @@
 
   function guidanceText() {
     if (state.hintOpen) {
-      if (state.level === "junior") return "Check the name, ID no. and date of birth one line at a time on the monitor, container and paper request.";
+      if (state.level === "junior") return "Check the name and ID no. on all three surfaces, then check the date of birth on the monitor and paper request.";
       if (state.level === "explorer") return "The name may look right. Compare every digit of the ID no. as well as the birthday.";
       return "Read the ID no. character by character. A very small difference still means the sample must not be accepted.";
     }
@@ -961,7 +971,7 @@
     if (action === "inspect") {
       state.expandedIndex = Number(value);
       state.mismatchFields = [];
-      state.feedback = "Compare the name, ID no. and date of birth on all three surfaces.";
+      state.feedback = "Compare the name and ID no. on all three surfaces, then compare the date of birth on the monitor and paper request.";
       state.feedbackType = "info";
       pendingFocus = `[data-action="select-candidate"][data-value="${value}"]`;
       save(); render(); return;
@@ -984,7 +994,7 @@
         state.mismatchFields = mismatches;
         const message = mismatches.length === 1 && mismatches[0] === "id"
           ? "This ID no. is different. Compare these two numbers on the reference, specimen label and paper request."
-          : "These patient details conflict. Compare the name, ID no. and date of birth on the reference, specimen label and paper request.";
+          : "These patient details conflict. Compare the name and ID no. on all three surfaces, then compare the date of birth on the reference and paper request.";
         setFeedback(message, "try");
         return;
       }

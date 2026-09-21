@@ -157,11 +157,13 @@ At minimum, the scene must contain:
 - the receiving/scanning rack;
 - a disabled **NEXT** action until all completion conditions are satisfied.
 
-Every reference and candidate surface must show:
+Every reference display and paper request must show:
 
 - patient name;
 - **ID no.**;
 - date of birth in `DD/MM/YYYY` format.
+
+Each specimen-container label must show only the patient name value and ID value. Do not show field labels or date of birth on the container label.
 
 The reference may also show **Specimen: Skin** and **Requested investigation: Histology**.
 
@@ -190,7 +192,7 @@ Export or otherwise expose the pure functions so they can be verified without ma
 - Randomise whether the correct set is left or right once when the case is created.
 - Never reshuffle the candidates during that case.
 - Both candidates must use the exact same container, lid, paper, tray, and presentation artwork.
-- A candidate's container label and paper request must agree with each other.
+- A candidate's container name and ID must agree with its paper request; date of birth remains on the paper request only.
 - Only **Select this sample** submits an answer.
 - Opening, closing, comparing, tapping, or missing a drag is not an incorrect scientific attempt.
 - Only one candidate may be expanded at a time.
@@ -202,7 +204,7 @@ On an incorrect selection:
 
 - keep the selected station expanded;
 - calculate mismatch fields from stored data;
-- highlight every conflicting field on the reference, specimen label, and paper request using colour plus text/icon;
+- highlight every conflicting field on each surface where it appears using colour plus text/icon; date-of-birth mismatches belong on the reference and paper request only;
 - show the exact field-specific feedback from the Mission 1 specification;
 - keep identities and candidate order unchanged;
 - allow immediate comparison and retry.
@@ -338,7 +340,7 @@ Perform and document all of the following before committing:
 - Generate many Junior, Explorer, and Challenge cases.
 - Every ID matches `^\d{4,7}[HL]$`.
 - Every ID's final two numeric digits match that person's birth-year suffix.
-- Correct data matches across reference, container label, and paper request.
+- Name and ID match across reference, container label, and paper request; date of birth matches between reference and paper request.
 - Incorrect container and paper agree with each other.
 - Each level differs only in its intended mismatch fields.
 - Correct and incorrect IDs are unique.
@@ -349,7 +351,7 @@ Perform and document all of the following before committing:
 - Each difficulty starts a valid case.
 - The correct sample appears on both left and right across new cases.
 - Inspecting and comparing does not submit an answer.
-- An incorrect selection stays open and highlights exact fields on all three surfaces.
+- An incorrect selection stays open and highlights exact fields on every surface where they appear.
 - Retry preserves identities and candidate order.
 - Correct selection enables only the accepted container for transfer.
 - Drag, tap/select, and keyboard transfer all complete the mission.

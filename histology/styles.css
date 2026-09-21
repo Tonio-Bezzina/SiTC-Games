@@ -130,7 +130,7 @@ h1, h2, h3, p { margin-top: 0; }
 .reference-heading h2, .candidate-heading h2 { margin: 2px 0 0; color: var(--navy); font-size: clamp(1.15rem,2vw,1.55rem); }
 .monitor-wrap, .paper-request, .specimen-pot { position: relative; }
 .monitor-wrap > img, .paper-request > img, .specimen-pot > img { display: block; width: 100%; height: auto; }
-.monitor-screen { position: absolute; inset: 16% 8% 24%; display: flex; flex-direction: column; justify-content: center; gap: 3px; color: #164252; font-size: clamp(.64rem,.94vw,.9rem); }
+.monitor-screen { position: absolute; inset: -5% 12% 24%; display: flex; flex-direction: column; justify-content: center; gap: 3px; color: #164252; font-size: clamp(.64rem,.94vw,.9rem); }
 .identity-field { display: grid; grid-template-columns: minmax(70px,.8fr) 1.25fr auto; gap: 6px; align-items: center; border-radius: 7px; padding: 2px 5px; }
 .identity-field span { font-weight: 700; }
 .identity-field strong { overflow-wrap: anywhere; }
@@ -147,7 +147,8 @@ h1, h2, h3, p { margin-top: 0; }
 .pot-tissue { position: absolute; z-index: -1; inset: 31% 23% auto; width: 54% !important; }
 .pot-label-art { position: absolute; top: 39%; right: 15%; left: 15%; width: 70% !important; }
 .pot-label { position: absolute; top: 42%; right: 17%; left: 17%; display: grid; gap: 1px; color: #183846; font-family: Arial,sans-serif; font-size: clamp(.38rem,.62vw,.59rem); line-height: 1.03; text-align: center; }
-.pot-label .identity-field, .paper-fields .identity-field { grid-template-columns: .75fr 1.25fr auto; gap: 3px; padding: 1px 2px; }
+.pot-label .identity-field { grid-template-columns: 1fr auto; gap: 3px; padding: 1px 2px; }
+.paper-fields .identity-field { grid-template-columns: .75fr 1.25fr auto; gap: 3px; padding: 1px 2px; }
 .paper-request { align-self: center; filter: drop-shadow(0 5px 8px rgba(21,51,68,.2)); }
 .paper-fields { position: absolute; inset: 18% 9% 8%; display: flex; flex-direction: column; justify-content: center; gap: 4px; color: #293e48; font-family: Arial,sans-serif; font-size: clamp(.5rem,.77vw,.75rem); }
 .inspect-prompt { min-height: 35px; border-radius: 10px; padding: 9px; background: var(--navy); color: white; font-weight: 900; text-align: center; }

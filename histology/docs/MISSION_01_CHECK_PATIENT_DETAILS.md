@@ -37,11 +37,13 @@ Each station contains:
 - one readable container label;
 - one paper request form that belongs to that container.
 
-The reference and every candidate surface display:
+The reference display and each paper request display:
 
 - patient name;
 - **ID no.**;
 - date of birth in `DD/MM/YYYY` format.
+
+Each specimen-container label displays only the patient's name value and ID value. Do not show the **Patient name** or **ID no.** field labels on the container, and do not show date of birth on the container.
 
 The reference may also show **Specimen: Skin** and **Requested investigation: Histology**. Non-essential clinical details may be visually obscured, but the three identity fields must remain readable.
 
@@ -96,7 +98,7 @@ mission reference date
   → correct and incorrect sample candidates
 ```
 
-The correct candidate's request and container label must match the reference exactly. An incorrect candidate's own request and container label must match each other.
+The correct candidate's paper request must match the reference exactly. Its container label must match the reference name and ID. An incorrect candidate's container name and ID must agree with its own paper request.
 
 ## Difficulty by level
 
@@ -115,12 +117,12 @@ The answer is correct only if all three identifiers match exactly after normalis
 Incorrect feedback:
 
 - One ID mismatch: **“This ID no. is different. Compare these two numbers on the reference, specimen label and paper request.”**
-- Several mismatches: **“These patient details conflict. Compare the name, ID no. and date of birth on the reference, specimen label and paper request.”**
+- Several mismatches: **“These patient details conflict. Compare the name and ID no. on all three surfaces, then compare the date of birth on the reference and paper request.”**
 
 On an incorrect answer:
 
 - keep the selected station expanded;
-- mark every conflicting field with text/icon and colour on the reference, container label, and paper request;
+- mark every conflicting field with text/icon and colour on each surface where that field appears; date-of-birth mismatches appear on the reference and paper request, not on the container label;
 - do not shuffle stations or regenerate any patient data;
 - do not relabel or accept the mismatched specimen;
 - do not count inspections or navigation as wrong answers.
@@ -159,12 +161,12 @@ Persist `missionStartedAt`, level, reference identity, candidates, candidate ord
 
 ## Acceptance checks
 
-- All three identifiers match on the correct reference, label, and request.
+- Name and ID match across the correct reference, container label, and paper request; date of birth matches between the reference and paper request.
 - Every generated ID has the required format and birth-year suffix.
 - The incorrect set differs only in the level-appropriate fields.
 - The correct station can appear on either side across new cases, but not move during a case.
 - Wrong selection highlights the exact fields on all relevant surfaces and stays open.
 - The rejected set cannot enter the rack or later missions.
 - Mouse, touch, tap-only, and keyboard-only paths all work.
-- Every visible identifier label says **ID no.**
+- Every visible ID field label says **ID no.**; the specimen-container label intentionally shows values without field labels.
 
