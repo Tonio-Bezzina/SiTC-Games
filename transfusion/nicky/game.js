@@ -61,6 +61,7 @@ const state = {
     suppressGroupingClickUntil: 0,
     selectedBloodPack: null,
     bloodChoiceBusy: false,
+    bloodChoiceContext: null,
     missionStartedAt: null,
     sampleScenario: null,
     soundOn: true,
@@ -224,19 +225,36 @@ function startMission(mode) {
 function renderBloodChoice() {
     beginTask();
     const units = shuffle(["O−", "A+", "AB+", "B−"]);
-    screenHost.innerHTML = `
+    state.bloodChoiceContext = "emergency";
+    screenHost.innerHTML = bloodBankSceneMarkup({
+        units,
+        kicker: "EMERGENCY BLOOD ISSUE",
+        title: "Choose emergency red cells",
+        instruction: "Move the safest unit from the fridge to the nurse.",
+        juniorHint: "O−"
+    });
+
+    prepareBloodBankInteraction(
+        state.mode === "junior"
+            ? "Drag the gently pulsing O-negative unit to the nurse, or select it and then tap her hand."
+            : "Drag a unit to the nurse, or select it and then tap her hand."
+    );
+}
+
+function bloodBankSceneMarkup({ units, kicker, title, instruction, juniorHint = null }) {
+    return `
         <section class="screen blood-bank-screen entering" aria-labelledby="bloodBankTitle">
             <img class="blood-bank-room" src="assets/screen-2/blood-bank-room.png" alt="">
             <div class="blood-bank-brief">
-                <p class="mission-kicker">EMERGENCY BLOOD ISSUE</p>
-                <h1 id="bloodBankTitle" class="screen-title">Choose emergency red cells</h1>
-                <p id="bloodBankInstruction" class="screen-instruction">Move the safest unit from the fridge to the nurse.</p>
+                <p class="mission-kicker">${kicker}</p>
+                <h1 id="bloodBankTitle" class="screen-title">${title}</h1>
+                <p id="bloodBankInstruction" class="screen-instruction">${instruction}</p>
             </div>
             <div class="blood-fridge" aria-label="Open blood storage refrigerator with four shelves">
                 <div class="fridge-cool-glow" aria-hidden="true"></div>
                 <img src="assets/screen-2/blood-fridge-open.png" alt="Open blood storage refrigerator">
                 ${units.map((type, shelf) => `
-                    <button class="shelf-blood-pack shelf-${shelf + 1} ${state.mode === "junior" && type === "O−" ? "junior-blood-hint" : ""}" type="button" data-blood="${type}" aria-pressed="false" aria-describedby="bloodBankInstruction" aria-label="${type} red-cell pack on shelf ${shelf + 1}">
+                    <button class="shelf-blood-pack shelf-${shelf + 1} ${state.mode === "junior" && type === juniorHint ? "junior-blood-hint" : ""}" type="button" data-blood="${type}" aria-pressed="false" aria-describedby="bloodBankInstruction" aria-label="${type} red-cell pack on shelf ${shelf + 1}">
                         <img src="assets/screen-2/red-cell-pack-blank.png" alt="">
                         <span class="shelf-blood-label">${type}</span>
                     </button>
@@ -249,10 +267,12 @@ function renderBloodChoice() {
             </button>
         </section>
     `;
+}
 
+function prepareBloodBankInteraction(guide) {
     state.selectedBloodPack = null;
     state.bloodChoiceBusy = false;
-    setGuide(state.mode === "junior" ? "Drag the gently pulsing O-negative unit to the nurse, or select it and then tap her hand." : "Drag a unit to the nurse, or select it and then tap her hand.");
+    setGuide(guide);
     document.querySelectorAll(".shelf-blood-pack").forEach(setUpBloodPack);
 
     const receivingZone = document.querySelector("[data-receive-blood]");
@@ -378,12 +398,20 @@ async function returnBloodPack(pack, showWrongFeedback = false) {
     clearFloatingPack(pack);
     if (showWrongFeedback) {
         state.bloodChoiceBusy = false;
-        showFeedback({
-            correct: false,
-            title: "Keep Nicky safe",
-            message: "Nicky's blood group is not yet known. O-negative red cells are the safest emergency choice.",
-            button: "Try again"
-        });
+        const feedback = state.bloodChoiceContext === "compatibility"
+            ? {
+                correct: false,
+                title: "Check compatibility",
+                message: `${pack.dataset.blood} red cells are not compatible with ${state.patient.name}'s ${bloodGroupName(state.bloodGroup)} group. Check both ABO and RhD again.`,
+                button: "Try another unit"
+            }
+            : {
+                correct: false,
+                title: "Keep Nicky safe",
+                message: "Nicky's blood group is not yet known. O-negative red cells are the safest emergency choice.",
+                button: "Try again"
+            };
+        showFeedback(feedback);
     }
 }
 
@@ -404,7 +432,11 @@ async function handBloodToNurse(pack) {
     state.bloodChoiceBusy = true;
     document.querySelector(".nurse-receiving-zone")?.classList.remove("drag-over");
 
-    if (pack.dataset.blood !== "O−") {
+    const compatible = state.bloodChoiceContext === "compatibility"
+        ? isRedCellCompatible(pack.dataset.blood, state.bloodGroup)
+        : pack.dataset.blood === "O−";
+
+    if (!compatible) {
         state.firstAttempt = false;
         pack.classList.add("wrong-pack");
         if (!pack.classList.contains("dragging")) {
@@ -435,16 +467,24 @@ async function handBloodToNurse(pack) {
     const nurseZone = document.querySelector(".nurse-receiving-zone");
     const nurse = nurseZone.querySelector(".blood-bank-nurse");
     nurse.src = "assets/screen-2/nurse-received.png";
-    nurse.alt = "Nurse smiling after receiving the O-negative emergency red-cell pack";
+    nurse.alt = `Nurse smiling after receiving the ${pack.dataset.blood} red-cell pack`;
     nurseZone.classList.add("received");
     nurseZone.disabled = true;
     state.selectedBloodPack = null;
-    showFeedback({
-        correct: true,
-        title: "Emergency unit released!",
-        message: "O-negative red cells give the laboratory time to confirm Nicky's blood group safely.",
-        action: () => moveTo(3)
-    });
+    const feedback = state.bloodChoiceContext === "compatibility"
+        ? {
+            correct: true,
+            title: "Compatible unit issued!",
+            message: `${pack.dataset.blood} red cells are compatible with ${state.patient.name}'s ${bloodGroupName(state.bloodGroup)} group and can be issued safely.`,
+            action: () => moveTo(6)
+        }
+        : {
+            correct: true,
+            title: "Emergency unit released!",
+            message: "O-negative red cells give the laboratory time to confirm Nicky's blood group safely.",
+            action: () => moveTo(3)
+        };
+    showFeedback(feedback);
 }
 
 const ageRanges = {
@@ -740,6 +780,22 @@ function chooseSample(station) {
 }
 
 const BLOOD_GROUPS = ["A+", "A−", "B+", "B−", "AB+", "AB−", "O+", "O−"];
+
+/* Compatible donor red-cell groups for each recipient group. */
+const RED_CELL_COMPATIBILITY = {
+    "O−": ["O−"],
+    "O+": ["O+", "O−"],
+    "A−": ["A−", "O−"],
+    "A+": ["A+", "A−", "O+", "O−"],
+    "B−": ["B−", "O−"],
+    "B+": ["B+", "B−", "O+", "O−"],
+    "AB−": ["AB−", "A−", "B−", "O−"],
+    "AB+": [...BLOOD_GROUPS]
+};
+
+function isRedCellCompatible(donorGroup, recipientGroup) {
+    return RED_CELL_COMPATIBILITY[recipientGroup]?.includes(donorGroup) || false;
+}
 const GROUPING_REAGENTS = [
     { id: "a", bottle: "Anti-A", well: "A", asset: "reagent-anti-a.png" },
     { id: "b", bottle: "Anti-B", well: "B", asset: "reagent-anti-b.png" },
@@ -1210,43 +1266,25 @@ function chooseGroup(button) {
 
 function renderCompatibility() {
     beginTask();
-    const requestedUnit = state.bloodGroup;
-    const units = shuffle([requestedUnit, ...shuffle(BLOOD_GROUPS.filter((group) => group !== requestedUnit)).slice(0, 3)]);
-    screenHost.innerHTML = `
-        <section class="screen">
-            <h1 class="screen-title">Issue the planned red-cell unit</h1>
-            <p class="screen-instruction">${state.patient.name} is ${bloodGroupName(state.bloodGroup)}. Select the labelled group-identical unit requested for issue.</p>
-            <div class="task-layout" style="--columns:4">
-                ${units.map((type) => `
-                    <button class="choice-card blood-choice" type="button" data-unit="${type}">
-                        <span class="blood-bag" aria-hidden="true"><span class="blood-type">${type}</span></span>
-                        <strong>${type === requestedUnit ? "Requested unit" : "Available unit"}</strong>
-                    </button>
-                `).join("")}
-            </div>
-        </section>
-    `;
+    state.bloodChoiceContext = "compatibility";
+    const compatibleAlternatives = RED_CELL_COMPATIBILITY[state.bloodGroup]
+        .filter((group) => group !== state.bloodGroup);
+    const units = [state.bloodGroup];
 
-    setGuide(state.mode === "challenge" ? "Confirm both ABO and RhD before issue." : `Match the unit label to ${state.patient.name}'s ${state.bloodGroup} result.`);
-    document.querySelectorAll("[data-unit]").forEach((button) => button.addEventListener("click", () => chooseCompatibleUnit(button)));
-}
+    if (compatibleAlternatives.length) units.push(randomItem(compatibleAlternatives));
+    units.push(...shuffle(BLOOD_GROUPS.filter((group) => !units.includes(group))).slice(0, 4 - units.length));
 
-function chooseCompatibleUnit(button) {
-    if (button.dataset.unit !== state.bloodGroup) {
-        state.firstAttempt = false;
-        button.classList.add("wrong");
-        showFeedback({ correct: false, title: "Check the issue request", message: `The requested unit is ${state.bloodGroup}. Match both the ABO and RhD label.`, button: "Try again" });
-        return;
-    }
-
-    markFirstTry();
-    button.classList.add("correct");
-    showFeedback({
-        correct: true,
-        title: "Safe unit selected",
-        message: `${state.bloodGroup} red cells are group-identical for ${state.patient.name}. The unit can be issued safely.`,
-        action: () => moveTo(6)
+    screenHost.innerHTML = bloodBankSceneMarkup({
+        units: shuffle(units),
+        kicker: "COMPATIBILITY CHECK",
+        title: "Choose compatible red cells",
+        instruction: `${state.patient.name} is ${bloodGroupName(state.bloodGroup)}. Move any compatible unit to the nurse.`
     });
+
+    const guide = state.mode === "challenge"
+        ? "A group-identical unit is not the only safe option. Confirm donor ABO and RhD compatibility before issue."
+        : `More than one unit may be compatible with ${state.patient.name}'s ${state.bloodGroup} group. Choose any safe option in the fridge.`;
+    prepareBloodBankInteraction(guide);
 }
 
 function saveCompletion() {
