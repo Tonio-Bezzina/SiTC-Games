@@ -93,12 +93,11 @@
     if (action === "advance") {
       if (state.step === "microtome_selected") return { ...state, step: "block_loaded", blockLoaded: true };
       if (state.step === "block_loaded") return { ...state, step: "section_cut", blockLoaded: true, sectionCut: true };
-      if (state.step === "section_cut") return { ...state, step: "section_revealed", blockLoaded: true, sectionCut: true, sectionRevealed: true };
-      if (state.step === "section_revealed") return { ...state, step: "complete", blockLoaded: true, sectionCut: true, sectionRevealed: true, complete: true };
+      if (state.step === "section_cut") return { ...state, step: "section_revealed", blockLoaded: true, sectionCut: true, sectionRevealed: true, complete: true };
+      if (state.step === "section_revealed") return { ...state, blockLoaded: true, sectionCut: true, sectionRevealed: true, complete: true };
     }
-    if (action === "resume-safe") {
-      if (state.step === "microtome_selected") return { ...state, step: "block_loaded", blockLoaded: true };
-      if (state.step === "section_cut") return { ...state, step: "section_revealed", blockLoaded: true, sectionCut: true, sectionRevealed: true };
+    if (action === "resume-safe" && ["section_revealed", "complete"].includes(state.step)) {
+      return { ...state, step: "section_revealed", blockLoaded: true, sectionCut: true, sectionRevealed: true, complete: true };
     }
     return state;
   }

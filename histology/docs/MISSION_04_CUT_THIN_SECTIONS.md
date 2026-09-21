@@ -34,20 +34,21 @@ After the correct choice, transition to a protected close-up of the microtome. T
 1. Present the question and the two equipment choices.
 2. Selecting **Staining Machine** shows the exact incorrect feedback and keeps both choices available.
 3. Selecting **Microtome** locks the choice and shows the exact correct feedback.
-4. Place the wax block into the microtome holder.
-5. Run a short animation in which the block advances and one very thin tissue section or ribbon emerges.
-6. Pause on a clear before/after comparison: **FFPE wax block** and **Very thin tissue section**.
-7. Enable **NEXT**.
+4. Pause on the protected microtome close-up until the player presses **NEXT**.
+5. Show the wax block safely loaded into the microtome holder and pause until **NEXT**.
+6. Show one very thin tissue section or ribbon emerging and pause until **NEXT**.
+7. Pause on a clear before/after comparison: **FFPE wax block** and **Very thin tissue section**. Leave it on screen until the player presses the final **NEXT**.
 
 No extra hand positioning, blade adjustment, numerical thickness, or trimming steps are required unless separately approved.
 
-## Animation and safety presentation
+## Player-controlled sequence and safety presentation
 
 - Keep the blade inaccessible and visually guarded.
 - Use a side or three-quarter view that makes the block-to-section relationship clear.
 - The output section must be visible against a contrasting background.
 - Do not use graphic tissue cutting imagery.
 - Reduced motion uses an immediate labelled state change or two static panels.
+- Never advance a scientific stage automatically; **NEXT** is the only way to continue.
 - No audio is required; all state changes must be visible and described in text.
 
 ## State model
@@ -57,7 +58,7 @@ question → microtome_selected → block_loaded
   → section_cut → section_revealed → complete
 ```
 
-Persist the selected option, whether the block is loaded, whether the section has been cut, and mission completion. If an animation is interrupted, restore either the safely loaded block or the finished section state.
+Persist the selected option, exact player-controlled stage, whether the block is loaded, whether the section has been cut, and mission completion. After interruption, restore the same stage without automatically advancing.
 
 ## Visual and interface specification
 
@@ -80,5 +81,5 @@ The FFPE block uses pale cream paraffin with embedded pink tissue. The thin sect
 - The wrong choice preserves the mission and shows the exact retry message.
 - The wax block visibly enters the microtome before the section appears.
 - The completed state contains one recognisable very thin section or ribbon.
-- **NEXT** remains disabled until the section is revealed.
+- **NEXT** advances each explanatory stage only when activated by the player and remains available on the final section reveal.
 

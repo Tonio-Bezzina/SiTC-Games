@@ -50,16 +50,16 @@ Reuse the existing FFPE block output from Mission 3 and only the shared shell/gu
 3. Ask the exact supplied question and show equally clear **Microtome** and **Staining Machine** choices.
 4. Staining Machine must show the exact retry feedback and leave both choices available.
 5. Microtome must lock as the correct answer and show the exact correct feedback.
-6. Show the block entering the protected microtome holder before any section appears.
+6. Show the protected microtome, loaded block, emerging section, and final reveal as separate player-controlled stages. Never advance on a timer; require **NEXT** between stages.
 7. Use the supplied loaded/emerging states to explain the block-to-section relationship, then reveal one thin section or short ribbon against a contrasting surface.
-8. Pause on the supplied or equivalent live-labelled before/after comparison: **FFPE wax block** and **Very thin tissue section**.
+8. Pause on the supplied or equivalent live-labelled before/after comparison: **FFPE wax block** and **Very thin tissue section**. Do not leave it until the player presses the final **NEXT**.
 9. Keep the blade visually guarded and inaccessible. Do not add trimming, blade adjustment, hand positioning, numerical thickness, graphic cutting, timing, or fine-motor tasks.
-10. Enable **NEXT** only after the section is clearly visible and announced.
+10. Keep **NEXT** available throughout the explanatory sequence after the correct equipment choice.
 
 ## State, motion, and integration
 
 - Migrate the versioned save safely and persist the selected option, block-loaded state, section-cut state, reveal, completion, and current screen.
-- If interrupted, restore either the safely loaded block or finished section; never duplicate or lose the case tissue.
+- If interrupted, restore the exact player-controlled stage without automatically advancing; never duplicate or lose the case tissue.
 - Reduced motion uses immediate, labelled loaded and section-revealed states or static before/after panels.
 - Earlier missions remain reviewable and all regression tests must pass.
 - Until Mission 5 exists, **NEXT** opens an honest Mission 4-complete panel naming **Put the Section on a Glass Slide** as the future mission. Replace only that transition when Mission 5 is built.
@@ -82,8 +82,8 @@ Do not move to Mission 5 until:
 - The cutting edge remains protected.
 - The final ribbon/section is recognizable and labelled.
 - The before/after comparison is available in normal and reduced-motion presentations.
-- **NEXT** is disabled before reveal and enabled only after completion.
-- Refresh restores safe question, loaded, or finished states.
+- **NEXT** advances the selected microtome, loaded block, emerging section, and final reveal stages only when the player activates it.
+- Refresh restores the exact question, selected, loaded, emerging, or finished stage.
 - No console error, broken asset, inaccessible control, focus failure, or responsive overflow blocks completion.
 
 Add focused state/persistence tests, run the full suite, syntax checks, and `git diff --check`, and review the full diff.

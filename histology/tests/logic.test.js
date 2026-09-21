@@ -159,25 +159,32 @@ test("Mission 4 accepts only the microtome and reveals a section in order", () =
   state = logic.applyMission4Action(state, "advance");
   assert.equal(state.step, "section_revealed");
   assert.equal(state.sectionRevealed, true);
-  assert.equal(state.complete, false);
+  assert.equal(state.complete, true);
   state = logic.applyMission4Action(state, "advance");
-  assert.equal(state.step, "complete");
+  assert.equal(state.step, "section_revealed");
   assert.equal(state.complete, true);
 });
 
-test("Mission 4 interrupted cutting resumes at a safe, non-duplicated state", () => {
+test("Mission 4 preserves player-controlled steps and restores a completed reveal", () => {
   const selected = { ...logic.createMission4State(), choice: logic.MISSION4_CORRECT_CHOICE, step: "microtome_selected" };
-  const loaded = logic.applyMission4Action(selected, "resume-safe");
-  assert.equal(loaded.step, "block_loaded");
-  assert.equal(loaded.blockLoaded, true);
-  assert.equal(loaded.sectionRevealed, false);
+  const resumedSelected = logic.applyMission4Action(selected, "resume-safe");
+  assert.equal(resumedSelected.step, "microtome_selected");
+  assert.equal(resumedSelected.blockLoaded, false);
+  assert.equal(resumedSelected.sectionRevealed, false);
 
-  const cutting = { ...loaded, step: "section_cut", sectionCut: true };
-  const revealed = logic.applyMission4Action(cutting, "resume-safe");
-  assert.equal(revealed.step, "section_revealed");
-  assert.equal(revealed.sectionCut, true);
-  assert.equal(revealed.sectionRevealed, true);
-  assert.equal(revealed.complete, false);
+  const reveal = {
+    ...logic.createMission4State(),
+    choice: logic.MISSION4_CORRECT_CHOICE,
+    step: "section_revealed",
+    blockLoaded: true,
+    sectionCut: true,
+    sectionRevealed: true
+  };
+  const resumedReveal = logic.applyMission4Action(reveal, "resume-safe");
+  assert.equal(resumedReveal.step, "section_revealed");
+  assert.equal(resumedReveal.sectionCut, true);
+  assert.equal(resumedReveal.sectionRevealed, true);
+  assert.equal(resumedReveal.complete, true);
 });
 
 test("Mission 5 keeps both distractors safe and gates slide transfer", () => {

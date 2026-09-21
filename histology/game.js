@@ -615,7 +615,7 @@
         <div class="mission-title-card"><p class="eyebrow">MICROTOMY</p><h1>Cut Very Thin Sections</h1><p>“We need a very thin slice of our tissue. Which machine should we use?”</p></div>
         ${caseIdentityChip()}
         ${mission4ProcessView()}
-        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission4-next" ${state.mission4.complete ? "" : "disabled"}>NEXT →</button></div>
+        <div class="mission2-actions"><button class="primary-button next-button" type="button" data-action="mission4-next" ${state.mission4.step === "question" ? "disabled" : ""}>NEXT →</button></div>
         ${mission2Feedback()}
       </div></main>
       <footer class="guide-strip" aria-label="Scientist guide"><img src="assets/shared/guide-strip-avatar.png" alt=""><div><strong>Scientist guide</strong><p>${mission4GuideText()}</p></div></footer>`;
@@ -854,26 +854,8 @@
       pendingFocus = null;
       requestAnimationFrame(() => app.querySelector(selector)?.focus());
     }
-    scheduleMission4Sequence();
     scheduleMission5Sequence();
     scheduleMission6Sequence();
-  }
-
-  function scheduleMission4Sequence() {
-    if (state.screen !== "mission4" || !["microtome_selected", "block_loaded", "section_cut", "section_revealed"].includes(state.mission4.step)) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    sequenceTimer = setTimeout(() => {
-      state.mission4 = L.applyMission4Action(state.mission4, "advance");
-      const messages = {
-        block_loaded: "The FFPE wax block is safely loaded in the protected microtome holder.",
-        section_cut: "The block advances and one very thin tissue section emerges.",
-        section_revealed: "The very thin tissue section is now clearly visible.",
-        complete: "That's right! A microtome cuts very thin sections of tissue."
-      };
-      state.feedback = messages[state.mission4.step] || state.feedback;
-      state.feedbackType = "good";
-      save(); announce(state.feedback); render();
-    }, reduced ? 40 : 850);
   }
 
   function scheduleMission5Sequence() {
@@ -1150,10 +1132,22 @@
       }
       save(); announce(state.feedback); render(); return;
     }
-    if (action === "mission4-next" && state.mission4.complete) {
-      state.mission4Complete = true;
-      state.screen = "mission4-complete";
-      save(); announce("Mission 4 complete."); render(); return;
+    if (action === "mission4-next" && state.mission4.step !== "question") {
+      if (state.mission4.complete || state.mission4.step === "section_revealed") {
+        state.mission4Complete = true;
+        state.screen = "mission4-complete";
+        save(); announce("Mission 4 complete."); render(); return;
+      }
+      state.mission4 = L.applyMission4Action(state.mission4, "advance");
+      const messages = {
+        block_loaded: "The FFPE wax block is safely loaded in the protected microtome holder.",
+        section_cut: "The block advances and one very thin tissue section emerges.",
+        section_revealed: "The very thin tissue section is now clearly visible."
+      };
+      state.feedback = messages[state.mission4.step] || state.feedback;
+      state.feedbackType = "good";
+      pendingFocus = '[data-action="mission4-next"]';
+      save(); announce(state.feedback); render(); return;
     }
     if (action === "review-mission4") {
       state.currentMission = 4;
