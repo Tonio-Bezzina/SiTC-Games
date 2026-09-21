@@ -15,9 +15,9 @@ The scene uses the established laboratory background, foreground bench, large in
 ### Opening state
 
 - Show the original incubated blood agar culture on the left side of the bench.
-- Show a sterile 1 µL loop beside the culture.
+- Use one shared tool station beside the culture. Show the sterile 1 µL loop there during the colony-transfer steps, then replace it with the pipette during the matrix steps.
 - Show the MALDI target plate in the centre.
-- Show an empty pipette and matrix solution bottle beside the target plate.
+- Show the matrix solution bottle beside the target plate. Hide the loop and pipette when neither tool is needed.
 - Show a large MALDI-TOF instrument on the right with its loading port open.
 - Introductory copy: “We have found the bacteria, but we still need to find out exactly what they are. Let’s identify our mystery bacterium!”
 
