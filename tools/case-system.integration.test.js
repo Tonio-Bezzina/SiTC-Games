@@ -49,7 +49,10 @@ test("generated catalogue contains expected live and empty libraries", () => {
   assert.equal(catalogue.laboratories.transfusion[1].id, "case-02");
   assert.equal(catalogue.laboratories.transfusion[1].slideCount, 4);
   assert.equal(catalogue.laboratories.bacteriology[0].slideCount, 5);
-  assert.equal(catalogue.laboratories.histology[0].slideCount, 5);
+  assert.deepEqual(catalogue.laboratories.histology.map(({ title, slideCount }) => ({ title, slideCount })), [
+    { title: "Case 1", slideCount: 7 },
+    { title: "Case 2 - Melanoma", slideCount: 5 }
+  ]);
   for (const laboratory of ["chemistry", "haematology", "mycology"]) {
     assert.deepEqual(catalogue.laboratories[laboratory], []);
   }

@@ -47,14 +47,29 @@
     "histology": [
       {
         "id": "Case 1",
-        "title": "Case 01",
+        "title": "Case 1",
         "thumbnail": "histology/cases/Case 1/image 1.png",
         "slides": [
           "histology/cases/Case 1/image 1.png",
           "histology/cases/Case 1/image 2.png",
+          "histology/cases/Case 1/image 3a.png",
+          "histology/cases/Case 1/image 3b.png",
           "histology/cases/Case 1/image 4.png",
           "histology/cases/Case 1/image 5.png",
           "histology/cases/Case 1/image 6.png"
+        ],
+        "slideCount": 7
+      },
+      {
+        "id": "Case 2 - Melanoma",
+        "title": "Case 2 - Melanoma",
+        "thumbnail": "histology/cases/Case 2 - Melanoma/Malignant melanoma image 1.png",
+        "slides": [
+          "histology/cases/Case 2 - Melanoma/Malignant melanoma image 1.png",
+          "histology/cases/Case 2 - Melanoma/Malignant melanoma image 2.png",
+          "histology/cases/Case 2 - Melanoma/Malignant melanoma image 3.png",
+          "histology/cases/Case 2 - Melanoma/Malignant melanoma image 4.png",
+          "histology/cases/Case 2 - Melanoma/Malignant melanoma image 5.png"
         ],
         "slideCount": 5
       }

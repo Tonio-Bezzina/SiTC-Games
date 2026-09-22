@@ -12,7 +12,7 @@ const LABS = [
   "mycology"
 ];
 
-const SLIDE_PATTERN = /^image[\s_-]*(\d+)\.(png|jpe?g|webp|gif|avif)$/i;
+const SLIDE_PATTERN = /(?:^|[\s_-])image[\s_-]*(\d+)(?:[\s_-]*([a-z]+))?\.(png|jpe?g|webp|gif|avif)$/i;
 const THUMBNAIL_PATTERN = /^thumbnail\.(png|jpe?g|webp|gif|avif)$/i;
 
 function naturalCompare(left, right) {
@@ -20,6 +20,15 @@ function naturalCompare(left, right) {
 }
 
 function titleFromFolder(folderName) {
+  const namedCase = folderName.match(/^case[\s_-]*(\d+)\s+-\s+(.+)$/i);
+  if (namedCase) {
+    const description = namedCase[2]
+      .replace(/[\s_-]+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    return `Case ${namedCase[1]} - ${description}`;
+  }
+
   let title = folderName
     .replace(/^case[\s_-]*\d+[\s_-]*/i, "")
     .replace(/^\d+[\s_-]*/, "")
@@ -28,7 +37,7 @@ function titleFromFolder(folderName) {
 
   if (!title) {
     const number = folderName.match(/(?:^|[\s_-])(\d+)(?:$|[\s_-])/);
-    return number ? `Case ${number[1].padStart(2, "0")}` : folderName;
+    return number ? `Case ${number[1]}` : folderName;
   }
 
   return title.replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -64,10 +73,12 @@ function scanCase(rootDirectory, laboratory, folderName) {
   const slides = files
     .map((fileName) => {
       const match = fileName.match(SLIDE_PATTERN);
-      return match ? { fileName, number: Number(match[1]) } : null;
+      return match ? { fileName, number: Number(match[1]), suffix: match[2] || "" } : null;
     })
     .filter(Boolean)
-    .sort((left, right) => left.number - right.number || naturalCompare(left.fileName, right.fileName))
+    .sort((left, right) => left.number - right.number
+      || naturalCompare(left.suffix, right.suffix)
+      || naturalCompare(left.fileName, right.fileName))
     .map(({ fileName }) => toWebPath(laboratory, "cases", folderName, fileName));
 
   if (!slides.length) return null;
