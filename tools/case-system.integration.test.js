@@ -19,6 +19,7 @@ test("passive viewer is navigation-only and cannot write progress", () => {
   assert.match(app, /previous\.disabled/);
   assert.match(app, /next\.disabled/);
   assert.match(styles, /object-fit:\s*contain/);
+  assert.match(styles, /touch-action:\s*pan-y\s+pinch-zoom/);
   assert.match(styles, /\.slide-stage\s*\{[^}]*overflow-y:\s*auto/s);
   assert.match(styles, /\.slide-stage img\s*\{[^}]*width:\s*auto[^}]*height:\s*auto[^}]*max-width:\s*100%[^}]*max-height:/s);
   assert.doesNotMatch(styles, /\.slide-stage\s*\{[^}]*overflow:\s*hidden/s);
@@ -50,10 +51,10 @@ test("generated catalogue contains expected live and empty libraries", () => {
   assert.equal(catalogue.laboratories.transfusion[1].slideCount, 4);
   assert.equal(catalogue.laboratories.bacteriology[0].slideCount, 5);
   assert.deepEqual(catalogue.laboratories.histology.map(({ title, slideCount }) => ({ title, slideCount })), [
-    { title: "Case 1", slideCount: 7 },
+    { title: "Case 1 - Cat Scratch Disease", slideCount: 7 },
     { title: "Case 2 - Melanoma", slideCount: 5 }
   ]);
-  for (const laboratory of ["chemistry", "haematology", "mycology"]) {
-    assert.deepEqual(catalogue.laboratories[laboratory], []);
-  }
+  assert.deepEqual(catalogue.laboratories.haematology.map(({ slideCount }) => slideCount), [11, 12, 10]);
+  assert.deepEqual(catalogue.laboratories.mycology.map(({ slideCount }) => slideCount), [10]);
+  assert.deepEqual(catalogue.laboratories.chemistry, []);
 });
