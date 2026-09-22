@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#073c63">
+  <meta name="description" content="Follow a fictional specimen through the mycology laboratory and become a Junior Mycologist.">
+  <title>The Mycology Journey | SiTC Games</title>
+  <link rel="icon" type="image/svg+xml" href="assets/shared/mycology-game-icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to the game</a>
+  <div id="app"></div>
+  <div id="announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
+  <dialog id="orientationDialog" aria-labelledby="orientationTitle">
+    <div class="dialog-card orientation-card">
+      <img src="assets/shared/rotate-device.svg" alt="A device rotating to landscape">
+      <div>
+        <p class="eyebrow">MORE ROOM TO EXPLORE</p>
+        <h2 id="orientationTitle">Landscape works best</h2>
+        <p>You can rotate your device, or continue in portrait with a stacked layout.</p>
+        <button id="continuePortrait" class="primary-button" type="button">Continue in portrait</button>
+      </div>
+    </div>
+  </dialog>
+  <dialog id="replayDialog" aria-labelledby="replayTitle">
+    <div class="dialog-card replay-card">
+      <p class="eyebrow">PLAY AGAIN</p>
+      <h2 id="replayTitle">Start a fresh fictional case?</h2>
+      <p>Your SiTC laboratory badge will stay safe.</p>
+      <div class="final-actions">
+        <button id="cancelReplay" class="secondary-button" type="button">Keep this case</button>
+        <button id="confirmReplay" class="primary-button" type="button">Start fresh case</button>
+      </div>
+    </div>
+  </dialog>
+  <script src="logic.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
