@@ -1,0 +1,54 @@
+Generated with OpenAI built-in image generation for Clinical Chemistry Chapters 3–6 on 22 September 2026.
+
+Selected outputs
+
+analyser-cutaway-v1.png <- exec-d9d9abe8-1e0b-407d-919c-66282abf70b1.png
+analyser-probe-v1.png <- exec-78861f04-47dd-4006-a5f8-2e3dc6265f39.png
+glucose-reagent-dispenser-v1.png <- exec-5578bcc5-de4a-4c3c-91d4-0ea7e83dab19.png
+reaction-cup-empty-v1.png <- exec-80779b49-337e-4fb3-9471-b2efea324060.png
+scientist-guide-v1.png <- exec-81240cae-ad5c-4d23-a94f-1dc4f38cb36e.png
+doctor-clinic-v1.png <- exec-0da9d36c-d5c7-4a44-b9f2-e5ef7e9e9452.png
+
+Reference images
+
+- analyser-exterior-v1.png for the cutaway, probe and reagent-module material language.
+- transfusion/nicky/assets/nurse-v1.png for the scientist’s character proportions and lighting.
+- ian-seated-v2.png for the doctor’s character proportions and clinic lighting.
+- The reaction cup used no reference image.
+
+Exact selected prompts
+
+1. Analyser cutaway
+
+Use case: scientific-educational. Asset type: wide game background for a child-friendly Clinical Chemistry analyser teaching cutaway. Primary request: create a wide simplified interior cutaway that clearly belongs to the referenced white, deep-navy and cyan benchtop analyser. Scene/backdrop: polished clean analyser interior with distinct empty bays for a patient tube at left, automated probe path, central reaction-cup station, reagent path, optical light source and detector, plus generous uncluttered space at right for a separate live graph overlay. Style/medium: polished 3D-cartoon museum-game illustration matching the reference. Composition/framing: landscape 16:9, front cutaway view, critical equipment inside central safe area for short-phone landscape cropping. Lighting/mood: calm bright clinical lighting. Constraints: no text, labels, arrows, numbers, graph, liquid, tube, reaction cup, probe, reagent bottle, light beam, buttons, people, logos or baked UI; equipment housing only; no commercial brand.
+
+2. Analyser probe
+
+Use case: product-mockup. Asset type: transparent draggable game cutout. Primary request: create an automated clinical chemistry sample probe matching the referenced analyser. Subject: rounded white and deep-navy sampling arm with cyan accent and a slim metal sampling tip, clearly an analyser component rather than a handheld pipette. Style/medium: polished child-friendly 3D-cartoon illustration. Composition/framing: isolated front-three-quarter view, vertical, full object visible with generous transparent padding. Constraints: genuine transparent background; neutral empty state; no liquid, text, logo, hand, person, fixed highlight, target, UI or scenery; preserve clean alpha edges.
+
+3. Glucose reagent dispenser
+
+Use case: product-mockup. Asset type: transparent draggable game cutout, NOT a complete analyser. Primary request: create only one small detachable automated reagent dispenser cartridge/module. Subject: palm-sized rectangular white and deep-navy cartridge with cyan accent, a small translucent unbranded reservoir on top, blank label panel, and a short delivery nozzle beneath. Style/medium: polished child-friendly 3D-cartoon laboratory illustration matching the referenced analyser materials. Composition/framing: isolated object centered on transparent canvas, full cartridge visible, no surrounding machine housing. Constraints: genuine transparent background; no full analyser, screen, loading bay, text, brand, chemical formula, hazard symbol, droplets, liquid path, hand, person, scenery or UI.
+
+4. Empty reaction cup
+
+Use case: product-mockup. Asset type: transparent game cutout. Primary request: create one empty clear clinical chemistry reaction cup or cuvette. Subject: small cylindrical transparent disposable reaction vessel with a readable rim and walls, no cap. Style/medium: polished educational 3D-cartoon product illustration matching child-friendly laboratory assets. Composition/framing: isolated straight front-three-quarter view, entire cup centered, generous transparent padding. Constraints: genuine transparent background; cup must be empty; no liquid, text, label, scale, rack, hand, machine, scenery, UI or watermark; clean alpha edges that remain visible on both dark navy and pale blue backgrounds.
+
+5. Scientist guide
+
+Use case: illustration-story. Asset type: transparent reusable game character. Primary request: create a friendly biomedical laboratory scientist in a calm open-hand teaching and acknowledging pose. Style/medium: polished child-friendly 3D-cartoon SiTC game character matching the referenced character proportions and lighting. Composition/framing: three-quarter body, front-three-quarter view, full hands visible, neutral stance. Wardrobe: clean white lab coat over navy/cyan laboratory clothing, no stethoscope. Constraints: genuine transparent background; no patient, sample, tube, equipment, speech bubble, readable badge, text, logo or scenery; not an emergency pose; clean alpha edges.
+
+6. Clinic doctor
+
+Use case: illustration-story. Asset type: transparent calm clinic character for a children’s laboratory game. Primary request: create a friendly doctor in a reassuring consultation pose, gently gesturing toward a separate report area while holding a blank tablet at their side. Style/medium: polished child-friendly 3D-cartoon SiTC style matching the referenced seated boy’s proportions and warm lighting. Composition/framing: three-quarter body, front-three-quarter view facing slightly toward the boy, complete hands and body visible. Constraints: genuine transparent background; no emergency equipment, blood tube, gloves, procedure, readable text, diagnosis, speech bubble, logo, patient or scenery; calm expression and clean alpha edges.
+
+Selection, verification and processing
+
+- Generation mode: OpenAI built-in image generation, reference-image editing where listed above.
+- No post-processing or scripted raster editing was performed; selected outputs were copied byte-for-byte into the runtime asset directory.
+- A first reagent candidate (exec-1fa0c3a9-0d04-4328-9c12-b64e254eb5b7.png) was rejected because it depicted a complete analyser rather than the detachable module requested.
+- The selected files were chosen for visual continuity, clear silhouettes and separation of readable/stateful UI from the raster artwork.
+- Dimensions and colour/alpha details are recorded in assets-manifest.json.
+- All five transparent cutouts have 32-bit alpha and alpha-0 corner pixels. The cutaway is an opaque 16:9 background by design.
+- Reviewer: Codex implementation pass, 22 September 2026.
+- Known limitation: the opaque cutaway includes illustrative internal housing details; all changing tools, liquids, labels, graph and light beam remain separate code-native layers.

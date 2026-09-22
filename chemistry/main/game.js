@@ -27,10 +27,13 @@ let phaseTimer = null;
 let drag = null;
 let centrifugeDrag = null;
 let qcDrag = null;
+let analyserDrag = null;
+let recapDrag = null;
 let lastFocus = null;
+let allowWithinNextCase = false;
 
 let state = {
-    version: 3,
+    version: 6,
     level: null,
     caseData: null,
     scenario: null,
@@ -42,8 +45,17 @@ let state = {
     bottleSelected: false,
     chapter1Complete: false,
     chapter2Complete: false,
+    chapter3Complete: false,
+    chapter4Complete: false,
+    chapter5Complete: false,
+    chapter6Complete: false,
     centrifuge: null,
     qualityControl: null,
+    measurementCase: null,
+    analyser: null,
+    review: null,
+    report: null,
+    delivery: null,
     soundOn: true
 };
 
@@ -130,6 +142,78 @@ function isQualityControlStage(stage) {
     return ["qc-intro", "qc", "qc-complete"].includes(stage);
 }
 
+function isAnalyserStage(stage) {
+    return stage === "analyser";
+}
+
+function isReviewStage(stage) {
+    return stage === "review";
+}
+
+function isDeliveryStage(stage) {
+    return ["delivery", "mission-complete"].includes(stage);
+}
+
+function createMeasurementCase(allowWithin = false) {
+    const category = allowWithin && Math.random() < .45 ? "within" : "above";
+    return category === "within"
+        ? { category, reactionStrength:"moderate", graphVariant:"midPlateau", reportMarker:.52, doctorDialogue:"within" }
+        : { category, reactionStrength:"strong", graphVariant:"highPlateau", reportMarker:.82, doctorDialogue:"above" };
+}
+
+function createAnalyserState() {
+    return {
+        phase:"entry",
+        tubeLocation:"rack",
+        selected:null,
+        testSelected:null,
+        sampleAdded:false,
+        reagentAdded:false,
+        reactionComplete:false,
+        graphComplete:false,
+        readingAccepted:false,
+        comparisonComplete:false,
+        feedback:""
+    };
+}
+
+function createReviewState(level) {
+    return {
+        phase: level === "junior" ? "compare" : "identity",
+        identityConfirmed: level === "junior",
+        categorySelected:null,
+        comparisonComplete:false,
+        reviewRequested:false,
+        scientistReviewed:false,
+        reviewAcknowledged:false,
+        feedback:""
+    };
+}
+
+function shuffleRecapCards() {
+    const cards = ["prepare", "measure", "report"];
+    for (let index = cards.length - 1; index > 0; index -= 1) {
+        const swap = Math.floor(Math.random() * (index + 1));
+        [cards[index], cards[swap]] = [cards[swap], cards[index]];
+    }
+    return cards;
+}
+
+function createDeliveryState() {
+    return {
+        phase:"ready",
+        sent:false,
+        doctorAcknowledged:false,
+        recapCards:shuffleRecapCards(),
+        recapSlots:[null, null, null],
+        selected:null,
+        attempts:0,
+        recapComplete:false,
+        badgeAwarded:false,
+        feedback:""
+    };
+}
+
 function chooseControlScenario(level) {
     if (level === "junior") return "pass";
     if (level === "challenge") return "fail";
@@ -196,36 +280,63 @@ function normaliseCheckpoint(value) {
         value.qualityControl = value.chapter2Complete ? createQualityControlState(value.level) : null;
         if (value.chapter2Complete) value.stage = "qc-intro";
     }
-    if (value.version === 3 && value.centrifuge?.cycle === "spinning") {
+    if (value.version === 3) {
+        const qcAccepted = value.stage === "qc-complete" && value.qualityControl?.accepted === true && value.qualityControl?.result === "pass";
+        value.version = 6;
+        value.chapter3Complete = qcAccepted;
+        value.chapter4Complete = false;
+        value.chapter5Complete = false;
+        value.chapter6Complete = false;
+        value.measurementCase = createMeasurementCase(false);
+        value.analyser = qcAccepted ? createAnalyserState() : null;
+        value.review = null;
+        value.report = null;
+        value.delivery = null;
+        if (qcAccepted) value.stage = "analyser";
+    }
+    if (value.version === 6 && value.centrifuge?.cycle === "spinning") {
         value.centrifuge.cycle = "idle";
         value.centrifuge.lidClosed = true;
         value.centrifuge.feedback = "The interrupted demonstration is ready to start safely again.";
         value.stage = "centrifuge-load";
     }
-    if (value.version === 3 && value.qualityControl?.phase === "processing") {
+    if (value.version === 6 && value.qualityControl?.phase === "processing") {
         value.qualityControl.phase = "loaded";
         value.qualityControl.controlLocation = "loader";
         value.qualityControl.result = null;
-        value.qualityControl.feedback = "The interrupted check is ready to run safely again.";
+        value.qualityControl.feedback = "The interrupted quality control check is ready to run safely again.";
+    }
+    if (value.version === 6 && ["reaction-running", "light-running"].includes(value.analyser?.phase)) {
+        value.analyser.phase = value.analyser.phase === "reaction-running" ? "reaction-ready" : "light-ready";
+        value.analyser.feedback = "The interrupted demonstration is ready to continue safely.";
+    }
+    if (value.version === 6 && value.delivery?.phase === "sending" && !value.delivery.sent) {
+        value.delivery.phase = "ready";
+        value.delivery.feedback = "The checked report is ready to send again.";
     }
     return value;
 }
 
 function isValidCheckpoint(value) {
-    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "qc-intro", "qc", "qc-complete"];
+    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "qc-intro", "qc", "analyser", "review", "delivery", "mission-complete"];
     const c = value?.centrifuge;
     const centrifugeOkay = !isCentrifugeStage(value?.stage) || (c && Array.isArray(c.batch) && c.batch.length === 4
         && Array.isArray(c.slots) && c.slots.length === centrifugeSlotCount(value.level)
         && Array.isArray(c.rack));
     const q = value?.qualityControl;
     const qualityOkay = !isQualityControlStage(value?.stage) || (q && ["pass", "fail"].includes(q.scenario) && [1, 2].includes(q.round));
-    return value && value.version === 3 && LEVELS[value.level]
+    const measurementOkay = !value?.measurementCase || (["above", "within"].includes(value.measurementCase.category)
+        && Number.isFinite(value.measurementCase.reportMarker) && value.measurementCase.reportMarker >= 0 && value.measurementCase.reportMarker <= 1);
+    const analyserOkay = !isAnalyserStage(value?.stage) || (value.chapter3Complete && value.analyser && value.measurementCase);
+    const reviewOkay = !isReviewStage(value?.stage) || (value.chapter4Complete && value.review && value.measurementCase);
+    const deliveryOkay = !isDeliveryStage(value?.stage) || (value.chapter5Complete && value.delivery && value.report?.checked);
+    return value && value.version === 6 && LEVELS[value.level]
         && value.caseData && typeof value.caseData.name === "string"
         && typeof value.caseData.id === "string" && /^\d{5}[HL]$/.test(value.caseData.id) && typeof value.caseData.dob === "string"
         && typeof value.caseData.accession === "string"
         && Array.isArray(value.scenario) && value.scenario.length === 2
         && value.scenario.filter(sample => sample && sample.correct === true).length === 1
-        && stages.includes(value.stage) && centrifugeOkay && qualityOkay;
+        && stages.includes(value.stage) && centrifugeOkay && qualityOkay && measurementOkay && analyserOkay && reviewOkay && deliveryOkay;
 }
 
 function readCheckpoint() {
@@ -266,13 +377,22 @@ function setGuide(message, callout = false) {
 
 function updateChrome() {
     levelLabel.textContent = state.level ? LEVELS[state.level].label : "Choose";
-    chapterLabel.textContent = state.level ? (state.chapter2Complete || isQualityControlStage(state.stage) ? "Chapter 3 · Check the test" : state.chapter1Complete || isCentrifugeStage(state.stage) ? "Chapter 2 · Balance & separate" : "Chapter 1 · Check the sample") : "Opening";
+    chapterLabel.textContent = state.level ? chapterLabelForStage(state.stage) : "Opening";
     caseSummary.textContent = "";
     caseSummary.classList.add("hidden");
     gameBar.classList.remove("has-case");
     soundButton.textContent = state.soundOn ? "🔊" : "🔇";
     soundButton.setAttribute("aria-pressed", String(state.soundOn));
     soundButton.setAttribute("aria-label", state.soundOn ? "Turn sound off" : "Turn sound on");
+}
+
+function chapterLabelForStage(stage) {
+    if (isDeliveryStage(stage)) return "Chapter 6 · Deliver the clues";
+    if (isReviewStage(stage)) return "Chapter 5 · Check the result";
+    if (isAnalyserStage(stage)) return "Chapter 4 · Inside the analyser";
+    if (state.chapter2Complete || isQualityControlStage(stage)) return "Chapter 3 · Check the test";
+    if (state.chapter1Complete || isCentrifugeStage(stage)) return "Chapter 2 · Balance & separate";
+    return "Chapter 1 · Check the sample";
 }
 
 function playTone(kind = "success") {
@@ -340,7 +460,10 @@ function render() {
     if (state.stage === "plasma") renderPlasmaChoice();
     if (state.stage === "qc-intro") renderQualityControlIntro();
     if (state.stage === "qc") renderQualityControl();
-    if (state.stage === "qc-complete") renderComplete();
+    if (state.stage === "analyser") renderAnalyserChapter();
+    if (state.stage === "review") renderReviewChapter();
+    if (state.stage === "delivery") renderDeliveryChapter();
+    if (state.stage === "mission-complete") renderComplete();
 }
 
 function renderOpening() {
@@ -357,17 +480,21 @@ function renderOpening() {
                 <div class="level-grid" aria-label="Choose a mission level">
                     ${Object.entries(LEVELS).map(([id, level]) => `<button type="button" data-opening-level="${id}"><strong>${level.label}</strong><span>${id === "junior" ? "More guidance" : id === "explorer" ? "Some clues" : "Fewer clues"}</span></button>`).join("")}
                 </div>
-                <p class="same-badge">Every level will earn the same badge when the full mission is available.</p>
+                <p class="same-badge">Every level earns the same badge.</p>
             </div>
         </section>`;
     setGuide("Choose Junior, Explorer or Challenge to start Ian's case.");
-    document.querySelectorAll("[data-opening-level]").forEach(button => button.addEventListener("click", () => startFresh(button.dataset.openingLevel)));
+    document.querySelectorAll("[data-opening-level]").forEach(button => button.addEventListener("click", () => {
+        const allowWithin = allowWithinNextCase;
+        allowWithinNextCase = false;
+        startFresh(button.dataset.openingLevel, allowWithin);
+    }));
 }
 
-function startFresh(level) {
+function startFresh(level, allowWithin = false) {
     clearCheckpoint();
     state = {
-        version: 3,
+        version: 6,
         level,
         caseData: createCase(level),
         scenario: null,
@@ -379,8 +506,17 @@ function startFresh(level) {
         bottleSelected: false,
         chapter1Complete: false,
         chapter2Complete: false,
+        chapter3Complete: false,
+        chapter4Complete: false,
+        chapter5Complete: false,
+        chapter6Complete: false,
         centrifuge: null,
         qualityControl: null,
+        measurementCase:createMeasurementCase(allowWithin),
+        analyser:null,
+        review:null,
+        report:null,
+        delivery:null,
         soundOn: state.soundOn
     };
     state.scenario = createScenario(level, state.caseData);
@@ -1174,7 +1310,7 @@ function renderQualityControlIntro() {
                 <p class="kicker">CHAPTER 3 · QUALITY CONTROL</p>
                 <h1 id="qcIntroTitle">Check the glucose test first</h1>
                 <p>Before testing Ian’s sample, we check that the glucose test is working as expected.</p>
-                <button class="primary-button" type="button" data-start-qc>Meet the check sample →</button>
+                <button class="primary-button" type="button" data-start-qc>Meet the quality control sample →</button>
             </div>
             <img class="qc-intro-analyser" src="assets/analyser-exterior-v1.png" alt="Clinical chemistry analyser">
         </section>`;
@@ -1189,8 +1325,8 @@ function renderQualityControlIntro() {
 function qcResultScaleMarkup(result) {
     if (!result) return "";
     const pass = result === "pass";
-    return `<div class="control-result-scale ${pass ? "passing" : "failing"}" aria-label="Check result ${pass ? "inside" : "outside"} the expected range">
-        <div class="scale-track"><span class="expected-band"><b>Expected range</b></span><span class="check-marker" style="--marker:${pass ? 52 : 84}%"><b>Check result</b><i aria-hidden="true">${pass ? "✓" : "!"}</i></span></div>
+    return `<div class="control-result-scale ${pass ? "passing" : "failing"}" aria-label="Quality control result ${pass ? "inside" : "outside"} the expected range">
+        <div class="scale-track"><span class="expected-band"><b>Expected range</b></span><span class="check-marker" style="--marker:${pass ? 52 : 84}%"><b>QC result</b><i aria-hidden="true">${pass ? "✓" : "!"}</i></span></div>
         <p>${pass ? "✓ Inside the expected range" : "! Outside the expected range"}</p>
     </div>`;
 }
@@ -1200,13 +1336,13 @@ function qcScreenMarkup() {
     if (q.phase === "processing") return `<div class="analyser-display checking"><strong>Checking…</strong><span>Quality control in progress</span><i aria-hidden="true"></i></div>`;
     if (["result", "accepted"].includes(q.phase)) return `<div class="analyser-display result-display"><strong>Quality control</strong>${qcResultScaleMarkup(q.result)}</div>`;
     if (q.phase === "investigating") return `<div class="analyser-display maintenance"><strong>Scientist investigating</strong><span>Patient testing paused</span><i aria-hidden="true"></i></div>`;
-    return `<div class="analyser-display"><strong>Quality control</strong><span>${q.controlLocation === "loader" ? "Check sample ready" : "Waiting for check sample"}</span></div>`;
+    return `<div class="analyser-display"><strong>Quality control</strong><span>${q.controlLocation === "loader" ? "Quality control sample ready" : "Waiting for quality control sample"}</span></div>`;
 }
 
 function controlVialMarkup(location = "rack") {
     const q = state.qualityControl;
-    return `<button class="qc-vial ${q.selected === "control" ? "selected" : ""}" type="button" data-qc-object="control" data-location="${location}" aria-pressed="${q.selected === "control"}" aria-label="${q.freshControl ? "Fresh " : ""}Check sample vial—select to move">
-        <img src="assets/check-sample-vial-v1.png" alt="" draggable="false"><span><b>${q.freshControl ? "Fresh check" : "Check sample"}</b><small>Expected result known</small></span>
+    return `<button class="qc-vial ${q.selected === "control" ? "selected" : ""}" type="button" data-qc-object="control" data-location="${location}" aria-pressed="${q.selected === "control"}" aria-label="${q.freshControl ? "Fresh " : ""}quality control sample vial—select to move">
+        <img src="assets/check-sample-vial-v1.png" alt="" draggable="false"><span><b>${q.freshControl ? "Fresh QC sample" : "Quality control sample"}</b><small>Expected result known</small></span>
     </button>`;
 }
 
@@ -1223,32 +1359,32 @@ function renderQualityControl() {
     const processing = q.phase === "processing";
     const investigating = q.phase === "investigating";
     screenHost.innerHTML = `
-        <section class="screen qc-screen phase-${q.phase} ${q.feedback.startsWith("This check is outside") ? "failed-choice" : ""}" aria-labelledby="qcTitle">
+        <section class="screen qc-screen phase-${q.phase} ${q.feedback.startsWith("This quality control result is outside") ? "failed-choice" : ""}" aria-labelledby="qcTitle">
             <img class="qc-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry analyser bench">
-            <div class="qc-heading"><p class="kicker">CHAPTER 3 · QUALITY CONTROL</p><h1 id="qcTitle">Check the test is ready</h1><p>${q.round === 2 ? "Run the fresh check sample after the scientist’s investigation." : "This check sample has an expected result. Let’s see whether the analyser gets it right."}</p></div>
-            <aside class="qc-supply" aria-label="Check sample supply">${q.controlLocation === "rack" ? controlVialMarkup("rack") : ""}<span>${q.round === 2 ? "Fresh check sample" : "Check sample"}</span></aside>
-            <aside class="ian-waiting ${q.phase === "accepted" ? "next" : ""}" aria-label="Ian’s sample waiting separately"><h2>${q.phase === "accepted" ? "Ian’s sample is next" : "Ian’s sample waits here"}</h2>${ianWaitingMarkup()}<span>${q.phase === "accepted" ? "Ready for the next chapter" : "Patient sample—do not load yet"}</span></aside>
+            <div class="qc-heading"><p class="kicker">CHAPTER 3 · QUALITY CONTROL</p><h1 id="qcTitle">Check the test is ready</h1><p>${q.round === 2 ? "Run the fresh quality control sample after the scientist’s investigation." : "This quality control sample has an expected result. Let’s see whether the analyser gets it right."}</p></div>
+            <aside class="qc-supply" aria-label="Quality control sample supply">${q.controlLocation === "rack" ? controlVialMarkup("rack") : ""}<span>${q.round === 2 ? "Fresh quality control sample" : "Quality control sample"}</span></aside>
+            <aside class="ian-waiting ${q.phase === "accepted" ? "next" : ""}" aria-label="Ian’s sample waiting separately"><h2>${q.phase === "accepted" ? "Ian’s sample is next" : "Ian’s sample waits here"}</h2>${ianWaitingMarkup()}<span>${q.phase === "accepted" ? "Ready for the next chapter" : "Patient sample — quality control first"}</span></aside>
             <div class="analyser-stage">
                 <img class="analyser-art" src="assets/analyser-exterior-v1.png" alt="Clinical chemistry analyser">
                 <span class="analyser-light ${processing ? "busy" : resultPhase && q.result === "pass" ? "pass" : resultPhase ? "hold" : "ready"}" role="status" aria-label="${processing ? "Status: checking" : resultPhase && q.result === "pass" ? "Status: check passed" : resultPhase ? "Status: testing paused" : "Status: ready"}"></span>
                 ${qcScreenMarkup()}
                 <button class="control-loader ${q.selected ? "active" : ""} ${q.controlLocation === "loader" ? "loaded" : ""} ${processing ? "inward" : ""}" type="button" data-control-loader aria-label="Highlighted control-loading position">
-                    <span class="tray-face" aria-hidden="true"></span>${q.controlLocation === "loader" ? controlVialMarkup("loader") : '<span class="loader-copy">Load check sample here</span>'}
+                    <span class="tray-face" aria-hidden="true"></span>${q.controlLocation === "loader" ? controlVialMarkup("loader") : '<span class="loader-copy">Load quality control sample here</span>'}
                 </button>
             </div>
             <div class="qc-actions">
-                ${["load", "loaded"].includes(q.phase) ? `<button class="primary-button" type="button" data-run-check ${q.controlLocation !== "loader" ? "disabled" : ""}>Run check</button>` : ""}
+                ${["load", "loaded"].includes(q.phase) ? `<button class="primary-button" type="button" data-run-check ${q.controlLocation !== "loader" ? "disabled" : ""}>Run quality control</button>` : ""}
                 ${resultPhase ? `<button class="primary-button" type="button" data-qc-choice="ready" ${q.phase === "accepted" ? "disabled" : ""}>Ready to test</button><button class="secondary-button" type="button" data-qc-choice="help" ${q.phase === "accepted" ? "disabled" : ""}>Ask the scientist for help</button>` : ""}
             </div>
-            ${investigating ? '<div class="scientist-intervention"><span aria-hidden="true">🔬</span><div><strong>The scientist investigates and corrects the problem.</strong><p>Patient testing stays paused while the analyser is checked.</p><i aria-hidden="true"></i></div></div>' : ""}
+            ${investigating ? '<div class="scientist-intervention"><img src="assets/scientist-guide-v1.png" alt="Clinical scientist investigating the quality control result"><div><strong>The scientist investigates and corrects the problem.</strong><p>Patient testing stays paused while the analyser is checked.</p><i aria-hidden="true"></i></div></div>' : ""}
             <div class="qc-feedback ${q.feedback ? "" : "hidden"}" role="alert">${q.feedback || ""}</div>
         </section>`;
-    if (q.phase === "load") setGuide(state.level === "challenge" ? "Load the Check sample, then run the check." : "This check sample has an expected result. Let’s see whether the analyser gets it right.");
-    else if (q.phase === "loaded") setGuide("The Check sample is loaded. Press Run check.");
+    if (q.phase === "load") setGuide(state.level === "challenge" ? "Load the quality control sample, then run the check." : "This quality control sample has an expected result. Let’s see whether the analyser gets it right.");
+    else if (q.phase === "loaded") setGuide("The quality control sample is loaded. Press Run quality control.");
     else if (processing) setGuide("Checking… The analyser is processing the control.");
     else if (investigating) setGuide("The scientist investigates and corrects the problem.");
-    else if (q.phase === "accepted") setGuide("The check passed! We’re ready to measure glucose in Ian’s sample.");
-    else setGuide("Is the Check result inside its Expected range?");
+    else if (q.phase === "accepted") setGuide("The quality control check passed! We’re ready to measure glucose in Ian’s sample.");
+    else setGuide("Is the quality control result inside its Expected range?");
     wireQualityControlInteractions();
     if (processing) schedulePhase(revealControlResult, reducedMotionEnabled() ? 1100 : 2200);
     if (investigating) schedulePhase(finishInvestigation, reducedMotionEnabled() ? 1100 : 2100);
@@ -1257,8 +1393,13 @@ function renderQualityControl() {
 
 function wireQualityControlInteractions() {
     const q = state.qualityControl;
+    const ian = document.querySelector('[data-qc-object="ian"]');
+    if (ian && q.phase !== "accepted") {
+        ian.addEventListener("click", redirectIanToQc);
+        if (["load", "loaded"].includes(q.phase)) ian.addEventListener("pointerdown", beginQcDrag);
+    }
     if (["processing", "investigating", "accepted"].includes(q.phase)) return;
-    document.querySelectorAll("[data-qc-object]").forEach(button => {
+    document.querySelectorAll('[data-qc-object="control"]').forEach(button => {
         button.addEventListener("click", () => selectQcObject(button.dataset.qcObject));
         button.addEventListener("pointerdown", beginQcDrag);
     });
@@ -1269,10 +1410,28 @@ function wireQualityControlInteractions() {
 
 function selectQcObject(object) {
     const q = state.qualityControl;
+    if (object === "ian") {
+        redirectIanToQc();
+        return;
+    }
     if (Date.now() < (state.suppressClickUntil || 0) || !["load", "loaded"].includes(q.phase)) return;
     q.selected = q.selected === object ? null : object;
     saveCheckpoint();
     render();
+}
+
+function redirectIanToQc() {
+    const q = state.qualityControl;
+    if (!q || q.phase === "accepted") return;
+    q.selected = null;
+    q.feedback = "Complete the quality control check before loading Ian’s sample.";
+    saveCheckpoint();
+    render();
+    const target = q.phase === "load" ? (q.controlLocation === "rack" ? document.querySelector('[data-qc-object="control"]') : document.querySelector("[data-control-loader]"))
+        : q.phase === "loaded" ? document.querySelector("[data-run-check]")
+        : q.phase === "result" ? document.querySelector('[data-qc-choice="ready"]')
+        : document.querySelector(".scientist-intervention, .analyser-display");
+    target?.focus?.();
 }
 
 function loadSelectedQcObject() {
@@ -1280,8 +1439,7 @@ function loadSelectedQcObject() {
     if (!q.selected || !["load", "loaded"].includes(q.phase)) return;
     if (q.selected === "ian") {
         q.selected = null;
-        q.feedback = "First, finish the check sample.";
-        playTone("try");
+        q.feedback = "Complete the quality control check before loading Ian’s sample.";
         saveCheckpoint();
         render();
         return;
@@ -1289,7 +1447,7 @@ function loadSelectedQcObject() {
     q.selected = null;
     q.controlLocation = "loader";
     q.phase = "loaded";
-    q.feedback = "The Check sample snapped into the control-loading position.";
+    q.feedback = "The quality control sample snapped into the control-loading position.";
     saveCheckpoint();
     render();
 }
@@ -1309,7 +1467,7 @@ function revealControlResult() {
     if (!q || q.phase !== "processing") return;
     q.result = q.round === 2 ? "pass" : q.scenario;
     q.phase = "result";
-    q.feedback = q.result === "pass" && state.level === "junior" ? "The check result is inside its expected range." : "";
+    q.feedback = q.result === "pass" && state.level === "junior" ? "The quality control result is inside its expected range." : "";
     saveCheckpoint();
     playTone(q.result === "pass" ? "success" : "try");
     render();
@@ -1319,14 +1477,14 @@ function chooseQcDecision(choice) {
     const q = state.qualityControl;
     if (q.phase !== "result") return;
     if (choice === "ready" && q.result === "fail") {
-        q.feedback = "This check is outside its expected range. Ask the scientist to investigate before testing Ian’s sample.";
+        q.feedback = "This quality control result is outside its expected range. Ask the scientist to investigate before testing Ian’s sample.";
         playTone("try");
         saveCheckpoint();
         render();
         return;
     }
     if (choice === "help" && q.result === "pass") {
-        q.feedback = "The scientist shows you that the Check result is inside the Expected range. Asking for help is always okay—now choose Ready to test.";
+        q.feedback = "The scientist shows you that the quality control result is inside the Expected range. Asking for help is always okay—now choose Ready to test.";
         saveCheckpoint();
         render();
         return;
@@ -1341,7 +1499,7 @@ function chooseQcDecision(choice) {
     }
     q.accepted = true;
     q.phase = "accepted";
-    q.feedback = "The check result is inside its expected range.";
+    q.feedback = "The quality control result is inside its expected range.";
     saveCheckpoint();
     playTone("success");
     render();
@@ -1355,7 +1513,7 @@ function finishInvestigation() {
     q.controlLocation = "rack";
     q.result = null;
     q.freshControl = true;
-    q.feedback = "A fresh Check sample is ready. Load it and run a new check.";
+    q.feedback = "A fresh quality control sample is ready. Load it and run a new check.";
     saveCheckpoint();
     render();
 }
@@ -1363,7 +1521,9 @@ function finishInvestigation() {
 function completeQualityControl() {
     const q = state.qualityControl;
     if (!q?.accepted || q.result !== "pass") return;
-    state.stage = "qc-complete";
+    state.chapter3Complete = true;
+    state.analyser = createAnalyserState();
+    state.stage = "analyser";
     saveCheckpoint();
     render();
 }
@@ -1406,7 +1566,7 @@ function endQcDrag(event) {
     if (inside) loadSelectedQcObject();
     else {
         state.qualityControl.selected = null;
-        state.qualityControl.feedback = current.object === "ian" ? "First, finish the check sample." : "The Check sample returned safely. Missed drops are not scientific errors.";
+        state.qualityControl.feedback = current.object === "ian" ? "Complete the quality control check before loading Ian’s sample." : "The quality control sample returned safely. Missed drops are not scientific errors.";
         saveCheckpoint();
         render();
     }
@@ -1435,6 +1595,741 @@ function cleanupQcDrag() {
     qcDrag = null;
 }
 
+function patientIdentityMarkup(compact = false) {
+    const patient = state.caseData;
+    return `<dl class="patient-identity ${compact ? "compact" : ""}">
+        <div><dt>Name</dt><dd>${patient.name}</dd></div>
+        <div><dt>ID no.</dt><dd>${patient.id}</dd></div>
+        <div><dt>Birthday</dt><dd>${patient.dob}</dd></div>
+        <div><dt>Accession</dt><dd>${patient.accession}</dd></div>
+        <div><dt>Requested test</dt><dd>${patient.test}</dd></div>
+    </dl>`;
+}
+
+function analyserTubeMarkup() {
+    const a = state.analyser;
+    return `<button class="analyser-tube ${a.selected === "tube" ? "selected" : ""}" type="button" data-analyser-object="tube" aria-pressed="${a.selected === "tube"}" aria-label="Ian’s prepared grey-top sample—select to move">
+        <img src="assets/ian-separated-v1.png" alt="" draggable="false"><span><b>${state.caseData.name}</b><small>${state.caseData.id}</small><small>${state.caseData.accession}</small></span>
+    </button>`;
+}
+
+function renderAnalyserChapter() {
+    const a = state.analyser;
+    if (!a) return;
+    if (["entry", "test"].includes(a.phase)) renderAnalyserExterior();
+    else renderAnalyserCutaway();
+}
+
+function renderAnalyserExterior() {
+    const a = state.analyser;
+    screenHost.innerHTML = `
+        <section class="screen analyser-entry-screen" aria-labelledby="analyserEntryTitle">
+            <img class="analyser-room-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry analyser bench">
+            <div class="analyser-entry-heading"><p class="kicker">CHAPTER 4 · DISCOVER WHAT HAPPENS INSIDE</p><h1 id="analyserEntryTitle">Load Ian’s prepared sample</h1><p>Quality control has passed. Now the analyser can measure Ian’s requested test.</p></div>
+            <aside class="patient-rack" aria-label="Ian’s prepared sample rack">${a.tubeLocation === "rack" ? analyserTubeMarkup() : ""}<span>Ian’s prepared plasma sample</span></aside>
+            <div class="analyser-entry-machine">
+                <img src="assets/analyser-exterior-v1.png" alt="Clinical chemistry analyser">
+                <button class="patient-loader ${a.selected === "tube" ? "active" : ""} ${a.tubeLocation === "loader" ? "loaded" : ""}" type="button" data-analyser-target="patient-loader" aria-label="Patient rack and scanner">
+                    ${a.tubeLocation === "loader" ? analyserTubeMarkup() : "<span>Load Ian’s sample here</span>"}
+                </button>
+                <div class="patient-screen ${a.tubeLocation === "loader" ? "confirmed" : ""}" aria-live="polite">
+                    ${a.tubeLocation === "loader" ? `<strong>Identity confirmed</strong>${patientIdentityMarkup(true)}` : "<strong>Waiting for patient sample</strong>"}
+                </div>
+            </div>
+            ${a.tubeLocation === "loader" ? `<div class="test-tiles" aria-label="Select the requested chemistry test"><h2>Choose the requested test</h2><button type="button" data-test-tile="electrolytes">Salts</button><button type="button" data-test-tile="glucose">Glucose</button><button type="button" data-test-tile="kidney">Kidney clues</button></div>` : ""}
+            <p class="chapter-feedback ${a.feedback ? "" : "hidden"}" role="alert">${a.feedback || ""}</p>
+        </section>`;
+    setGuide(a.tubeLocation === "rack" ? "Drag Ian’s prepared grey-top sample into the patient rack." : "The request says glucose. Select the matching test.");
+    wireAnalyserInteractions();
+}
+
+function analyserProgressMarkup() {
+    const a = state.analyser;
+    const steps = [
+        ["sample", a.sampleAdded],
+        ["reagent", a.reagentAdded],
+        ["reaction", a.reactionComplete],
+        ["light", a.graphComplete]
+    ];
+    return `<ol class="analyser-progress" aria-label="Analyser teaching sequence">${steps.map(([name, done], index) => `<li class="${done ? "done" : ""}"><span>${done ? "✓" : index + 1}</span>${name[0].toUpperCase() + name.slice(1)}</li>`).join("")}</ol>`;
+}
+
+function analyserGraphMarkup() {
+    const a = state.analyser;
+    const high = state.measurementCase.graphVariant === "highPlateau";
+    const path = high ? "M12 112 C42 110 58 98 78 76 S125 32 168 24 S222 20 270 20" : "M12 112 C45 110 61 100 82 83 S128 55 171 49 S224 46 270 46";
+    return `<div class="reaction-graph ${a.phase === "light-running" ? "running" : ""} ${a.graphComplete ? "complete" : ""}" role="img" aria-label="Reaction reading ${a.graphComplete ? "steady" : "changing"}; horizontal axis Reaction time; vertical axis Light absorbed">
+        <span class="graph-y">Light absorbed${state.level === "junior" ? "" : " · Absorbance"}</span>
+        <svg viewBox="0 0 286 132" aria-hidden="true"><path class="axis" d="M12 8 V118 H278"/><path class="trace" pathLength="1" d="${path}"/><circle class="reading-point" cx="270" cy="${high ? 20 : 46}" r="6"/></svg>
+        <span class="graph-x">Reaction time</span><strong>${a.graphComplete ? "Reading steady" : a.phase === "light-running" ? "Reading changing…" : "Ready for light reading"}</strong>
+    </div>`;
+}
+
+function renderAnalyserCutaway() {
+    const a = state.analyser;
+    const sampleStep = a.phase === "sample";
+    const reagentStep = a.phase === "reagent";
+    const reactionRunning = a.phase === "reaction-running";
+    const lightRunning = a.phase === "light-running";
+    const readingStep = ["light-running", "reading"].includes(a.phase);
+    const compareStep = a.phase === "compare";
+    screenHost.innerHTML = `
+        <section class="screen analyser-cutaway-screen phase-${a.phase}" aria-labelledby="cutawayTitle">
+            <img class="cutaway-art" src="assets/analyser-cutaway-v1.png" alt="Simplified interior of the clinical chemistry analyser">
+            <header class="cutaway-heading"><p class="kicker">CHAPTER 4 · TEACHING CUTAWAY</p><h1 id="cutawayTitle">Inside the analyser — a simplified view</h1><p>${state.caseData.name} · ${state.caseData.accession}</p></header>
+            ${analyserProgressMarkup()}
+            <div class="cutaway-sample"><img src="assets/ian-separated-v1.png" alt="Ian’s original grey-top tube with plasma still inside"><span>Ian’s original tube</span></div>
+            <button class="teaching-tool probe ${a.selected === "probe" ? "selected" : ""} ${a.sampleAdded ? "used" : ""}" type="button" data-analyser-object="probe" aria-pressed="${a.selected === "probe"}" aria-label="Teaching sample probe${sampleStep ? "—select to move" : "—not needed now"}" ${sampleStep ? "" : "disabled"}><img src="assets/analyser-probe-v1.png" alt="" draggable="false"></button>
+            <button class="teaching-tool reagent ${a.selected === "reagent" ? "selected" : ""} ${a.reagentAdded ? "used" : ""}" type="button" data-analyser-object="reagent" aria-pressed="${a.selected === "reagent"}" aria-label="Glucose reagent dispenser${reagentStep ? "—select to move" : "—not needed now"}" ${reagentStep ? "" : "disabled"}><img src="assets/glucose-reagent-dispenser-v1.png" alt="" draggable="false"><span>Glucose reagent</span></button>
+            <button class="reaction-cup-target ${a.selected ? "active" : ""}" type="button" data-analyser-target="reaction-cup" aria-label="Reaction cup target">
+                <img src="assets/reaction-cup-empty-v1.png" alt="Clear reaction cup">
+                <span class="reaction-fill ${a.sampleAdded ? "sample" : ""} ${a.reagentAdded ? "reagent-added" : ""} ${a.reactionComplete ? state.measurementCase.reactionStrength : ""}"></span>
+                <b>${a.graphComplete ? "Measured" : a.reactionComplete ? "Ready for light" : a.reagentAdded ? "Sample + reagent" : a.sampleAdded ? "Tiny plasma aliquot" : "Reaction cup"}</b>
+            </button>
+            <div class="optical-path ${readingStep ? "active" : ""}" aria-hidden="true"><span></span><i></i></div>
+            ${analyserGraphMarkup()}
+            <div class="cutaway-actions">
+                ${a.phase === "reaction-ready" ? '<button class="primary-button" type="button" data-start-reaction>Start reaction</button>' : ""}
+                ${a.phase === "light-ready" ? '<button class="primary-button" type="button" data-start-light>Start light reading</button>' : ""}
+                ${reactionRunning || lightRunning ? '<button class="secondary-button" type="button" data-skip-animation>Skip animation</button>' : ""}
+                ${lightRunning && state.level !== "junior" ? '<button class="primary-button" type="button" data-use-reading>Use reading</button>' : ""}
+                ${a.phase === "reading" && state.level !== "junior" ? '<button class="primary-button" type="button" data-use-reading>Use reading</button>' : ""}
+            </div>
+            ${compareStep ? `<div class="colour-compare"><h2>Which demonstration cup has the stronger colour?</h2><button type="button" data-colour-choice="a"><span class="demo-cup moderate"></span><b>Cup A · lighter pattern</b></button><button type="button" data-colour-choice="b"><span class="demo-cup strong"></span><b>Cup B · stronger pattern</b></button></div>` : ""}
+            <p class="chapter-feedback ${a.feedback ? "" : "hidden"}" role="alert">${a.feedback || ""}</p>
+        </section>`;
+    if (sampleStep) setGuide("Drag the teaching probe to the reaction cup to take a tiny plasma aliquot.");
+    else if (reagentStep) setGuide("Add the glucose reagent to the separate reaction cup.");
+    else if (["reaction-ready", "reaction-running"].includes(a.phase)) setGuide("Start the reaction. The colour develops in the reaction cup, not Ian’s tube.");
+    else if (["light-ready", "light-running", "reading"].includes(a.phase)) setGuide("Use light to follow the reaction until the reading is steady.");
+    else setGuide("Compare the demonstration cups. The analyser calculates Ian’s result.");
+    wireAnalyserInteractions();
+    if (reactionRunning) schedulePhase(finishReaction, reducedMotionEnabled() ? 700 : 1900);
+    if (lightRunning) schedulePhase(finishLightReading, reducedMotionEnabled() ? 900 : 2600);
+    if (a.phase === "reading" && state.level === "junior") schedulePhase(completeAnalyserChapter, reducedMotionEnabled() ? 500 : 1100);
+    if (a.phase === "complete") schedulePhase(completeAnalyserChapter, reducedMotionEnabled() ? 600 : 1300);
+}
+
+function wireAnalyserInteractions() {
+    document.querySelectorAll("[data-analyser-object]").forEach(button => {
+        button.addEventListener("click", () => selectAnalyserObject(button.dataset.analyserObject));
+        button.addEventListener("pointerdown", beginAnalyserDrag);
+    });
+    document.querySelectorAll("[data-analyser-target]").forEach(button => button.addEventListener("click", () => useAnalyserTarget(button.dataset.analyserTarget)));
+    document.querySelectorAll("[data-test-tile]").forEach(button => button.addEventListener("click", () => chooseAnalyserTest(button.dataset.testTile)));
+    document.querySelector("[data-start-reaction]")?.addEventListener("click", startReaction);
+    document.querySelector("[data-start-light]")?.addEventListener("click", startLightReading);
+    document.querySelector("[data-skip-animation]")?.addEventListener("click", skipAnalyserAnimation);
+    document.querySelector("[data-use-reading]")?.addEventListener("click", useSettledReading);
+    document.querySelectorAll("[data-colour-choice]").forEach(button => button.addEventListener("click", () => chooseColourStrength(button.dataset.colourChoice)));
+}
+
+function selectAnalyserObject(object) {
+    const a = state.analyser;
+    if (Date.now() < (state.suppressClickUntil || 0)) return;
+    const allowed = (a.phase === "entry" && object === "tube") || (a.phase === "sample" && object === "probe") || (a.phase === "reagent" && object === "reagent");
+    if (!allowed) return;
+    a.selected = a.selected === object ? null : object;
+    a.feedback = a.selected ? `${object === "tube" ? "Ian’s sample" : object === "probe" ? "Teaching probe" : "Glucose reagent"} selected. Choose the highlighted target.` : "";
+    saveCheckpoint();
+    render();
+}
+
+function useAnalyserTarget(target) {
+    const a = state.analyser;
+    if (target === "patient-loader" && a.phase === "entry" && a.selected === "tube") {
+        a.selected = null;
+        a.tubeLocation = "loader";
+        a.phase = "test";
+        a.feedback = "Ian’s identity and requested test are confirmed.";
+    } else if (target === "reaction-cup" && a.phase === "sample" && a.selected === "probe") {
+        a.selected = null;
+        a.sampleAdded = true;
+        a.phase = "reagent";
+        a.feedback = "The analyser uses a tiny amount of the plasma. Most remains in Ian’s tube.";
+    } else if (target === "reaction-cup" && a.phase === "reagent" && a.selected === "reagent") {
+        a.selected = null;
+        a.reagentAdded = true;
+        a.phase = "reaction-ready";
+        a.feedback = "This reagent helps us measure glucose.";
+    } else {
+        a.feedback = a.phase === "sample" ? "Take the sample from the liquid above the cells, then move it to the reaction cup." : "Complete the highlighted analyser step first.";
+        playTone("try");
+    }
+    saveCheckpoint();
+    render();
+}
+
+function chooseAnalyserTest(test) {
+    const a = state.analyser;
+    if (a.phase !== "test") return;
+    if (test !== "glucose") {
+        a.feedback = "Ian’s request says glucose. Choose the glucose test.";
+        playTone("try");
+    } else {
+        a.testSelected = "glucose";
+        a.phase = "sample";
+        a.feedback = "Glucose selected. Let’s zoom inside and follow a tiny aliquot.";
+        playTone("success");
+    }
+    saveCheckpoint();
+    render();
+}
+
+function startReaction() {
+    const a = state.analyser;
+    if (a.phase !== "reaction-ready" || !a.sampleAdded || !a.reagentAdded) {
+        if (a) a.feedback = "Add the sample and reagent before starting the reaction.";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    a.phase = "reaction-running";
+    a.feedback = "Mixing… the colour is developing in the separate reaction cup.";
+    saveCheckpoint();
+    render();
+}
+
+function finishReaction() {
+    const a = state.analyser;
+    if (!a || a.phase !== "reaction-running") return;
+    a.reactionComplete = true;
+    a.phase = "light-ready";
+    a.feedback = "The reaction produced a colour we can measure.";
+    saveCheckpoint();
+    render();
+}
+
+function startLightReading() {
+    const a = state.analyser;
+    if (a.phase !== "light-ready" || !a.reactionComplete) return;
+    a.phase = "light-running";
+    a.feedback = "The reading is changing as the reaction develops.";
+    saveCheckpoint();
+    render();
+}
+
+function finishLightReading() {
+    const a = state.analyser;
+    if (!a || a.phase !== "light-running") return;
+    a.graphComplete = true;
+    a.phase = "reading";
+    a.feedback = "The reading is steady.";
+    saveCheckpoint();
+    render();
+}
+
+function skipAnalyserAnimation() {
+    const a = state.analyser;
+    if (a.phase === "reaction-running") finishReaction();
+    else if (a.phase === "light-running") finishLightReading();
+}
+
+function useSettledReading() {
+    const a = state.analyser;
+    if (a.phase === "light-running" || !a.graphComplete) {
+        a.feedback = "Wait for the reading to settle.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (a.phase !== "reading") return;
+    a.readingAccepted = true;
+    a.phase = "compare";
+    a.feedback = "Reading accepted. Now compare two demonstration reactions.";
+    saveCheckpoint();
+    render();
+}
+
+function chooseColourStrength(choice) {
+    const a = state.analyser;
+    if (a.phase !== "compare") return;
+    if (choice !== "b") {
+        a.feedback = "Cup B has the stronger fill pattern and deeper colour. Choose Cup B.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    a.comparisonComplete = true;
+    a.phase = "complete";
+    a.feedback = "In this example, a stronger colour corresponds to more glucose within the method’s working range. The analyser calculates Ian’s result.";
+    playTone("success");
+    saveCheckpoint();
+    render();
+}
+
+function completeAnalyserChapter() {
+    const a = state.analyser;
+    const required = a?.sampleAdded && a.reagentAdded && a.reactionComplete && a.graphComplete;
+    const olderLevelDone = state.level === "junior" || (a?.readingAccepted && a?.comparisonComplete);
+    if (!required || !olderLevelDone) return;
+    state.chapter4Complete = true;
+    state.review = createReviewState(state.level);
+    state.report = { checked:false, sent:false };
+    state.stage = "review";
+    saveCheckpoint();
+    render();
+}
+
+function analyserDropTargetForPhase() {
+    if (state.analyser?.phase === "entry") return document.querySelector('[data-analyser-target="patient-loader"]');
+    if (["sample", "reagent"].includes(state.analyser?.phase)) return document.querySelector('[data-analyser-target="reaction-cup"]');
+    return null;
+}
+
+function beginAnalyserDrag(event) {
+    if (!event.isPrimary || event.button !== 0 || event.currentTarget.disabled) return;
+    const button = event.currentTarget;
+    button.setPointerCapture(event.pointerId);
+    analyserDrag = { pointerId:event.pointerId, button, object:button.dataset.analyserObject, startX:event.clientX, startY:event.clientY, moved:false };
+    button.addEventListener("pointermove", moveAnalyserDrag);
+    button.addEventListener("pointerup", endAnalyserDrag);
+    button.addEventListener("pointercancel", cancelAnalyserDrag);
+}
+
+function moveAnalyserDrag(event) {
+    if (!analyserDrag || event.pointerId !== analyserDrag.pointerId) return;
+    const dx = event.clientX - analyserDrag.startX;
+    const dy = event.clientY - analyserDrag.startY;
+    if (!analyserDrag.moved && Math.hypot(dx, dy) < 7) return;
+    analyserDrag.moved = true;
+    event.preventDefault();
+    analyserDrag.button.classList.add("dragging");
+    analyserDrag.button.style.setProperty("--drag-x", `${dx}px`);
+    analyserDrag.button.style.setProperty("--drag-y", `${dy - 44}px`);
+    const target = analyserDropTargetForPhase();
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    target.classList.toggle("drag-over", event.clientX >= rect.left - 38 && event.clientX <= rect.right + 38 && event.clientY >= rect.top - 38 && event.clientY <= rect.bottom + 38);
+}
+
+function endAnalyserDrag(event) {
+    if (!analyserDrag || event.pointerId !== analyserDrag.pointerId) return;
+    const current = { ...analyserDrag };
+    const target = analyserDropTargetForPhase();
+    const rect = target?.getBoundingClientRect();
+    const inside = current.moved && rect && event.clientX >= rect.left - 38 && event.clientX <= rect.right + 38 && event.clientY >= rect.top - 38 && event.clientY <= rect.bottom + 38;
+    cleanupAnalyserDrag();
+    if (!current.moved) return;
+    state.suppressClickUntil = Date.now() + 450;
+    state.analyser.selected = inside ? current.object : null;
+    if (inside) useAnalyserTarget(target.dataset.analyserTarget);
+    else {
+        state.analyser.feedback = "The object returned safely. Missed drops are not scientific errors.";
+        saveCheckpoint();
+        render();
+    }
+}
+
+function cancelAnalyserDrag() {
+    if (!analyserDrag) return;
+    cleanupAnalyserDrag();
+    if (state.analyser) {
+        state.analyser.selected = null;
+        state.analyser.feedback = "The object returned safely. Continue when you are ready.";
+        saveCheckpoint();
+        if (!portraitQuery.matches) render();
+    }
+}
+
+function cleanupAnalyserDrag() {
+    if (!analyserDrag) return;
+    const { button } = analyserDrag;
+    button.classList.remove("dragging");
+    button.style.removeProperty("--drag-x");
+    button.style.removeProperty("--drag-y");
+    button.removeEventListener("pointermove", moveAnalyserDrag);
+    button.removeEventListener("pointerup", endAnalyserDrag);
+    button.removeEventListener("pointercancel", cancelAnalyserDrag);
+    analyserDropTargetForPhase()?.classList.remove("drag-over");
+    analyserDrag = null;
+}
+
+function reportScaleMarkup() {
+    const within = state.measurementCase.category === "within";
+    return `<div class="report-scale" aria-label="Glucose result ${within ? "within" : "above"} the example range for this story">
+        <strong>Example range for this story</strong>
+        <div class="report-track"><span class="story-band">Example range</span><span class="report-marker" style="--report-marker:${state.measurementCase.reportMarker * 100}%"><b>Ian’s result</b><i>${within ? "✓" : "↑"}</i></span></div>
+        <p>${within ? "Result marker inside the example range" : "Result marker above the example range"}</p>
+    </div>`;
+}
+
+function reviewStepState(step) {
+    const r = state.review;
+    if (step === "identity") return r.identityConfirmed ? "complete" : r.phase.startsWith("identity") ? "active" : "pending";
+    if (step === "compare") return r.comparisonComplete ? "complete" : r.phase === "compare" ? "active" : "pending";
+    return r.reviewAcknowledged ? "complete" : ["scientist", "acknowledge"].includes(r.phase) ? "active" : "pending";
+}
+
+function renderReviewChapter() {
+    const r = state.review;
+    const junior = state.level === "junior";
+    const choices = junior ? ["within", "outside"] : ["below", "within", "above"];
+    screenHost.innerHTML = `
+        <section class="screen review-screen" aria-labelledby="reviewTitle">
+            <img class="review-bg" src="assets/reception-background-v1.png" alt="Clinical chemistry reporting bench">
+            <header class="review-heading"><p class="kicker">CHAPTER 5 · CHECK THE RESULT</p><h1 id="reviewTitle">Review Ian’s glucose result</h1><p>${junior ? "Compare the result with the range shown." : "Check the patient, compare the result, and acknowledge the scientist’s review."}</p></header>
+            <article class="result-report"><div class="report-title"><strong>Checked result</strong><span>Glucose</span></div>${patientIdentityMarkup(true)}${reportScaleMarkup()}</article>
+            <ol class="review-checklist" aria-label="Result review checklist">
+                ${junior ? "" : `<li class="${reviewStepState("identity")}"><button type="button" data-review-step="identity"><span>${r.identityConfirmed ? "✓" : "1"}</span>Confirm Ian’s identity<small>${r.identityConfirmed ? "Complete" : "Compare report and accepted request"}</small></button></li>`}
+                <li class="${reviewStepState("compare")}"><button type="button" data-review-step="compare"><span>${r.comparisonComplete ? "✓" : junior ? "1" : "2"}</span>Compare the glucose result<small>${r.comparisonComplete ? "Complete" : "Use the example range"}</small></button></li>
+                ${junior ? `<li class="${r.reviewAcknowledged ? "complete" : "pending"} automatic"><span>${r.reviewAcknowledged ? "✓" : "2"}</span><b>Scientist review</b><small>${r.reviewAcknowledged ? "Completed automatically after comparison" : "Follows the comparison"}</small></li>` : `<li class="${reviewStepState("scientist")}"><button type="button" data-review-step="scientist"><span>${r.reviewAcknowledged ? "✓" : "3"}</span>Acknowledge scientist review<small>${r.reviewAcknowledged ? "Complete" : "Available after comparison"}</small></button></li>`}
+            </ol>
+            ${r.phase === "identity-open" ? `<div class="review-action-panel identity-panel"><h2>Compare the identifiers</h2><div class="identity-columns"><div><h3>Accepted request</h3>${patientIdentityMarkup()}</div><div><h3>Result report</h3>${patientIdentityMarkup()}</div></div><button class="primary-button" type="button" data-confirm-identity>Matches Ian</button></div>` : ""}
+            ${r.phase === "compare" ? `<div class="review-action-panel compare-panel"><h2>Where is Ian’s result marker?</h2><div class="classification-buttons">${choices.map(choice => `<button type="button" data-result-choice="${choice}">${choice[0].toUpperCase() + choice.slice(1)}</button>`).join("")}</div></div>` : ""}
+            ${r.phase === "scientist" ? '<div class="review-action-panel scientist-panel"><img class="review-scientist" src="assets/scientist-guide-v1.png" alt="Clinical scientist"><div><h2>Scientist review</h2><p>The report and result comparison are ready for a laboratory scientist.</p><button class="primary-button" type="button" data-request-review>Request scientist review</button></div></div>' : ""}
+            ${r.phase === "acknowledge" ? `<div class="review-action-panel scientist-panel"><img class="review-scientist" src="assets/scientist-guide-v1.png" alt="Clinical scientist"><div><h2>Scientist review complete</h2><p>${state.level === "challenge" ? "A result is one clue. The doctor interprets it with symptoms, history, and other information." : "The checked result is ready to report."}</p><button class="primary-button" type="button" data-acknowledge-review>Acknowledge review</button></div></div>` : ""}
+            <p class="chapter-feedback ${r.feedback ? "" : "hidden"}" role="alert">${r.feedback || ""}</p>
+        </section>`;
+    setGuide(junior ? "The result is ready. Use your checklist to compare it with the range shown." : "Work through the checklist: check the patient, compare the result, and acknowledge the scientist’s review.");
+    wireReviewInteractions();
+    if (r.phase === "complete") schedulePhase(completeReviewChapter, reducedMotionEnabled() ? 500 : 1100);
+}
+
+function wireReviewInteractions() {
+    document.querySelectorAll("[data-review-step]").forEach(button => button.addEventListener("click", () => openReviewStep(button.dataset.reviewStep)));
+    document.querySelector("[data-confirm-identity]")?.addEventListener("click", confirmReviewIdentity);
+    document.querySelectorAll("[data-result-choice]").forEach(button => button.addEventListener("click", () => chooseResultCategory(button.dataset.resultChoice)));
+    document.querySelector("[data-request-review]")?.addEventListener("click", requestScientistReview);
+    document.querySelector("[data-acknowledge-review]")?.addEventListener("click", acknowledgeScientistReview);
+}
+
+function openReviewStep(step) {
+    const r = state.review;
+    if (step === "identity" && !r.identityConfirmed) r.phase = "identity-open";
+    else if (step === "compare" && r.identityConfirmed && !r.comparisonComplete) r.phase = "compare";
+    else if (step === "scientist" && r.comparisonComplete && !r.reviewAcknowledged) r.phase = r.scientistReviewed ? "acknowledge" : "scientist";
+    else if ((step === "compare" && !r.identityConfirmed) || (step === "scientist" && !r.comparisonComplete)) r.feedback = "Complete the highlighted checklist step first.";
+    else r.feedback = "This checklist step is already complete.";
+    saveCheckpoint();
+    render();
+}
+
+function confirmReviewIdentity() {
+    const r = state.review;
+    if (r.phase !== "identity-open") return;
+    r.identityConfirmed = true;
+    r.phase = "compare";
+    r.feedback = "The report identifiers match Ian’s accepted request.";
+    saveCheckpoint();
+    render();
+}
+
+function chooseResultCategory(choice) {
+    const r = state.review;
+    if (r.phase !== "compare") return;
+    r.categorySelected = choice;
+    const expected = state.measurementCase.category === "above" ? (state.level === "junior" ? "outside" : "above") : "within";
+    if (choice !== expected) {
+        r.feedback = state.measurementCase.category === "above" ? `The marker is above the shaded band. Choose ${state.level === "junior" ? "Outside" : "Above"}.` : "The marker is inside the shaded band. Choose Within.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    r.comparisonComplete = true;
+    if (state.level === "junior") {
+        r.scientistReviewed = true;
+        r.reviewAcknowledged = true;
+        r.phase = "complete";
+        r.feedback = state.measurementCase.category === "above" ? "The marker is outside the example range, above the shaded band. The scientist reviewed it before reporting." : "The marker is inside the example range. The scientist still reviewed it before reporting.";
+    } else {
+        r.phase = "scientist";
+        r.feedback = state.measurementCase.category === "above" ? "This result needs the doctor’s attention. It is not a diagnosis." : "This result is within the example range. The doctor will consider it with Ian’s other information.";
+    }
+    playTone("success");
+    saveCheckpoint();
+    render();
+}
+
+function requestScientistReview() {
+    const r = state.review;
+    if (r.phase !== "scientist" || !r.comparisonComplete) return;
+    r.reviewRequested = true;
+    r.scientistReviewed = true;
+    r.phase = "acknowledge";
+    r.feedback = "Scientist review complete.";
+    saveCheckpoint();
+    render();
+}
+
+function acknowledgeScientistReview() {
+    const r = state.review;
+    if (r.phase !== "acknowledge" || !r.scientistReviewed) return;
+    r.reviewAcknowledged = true;
+    r.phase = "complete";
+    r.feedback = "The checked report is ready to send.";
+    playTone("success");
+    saveCheckpoint();
+    render();
+}
+
+function completeReviewChapter() {
+    const r = state.review;
+    if (!r?.comparisonComplete || !r.reviewAcknowledged) return;
+    state.chapter5Complete = true;
+    state.report = { checked:true, sent:false };
+    state.delivery = createDeliveryState();
+    state.stage = "delivery";
+    saveCheckpoint();
+    render();
+}
+
+function checkedReportMarkup() {
+    return `<article class="checked-report"><header><strong>Clinical Chemistry · Checked report</strong><span>✓ Scientist review complete</span></header>${patientIdentityMarkup()}${reportScaleMarkup()}<p class="report-conclusion">${state.measurementCase.category === "above" ? "This result needs the doctor’s attention." : "This result is within the example range. The doctor will consider it with Ian’s other information."}</p></article>`;
+}
+
+function renderDeliveryChapter() {
+    const d = state.delivery;
+    if (d.phase === "ready" || d.phase === "sending") renderReportDelivery();
+    else if (d.phase === "clinic") renderClinicReport();
+    else renderRecap();
+}
+
+function renderReportDelivery() {
+    const d = state.delivery;
+    screenHost.innerHTML = `<section class="screen delivery-screen" aria-labelledby="deliveryTitle">
+        <img class="review-bg" src="assets/reception-background-v1.png" alt="Clinical chemistry reporting bench">
+        <header class="delivery-heading"><p class="kicker">CHAPTER 6 · DELIVER THE CLUES</p><h1 id="deliveryTitle">Send Ian’s checked report</h1><p>The laboratory work is reviewed and ready for Ian’s doctor.</p></header>
+        ${checkedReportMarkup()}
+        <div class="delivery-action"><button class="primary-button" type="button" data-send-report ${d.phase === "sending" ? "disabled" : ""}>${d.phase === "sending" ? "Sending checked report…" : "Send checked report"}</button></div>
+        <p class="chapter-feedback ${d.feedback ? "" : "hidden"}" role="status">${d.feedback || ""}</p>
+    </section>`;
+    setGuide(d.phase === "sending" ? "Sending the checked report securely to Ian’s doctor…" : "The report is checked. Send it to Ian’s doctor.");
+    document.querySelector("[data-send-report]")?.addEventListener("click", sendCheckedReport);
+    if (d.phase === "sending") schedulePhase(showClinicReport, reducedMotionEnabled() ? 450 : 1300);
+}
+
+function sendCheckedReport() {
+    const d = state.delivery;
+    if (d.phase !== "ready" || !state.report?.checked) return;
+    d.sent = true;
+    state.report.sent = true;
+    d.phase = "sending";
+    d.feedback = "Sending checked report…";
+    saveCheckpoint();
+    render();
+}
+
+function showClinicReport() {
+    const d = state.delivery;
+    if (!d?.sent || d.phase !== "sending") return;
+    d.phase = "clinic";
+    d.feedback = "Report received by Ian’s doctor.";
+    saveCheckpoint();
+    render();
+}
+
+function renderClinicReport() {
+    const d = state.delivery;
+    const doctorCopy = state.measurementCase.doctorDialogue === "above"
+        ? "Thank you. I’ll look at this glucose result together with Ian’s symptoms and other information to decide what to do next."
+        : "Thank you. This glucose result is within the range shown. I’ll use it with the other information to understand why Ian feels tired.";
+    screenHost.innerHTML = `<section class="screen clinic-report-screen" aria-labelledby="clinicReportTitle">
+        <div class="clinic-return-art"><div class="clinic-window"><img src="assets/malta-window-townscape-v2.png" alt=""></div><img class="ian-return" src="assets/ian-seated-v2.png" alt="Ian sitting calmly"><img class="doctor-return" src="assets/doctor-clinic-v1.png" alt="Ian’s doctor"></div>
+        <div class="clinic-dialogue"><p class="kicker">REPORT RECEIVED</p><h1 id="clinicReportTitle">Ian’s doctor has the clues</h1><p><strong>Doctor:</strong> “${doctorCopy}”</p><p><strong>Ian:</strong> “Thank you for looking after my sample!”</p><button class="primary-button" type="button" data-start-recap>Review the laboratory journey →</button></div>
+    </section>`;
+    setGuide("The checked glucose report is back with Ian’s doctor.");
+    document.querySelector("[data-start-recap]").addEventListener("click", () => {
+        d.doctorAcknowledged = true;
+        d.phase = "recap";
+        saveCheckpoint();
+        render();
+    });
+}
+
+const RECAP_CARDS = {
+    prepare:{ title:"Check and prepare", copy:"Match the sample, separate plasma, and complete quality control.", asset:"centrifuge-open-v1.png" },
+    measure:{ title:"Measure", copy:"Use a tiny aliquot, reagent, reaction, and light reading.", asset:"analyser-cutaway-v1.png" },
+    report:{ title:"Review and report", copy:"Compare, review, and send the checked result.", asset:"request-monitor-v1.png" }
+};
+
+function recapCardMarkup(key, source = "pool") {
+    const card = RECAP_CARDS[key];
+    return `<button class="recap-card ${state.delivery.selected === key ? "selected" : ""}" type="button" data-recap-card="${key}" data-source="${source}" aria-pressed="${state.delivery.selected === key}" aria-label="${card.title} recap card${source.startsWith("slot") ? ` in ${Number(source.slice(4)) + 1}` : " in card tray"}"><img src="assets/${card.asset}" alt=""><span><b>${card.title}</b><small>${card.copy}</small></span></button>`;
+}
+
+function renderRecap() {
+    const d = state.delivery;
+    const placed = new Set(d.recapSlots.filter(Boolean));
+    screenHost.innerHTML = `<section class="screen recap-screen" aria-labelledby="recapTitle">
+        <header class="recap-heading"><p class="kicker">CHAPTER 6 · MISSION RECAP</p><h1 id="recapTitle">Put the laboratory journey in order</h1><p>Drag each card into a slot, or select a card and then a slot.</p></header>
+        <div class="recap-pool" aria-label="Recap card tray">${d.recapCards.filter(key => !placed.has(key)).map(key => recapCardMarkup(key)).join("")}</div>
+        <div class="recap-slots" aria-label="Journey order">
+            ${d.recapSlots.map((key, index) => `<div class="recap-slot ${d.selected ? "active" : ""}" role="button" tabindex="0" data-recap-slot="${index}" aria-label="Journey position ${index + 1}${state.level === "junior" ? `; hint ${["check and prepare", "measure", "review and report"][index]}` : ""}"><span class="slot-number">${index + 1}</span>${key ? recapCardMarkup(key, `slot${index}`) : `<span class="slot-hint">${state.level === "junior" ? ["Check first", "Measure next", "Review last"][index] : "Drop a card here"}</span>`}</div>`).join("")}
+        </div>
+        <button class="primary-button recap-submit" type="button" data-submit-recap ${d.recapSlots.some(value => !value) ? "disabled" : ""}>Check the order</button>
+        <p class="chapter-feedback ${d.feedback ? "" : "hidden"}" role="alert">${d.feedback || ""}</p>
+    </section>`;
+    setGuide("Order the journey: checking and preparation happen before measurement, review, and reporting.");
+    wireRecapInteractions();
+}
+
+function wireRecapInteractions() {
+    document.querySelectorAll("[data-recap-card]").forEach(button => {
+        button.addEventListener("click", event => { event.stopPropagation(); selectRecapCard(button.dataset.recapCard); });
+        button.addEventListener("pointerdown", beginRecapDrag);
+    });
+    document.querySelectorAll("[data-recap-slot]").forEach(slot => {
+        slot.addEventListener("click", () => placeSelectedRecapCard(Number(slot.dataset.recapSlot)));
+        slot.addEventListener("keydown", event => {
+            if (!["Enter", " "].includes(event.key)) return;
+            event.preventDefault();
+            placeSelectedRecapCard(Number(slot.dataset.recapSlot));
+        });
+    });
+    document.querySelector("[data-submit-recap]")?.addEventListener("click", submitRecap);
+}
+
+function selectRecapCard(key) {
+    if (Date.now() < (state.suppressClickUntil || 0)) return;
+    state.delivery.selected = state.delivery.selected === key ? null : key;
+    state.delivery.feedback = state.delivery.selected ? `${RECAP_CARDS[key].title} selected. Choose a journey position.` : "";
+    saveCheckpoint();
+    render();
+}
+
+function placeSelectedRecapCard(index) {
+    const d = state.delivery;
+    const key = d.selected;
+    if (!key) return;
+    const oldIndex = d.recapSlots.indexOf(key);
+    const displaced = d.recapSlots[index];
+    if (oldIndex >= 0) d.recapSlots[oldIndex] = displaced || null;
+    else if (displaced) {
+        const empty = d.recapSlots.findIndex(value => !value);
+        if (empty >= 0) d.recapSlots[empty] = displaced;
+    }
+    d.recapSlots[index] = key;
+    d.selected = null;
+    d.feedback = `${RECAP_CARDS[key].title} placed in position ${index + 1}.`;
+    saveCheckpoint();
+    render();
+}
+
+function submitRecap() {
+    const d = state.delivery;
+    if (d.recapSlots.some(value => !value)) return;
+    if (d.recapSlots.join(",") !== "prepare,measure,report") {
+        d.attempts += 1;
+        d.feedback = d.attempts > 1 ? "Check the first pair that is out of order: prepare the sample before measuring it, then review and report." : "Start by checking and preparing the sample before it is measured.";
+        playTone("try");
+        saveCheckpoint();
+        render();
+        return;
+    }
+    d.recapComplete = true;
+    d.feedback = "That is the laboratory journey in the correct order!";
+    saveCheckpoint();
+    awardChemistryBadge();
+}
+
+function beginRecapDrag(event) {
+    if (!event.isPrimary || event.button !== 0) return;
+    const button = event.currentTarget;
+    button.setPointerCapture(event.pointerId);
+    recapDrag = { pointerId:event.pointerId, button, key:button.dataset.recapCard, startX:event.clientX, startY:event.clientY, moved:false };
+    button.addEventListener("pointermove", moveRecapDrag);
+    button.addEventListener("pointerup", endRecapDrag);
+    button.addEventListener("pointercancel", cancelRecapDrag);
+}
+
+function moveRecapDrag(event) {
+    if (!recapDrag || event.pointerId !== recapDrag.pointerId) return;
+    const dx = event.clientX - recapDrag.startX;
+    const dy = event.clientY - recapDrag.startY;
+    if (!recapDrag.moved && Math.hypot(dx, dy) < 7) return;
+    recapDrag.moved = true;
+    event.preventDefault();
+    recapDrag.button.classList.add("dragging");
+    recapDrag.button.style.setProperty("--drag-x", `${dx}px`);
+    recapDrag.button.style.setProperty("--drag-y", `${dy - 42}px`);
+    document.querySelectorAll("[data-recap-slot]").forEach(slot => {
+        const rect = slot.getBoundingClientRect();
+        slot.classList.toggle("drag-over", event.clientX >= rect.left - 24 && event.clientX <= rect.right + 24 && event.clientY >= rect.top - 24 && event.clientY <= rect.bottom + 24);
+    });
+}
+
+function endRecapDrag(event) {
+    if (!recapDrag || event.pointerId !== recapDrag.pointerId) return;
+    const current = { ...recapDrag };
+    const slot = Array.from(document.querySelectorAll("[data-recap-slot]")).find(candidate => {
+        const rect = candidate.getBoundingClientRect();
+        return event.clientX >= rect.left - 24 && event.clientX <= rect.right + 24 && event.clientY >= rect.top - 24 && event.clientY <= rect.bottom + 24;
+    });
+    cleanupRecapDrag();
+    if (!current.moved) return;
+    state.suppressClickUntil = Date.now() + 450;
+    state.delivery.selected = current.key;
+    if (slot) placeSelectedRecapCard(Number(slot.dataset.recapSlot));
+    else {
+        state.delivery.selected = null;
+        state.delivery.feedback = "The recap card returned safely. Missed drops are not errors.";
+        saveCheckpoint();
+        render();
+    }
+}
+
+function cancelRecapDrag() {
+    if (!recapDrag) return;
+    cleanupRecapDrag();
+    if (state.delivery) {
+        state.delivery.selected = null;
+        state.delivery.feedback = "The recap card returned to its last valid position.";
+        saveCheckpoint();
+        if (!portraitQuery.matches) render();
+    }
+}
+
+function cleanupRecapDrag() {
+    if (!recapDrag) return;
+    const { button } = recapDrag;
+    button.classList.remove("dragging");
+    button.style.removeProperty("--drag-x");
+    button.style.removeProperty("--drag-y");
+    button.removeEventListener("pointermove", moveRecapDrag);
+    button.removeEventListener("pointerup", endRecapDrag);
+    button.removeEventListener("pointercancel", cancelRecapDrag);
+    document.querySelectorAll("[data-recap-slot]").forEach(slot => slot.classList.remove("drag-over"));
+    recapDrag = null;
+}
+
+function awardChemistryBadge() {
+    const d = state.delivery;
+    if (!d?.sent || !d.doctorAcknowledged || !d.recapComplete) return;
+    if (!d.badgeAwarded) {
+        d.badgeAwarded = true;
+        saveSharedChemistryProgress();
+    }
+    state.chapter6Complete = true;
+    state.stage = "mission-complete";
+    saveCheckpoint();
+    playTone("success");
+    render();
+}
+
+function saveSharedChemistryProgress() {
+    try {
+        const key = "sitcGameProgressV2";
+        const raw = localStorage.getItem(key);
+        let progress = {};
+        if (raw) {
+            try { progress = JSON.parse(raw); } catch (error) { progress = {}; }
+        }
+        if (!progress || typeof progress !== "object" || Array.isArray(progress)) progress = {};
+        if (!progress.completedCases || typeof progress.completedCases !== "object" || Array.isArray(progress.completedCases)) progress.completedCases = {};
+        if (!Array.isArray(progress.completedCases.chemistry)) progress.completedCases.chemistry = [];
+        if (!progress.completedCases.chemistry.includes("main")) progress.completedCases.chemistry.push("main");
+        localStorage.setItem(key, JSON.stringify(progress));
+        storageAvailable = true;
+    } catch (error) {
+        storageAvailable = false;
+        console.warn("Chemistry badge progress could not be saved:", error);
+    }
+}
+
 function replayQualityControl() {
     state.qualityControl = createQualityControlState(state.level);
     state.stage = "qc-intro";
@@ -1444,22 +2339,40 @@ function replayQualityControl() {
 
 function renderComplete() {
     screenHost.innerHTML = `
-        <section class="screen complete-screen" aria-labelledby="completeTitle">
-            <div class="complete-card">
-                <div class="complete-icon" aria-hidden="true">✓</div>
-                <p class="kicker">CHAPTER 3 COMPLETE</p>
-                <h1 id="completeTitle">The check passed!</h1>
-                <p class="success-line">The check passed! We’re ready to measure glucose in Ian’s sample.</p>
-                <p class="section-end"><strong>This is the end of the available content.</strong><br>The patient-analysis chapter is not available yet.</p>
+        <section class="screen complete-screen mission-complete-screen" aria-labelledby="completeTitle">
+            <div class="complete-card chemistry-badge-card">
+                <div class="chemistry-badge" aria-hidden="true"><span class="badge-tube"></span><span class="badge-cup"></span><span class="badge-beam"></span><b>★</b></div>
+                <p class="kicker">ALL SIX CHAPTERS COMPLETE</p>
+                <h1 id="completeTitle" tabindex="-1">Clinical Chemistry Badge Earned!</h1>
+                <p class="success-line">You checked Ian’s sample, prepared the plasma, checked the test, measured glucose, and helped his doctor.</p>
+                <p class="section-end"><strong>${state.caseData.name}’s laboratory journey is complete.</strong><br>Hints and retries never change the badge you earn.</p>
                 <div class="complete-actions">
-                    <button class="primary-button" id="replayButton" type="button">Replay quality-control chapter</button>
-                    <a class="secondary-button" href="../">Return to Chemistry Lab</a>
+                    <button class="primary-button" id="newVersionButton" type="button">Play a new version</button>
+                    <a class="secondary-button" href="../">Return to Clinical Chemistry</a>
                 </div>
-                <p class="no-badge">No Chemistry badge has been awarded for this partial mission.${storageAvailable ? "" : " Progress could not be saved on this device."}</p>
+                <p class="no-badge">${storageAvailable ? "The badge is saved in your laboratory passport." : "The mission is complete, but the badge could not be saved on this device."}</p>
             </div>
         </section>`;
-    setGuide("The check passed! We’re ready to measure glucose in Ian’s sample.");
-    document.getElementById("replayButton").addEventListener("click", replayQualityControl);
+    setGuide("Clinical Chemistry Badge Earned! Ian’s checked report reached his doctor.");
+    document.getElementById("newVersionButton").addEventListener("click", startNewVersion);
+    document.getElementById("completeTitle")?.focus();
+}
+
+function startNewVersion() {
+    resetToOpening(true);
+}
+
+function resetToOpening(allowWithin = false) {
+    const soundOn = state.soundOn;
+    clearCheckpoint();
+    allowWithinNextCase = allowWithin;
+    state = {
+        version:6, level:null, caseData:null, scenario:null, stage:"opening", clueSeen:false,
+        inspectionIndex:null, mismatchFields:[], acceptedIndex:null, bottleSelected:false,
+        chapter1Complete:false, chapter2Complete:false, chapter3Complete:false, chapter4Complete:false, chapter5Complete:false, chapter6Complete:false,
+        centrifuge:null, qualityControl:null, measurementCase:null, analyser:null, review:null, report:null, delivery:null, soundOn
+    };
+    render();
 }
 
 function changeLevel(level) {
@@ -1472,6 +2385,37 @@ function changeLevel(level) {
     cancelBottleDrag();
     cancelCentrifugeDrag();
     cancelQcDrag();
+    cancelAnalyserDrag();
+    cancelRecapDrag();
+    if (state.stage === "mission-complete") {
+        startFresh(level, true);
+        return;
+    }
+    if (state.chapter5Complete || state.stage === "delivery") {
+        state.level = level;
+        state.delivery = createDeliveryState();
+        state.stage = "delivery";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (state.chapter4Complete || state.stage === "review") {
+        state.level = level;
+        state.review = createReviewState(level);
+        state.report = { checked:false, sent:false };
+        state.stage = "review";
+        saveCheckpoint();
+        render();
+        return;
+    }
+    if (state.chapter3Complete || state.stage === "analyser") {
+        state.level = level;
+        state.analyser = createAnalyserState();
+        state.stage = "analyser";
+        saveCheckpoint();
+        render();
+        return;
+    }
     if (state.chapter2Complete || isQualityControlStage(state.stage)) {
         state.level = level;
         state.qualityControl = createQualityControlState(level);
@@ -1512,6 +2456,8 @@ function showDialog(dialog, invoker) {
     pausePhaseTimer();
     cancelCentrifugeDrag();
     cancelQcDrag();
+    cancelAnalyserDrag();
+    cancelRecapDrag();
     document.body.classList.add("dialog-paused");
     if (typeof dialog.showModal === "function") dialog.showModal();
     else dialog.setAttribute("open", "");
@@ -1536,6 +2482,8 @@ function updateOrientation() {
         cancelBottleDrag();
         cancelCentrifugeDrag();
         cancelQcDrag();
+        cancelAnalyserDrag();
+        cancelRecapDrag();
     } else {
         startPhaseTimer();
     }
@@ -1561,12 +2509,7 @@ function showResumeDialog(saved) {
         dialog.close();
         dialog.remove();
         resumeAfterDialog();
-        state.stage = "opening";
-        state.level = null;
-        state.caseData = null;
-        state.scenario = null;
-        clearCheckpoint();
-        render();
+        resetToOpening(false);
     });
     if (portraitQuery.matches) {
         const showWhenLandscape = event => {
@@ -1602,6 +2545,8 @@ window.addEventListener("blur", () => {
     if (drag) cancelBottleDrag();
     if (centrifugeDrag) cancelCentrifugeDrag();
     if (qcDrag) cancelQcDrag();
+    if (analyserDrag) cancelAnalyserDrag();
+    if (recapDrag) cancelRecapDrag();
 });
 
 // Read-only hooks make browser verification possible without changing passport progress.

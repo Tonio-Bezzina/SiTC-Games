@@ -513,12 +513,12 @@ function createLabCard(
         "lab-badge-status";
 
 
-    if (mastered) {
+    if (mastered && lab.missions.length > 1) {
 
         badgeStatus.textContent =
             lab.masterTitle;
 
-    } else if (badgeEarned) {
+    } else if (badgeEarned || mastered) {
 
         badgeStatus.textContent =
             "Lab Badge Earned";
