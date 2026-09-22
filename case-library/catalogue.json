@@ -43,7 +43,65 @@
         "slideCount": 5
       }
     ],
-    "haematology": [],
+    "haematology": [
+      {
+        "id": "Case 1 - Bacteria",
+        "title": "Case 1 - Bacteria",
+        "thumbnail": "haematology/cases/Case 1 - Bacteria/image 1.png",
+        "slides": [
+          "haematology/cases/Case 1 - Bacteria/image 1.png",
+          "haematology/cases/Case 1 - Bacteria/image 2.png",
+          "haematology/cases/Case 1 - Bacteria/image 3.png",
+          "haematology/cases/Case 1 - Bacteria/image 4.png",
+          "haematology/cases/Case 1 - Bacteria/image 5.png",
+          "haematology/cases/Case 1 - Bacteria/image 6.png",
+          "haematology/cases/Case 1 - Bacteria/image 7.png",
+          "haematology/cases/Case 1 - Bacteria/image 8.png",
+          "haematology/cases/Case 1 - Bacteria/image 9.png",
+          "haematology/cases/Case 1 - Bacteria/image 10.png",
+          "haematology/cases/Case 1 - Bacteria/image 11.png"
+        ],
+        "slideCount": 11
+      },
+      {
+        "id": "Case 2 - Malaria",
+        "title": "Case 2 - Malaria",
+        "thumbnail": "haematology/cases/Case 2 - Malaria/image 1.png",
+        "slides": [
+          "haematology/cases/Case 2 - Malaria/image 1.png",
+          "haematology/cases/Case 2 - Malaria/image 2.png",
+          "haematology/cases/Case 2 - Malaria/image 3.png",
+          "haematology/cases/Case 2 - Malaria/image 4.png",
+          "haematology/cases/Case 2 - Malaria/image 5.png",
+          "haematology/cases/Case 2 - Malaria/image 6.png",
+          "haematology/cases/Case 2 - Malaria/image 7.png",
+          "haematology/cases/Case 2 - Malaria/image 8.png",
+          "haematology/cases/Case 2 - Malaria/image 9.png",
+          "haematology/cases/Case 2 - Malaria/image 10.png",
+          "haematology/cases/Case 2 - Malaria/image 11.png",
+          "haematology/cases/Case 2 - Malaria/image 12.png"
+        ],
+        "slideCount": 12
+      },
+      {
+        "id": "Case 3 - Bleeding",
+        "title": "Case 3 - Bleeding",
+        "thumbnail": "haematology/cases/Case 3 - Bleeding/image 1.png",
+        "slides": [
+          "haematology/cases/Case 3 - Bleeding/image 1.png",
+          "haematology/cases/Case 3 - Bleeding/image 2.png",
+          "haematology/cases/Case 3 - Bleeding/image 3.png",
+          "haematology/cases/Case 3 - Bleeding/image 4.png",
+          "haematology/cases/Case 3 - Bleeding/image 5.png",
+          "haematology/cases/Case 3 - Bleeding/image 6.png",
+          "haematology/cases/Case 3 - Bleeding/image 7.png",
+          "haematology/cases/Case 3 - Bleeding/image 8.png",
+          "haematology/cases/Case 3 - Bleeding/image 9.png",
+          "haematology/cases/Case 3 - Bleeding/image 10.png"
+        ],
+        "slideCount": 10
+      }
+    ],
     "histology": [
       {
         "id": "Case 1 - Cat Scratch Disease",
