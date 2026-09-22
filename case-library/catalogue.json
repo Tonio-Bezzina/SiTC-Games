@@ -46,17 +46,17 @@
     "haematology": [],
     "histology": [
       {
-        "id": "Case 1",
-        "title": "Case 1",
-        "thumbnail": "histology/cases/Case 1/image 1.png",
+        "id": "Case 1 - Cat Scratch Disease",
+        "title": "Case 1 - Cat Scratch Disease",
+        "thumbnail": "histology/cases/Case 1 - Cat Scratch Disease/image 1.png",
         "slides": [
-          "histology/cases/Case 1/image 1.png",
-          "histology/cases/Case 1/image 2.png",
-          "histology/cases/Case 1/image 3a.png",
-          "histology/cases/Case 1/image 3b.png",
-          "histology/cases/Case 1/image 4.png",
-          "histology/cases/Case 1/image 5.png",
-          "histology/cases/Case 1/image 6.png"
+          "histology/cases/Case 1 - Cat Scratch Disease/image 1.png",
+          "histology/cases/Case 1 - Cat Scratch Disease/image 2.png",
+          "histology/cases/Case 1 - Cat Scratch Disease/image 3a.png",
+          "histology/cases/Case 1 - Cat Scratch Disease/image 3b.png",
+          "histology/cases/Case 1 - Cat Scratch Disease/image 4.png",
+          "histology/cases/Case 1 - Cat Scratch Disease/image 5.png",
+          "histology/cases/Case 1 - Cat Scratch Disease/image 6.png"
         ],
         "slideCount": 7
       },
