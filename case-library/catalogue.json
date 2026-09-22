@@ -132,6 +132,25 @@
         "slideCount": 5
       }
     ],
-    "mycology": []
+    "mycology": [
+      {
+        "id": "Case 1",
+        "title": "Case 1",
+        "thumbnail": "mycology/cases/Case 1/Image 0.png",
+        "slides": [
+          "mycology/cases/Case 1/Image 0.png",
+          "mycology/cases/Case 1/Image 1.png",
+          "mycology/cases/Case 1/Image 2.png",
+          "mycology/cases/Case 1/Image 3.png",
+          "mycology/cases/Case 1/Image 4.png",
+          "mycology/cases/Case 1/Image 5.png",
+          "mycology/cases/Case 1/Image 6.png",
+          "mycology/cases/Case 1/Image 7.png",
+          "mycology/cases/Case 1/Image 8.png",
+          "mycology/cases/Case 1/Image 9.png"
+        ],
+        "slideCount": 10
+      }
+    ]
   }
 }
