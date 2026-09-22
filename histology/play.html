@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#073c63">
+  <meta name="description" content="Follow a patient skin specimen through all seven missions of The Histology Journey.">
+  <title>The Histology Journey | SiTC Games</title>
+  <link rel="icon" type="image/svg+xml" href="assets/shared/histology-game-icon.svg">
+  <link rel="stylesheet" href="styles.css?v=9">
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to the game</a>
+  <div id="app" class="app-shell" tabindex="-1"></div>
+  <div id="announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <div id="orientationBlocker" class="orientation-blocker" role="dialog" aria-modal="true" aria-labelledby="rotateTitle" hidden>
+    <img src="assets/shared/rotate-device-illustration.svg" alt="Rotate a device from portrait to landscape">
+    <h1 id="rotateTitle">Turn your device sideways</h1>
+    <p>Your case is saved. The mission will continue exactly where you left it.</p>
+  </div>
+  <noscript>
+    <main class="noscript-card">
+      <h1>JavaScript is needed</h1>
+      <p>The Histology Journey needs JavaScript for its patient-matching activity.</p>
+      <a href="../">Return to all laboratories</a>
+    </main>
+  </noscript>
+  <script src="logic.js?v=8"></script>
+  <script src="game.js?v=11"></script>
+</body>
+</html>
