@@ -44,7 +44,21 @@
       }
     ],
     "haematology": [],
-    "histology": [],
+    "histology": [
+      {
+        "id": "Case 1",
+        "title": "Case 01",
+        "thumbnail": "histology/cases/Case 1/image 1.png",
+        "slides": [
+          "histology/cases/Case 1/image 1.png",
+          "histology/cases/Case 1/image 2.png",
+          "histology/cases/Case 1/image 4.png",
+          "histology/cases/Case 1/image 5.png",
+          "histology/cases/Case 1/image 6.png"
+        ],
+        "slideCount": 5
+      }
+    ],
     "mycology": []
   }
 }
