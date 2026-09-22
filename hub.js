@@ -122,7 +122,7 @@ const labs = [
         description:
             "Follow a patient sample through the laboratory and identify the bacterium causing an infection.",
 
-        href: "bacteriology/main/",
+        href: "bacteriology/",
         casesHref: "case-library/?lab=bacteriology",
 
         available: true,
@@ -560,7 +560,7 @@ function createLabCard(
             "lab-button";
 
         button.textContent =
-            "Main Mission";
+            "Enter Lab";
 
     } else {
 
