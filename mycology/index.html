@@ -3,39 +3,68 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#073c63">
-  <meta name="description" content="Follow a fictional specimen through the mycology laboratory and become a Junior Mycologist.">
-  <title>The Mycology Journey | SiTC Games</title>
-  <link rel="icon" type="image/svg+xml" href="assets/shared/mycology-game-icon.svg">
-  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#29482c">
+  <title>Mycology Laboratory | SiTC Games</title>
+  <link rel="stylesheet" href="../assets/lab-section.css?v=20260922-lab-hubs">
 </head>
-<body>
-  <a class="skip-link" href="#app">Skip to the game</a>
-  <div id="app"></div>
-  <div id="announcer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
-  <dialog id="orientationDialog" aria-labelledby="orientationTitle">
-    <div class="dialog-card orientation-card">
-      <img src="assets/shared/rotate-device.svg" alt="A device rotating to landscape">
+<body data-lab-id="mycology" data-main-mission="main"
+      style="--lab-primary:#52783b;--lab-secondary:#9fc96f;--lab-dark:#29482c;--lab-soft:#eef7e8;">
+  <header class="lab-header">
+    <a class="back-link" href="../">← All laboratories</a>
+    <div>
+      <p class="eyebrow">SiTC Games · Laboratory</p>
+      <h1>Mycology</h1>
+      <p>Follow a specimen through the laboratory and solve a fungal mystery.</p>
+    </div>
+    <div class="lab-icon" aria-hidden="true">🍄</div>
+  </header>
+
+  <main>
+    <section class="lab-status" data-lab-status>
+      <div class="badge-icon" aria-hidden="true">🍄</div>
       <div>
-        <p class="eyebrow">MORE ROOM TO EXPLORE</p>
-        <h2 id="orientationTitle">Landscape works best</h2>
-        <p>You can rotate your device, or continue in portrait with a stacked layout.</p>
-        <button id="continuePortrait" class="primary-button" type="button">Continue in portrait</button>
+        <p class="eyebrow">YOUR MYCOLOGY BADGE</p>
+        <h2 data-badge-title>Badge Not Yet Earned</h2>
+        <p data-badge-description>Complete the Main Mission to earn this laboratory badge for your Young Scientist progress.</p>
       </div>
+    </section>
+
+    <div class="section-heading">
+      <p class="eyebrow">CHOOSE WHAT TO EXPLORE</p>
+      <h2>Game and Cases</h2>
+      <p>Play the interactive Main Mission for your badge, or open the scientist-guided case library at any time.</p>
     </div>
-  </dialog>
-  <dialog id="replayDialog" aria-labelledby="replayTitle">
-    <div class="dialog-card replay-card">
-      <p class="eyebrow">PLAY AGAIN</p>
-      <h2 id="replayTitle">Start a fresh fictional case?</h2>
-      <p>Your SiTC laboratory badge will stay safe.</p>
-      <div class="final-actions">
-        <button id="cancelReplay" class="secondary-button" type="button">Keep this case</button>
-        <button id="confirmReplay" class="primary-button" type="button">Start fresh case</button>
-      </div>
+
+    <section class="option-grid">
+      <article class="option-card main-option">
+        <div class="option-art" aria-hidden="true">🍄</div>
+        <p class="eyebrow">INTERACTIVE GAME · MAIN MISSION</p>
+        <h3>The Mycology Journey</h3>
+        <p>Follow a fictional specimen through microscopy, culture, identification and antifungal testing to solve the fungal mystery.</p>
+        <div class="option-meta">
+          <span class="meta-pill">Junior · Explorer · Challenge</span>
+          <span class="meta-pill" data-mission-status>Not completed</span>
+        </div>
+        <a class="action-button" href="play.html">Start Main Mission →</a>
+      </article>
+
+      <article class="option-card cases-option">
+        <div class="option-art" aria-hidden="true">🗂️</div>
+        <p class="eyebrow">SCIENTIST-GUIDED · ALWAYS AVAILABLE</p>
+        <h3>Cases</h3>
+        <p>Explore passive, image-based cases with a scientist. Cases do not affect mission progress, stars or badges.</p>
+        <div class="option-meta">
+          <span class="meta-pill">No progress required</span>
+        </div>
+        <a class="action-button" href="../case-library/?lab=mycology">View Cases →</a>
+      </article>
+    </section>
+
+    <div class="return-area">
+      <a class="return-link" href="../">← Return to all laboratories</a>
     </div>
-  </dialog>
-  <script src="logic.js"></script>
-  <script src="game.js"></script>
+  </main>
+
+  <script src="../assets/lab-section.js?v=20260922-lab-hubs"></script>
 </body>
 </html>
