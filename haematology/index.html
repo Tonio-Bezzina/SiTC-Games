@@ -1,141 +1,70 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#073c63">
-    <meta name="description" content="Identify five white blood cells and match each one to its role.">
-    <title>Identify the White Blood Cell | SiTC Games</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23073c63'/%3E%3Ccircle cx='32' cy='32' r='21' fill='%23f3d9f4'/%3E%3Ccircle cx='24' cy='31' r='8' fill='%236a2c91'/%3E%3Ccircle cx='39' cy='24' r='7' fill='%236a2c91'/%3E%3Ccircle cx='39' cy='41' r='7' fill='%236a2c91'/%3E%3C/svg%3E">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#34204b">
+  <title>Haematology Laboratory | SiTC Games</title>
+  <link rel="stylesheet" href="../assets/lab-section.css?v=20260922-lab-hubs">
 </head>
-<body>
-    <header class="game-bar">
-        <a class="back-link" href="../">← All laboratories</a>
-        <div class="game-heading">
-            <span>Haematology</span>
-            <strong>Identify the White Blood Cell</strong>
+<body data-lab-id="haematology" data-main-mission="main"
+      style="--lab-primary:#73338f;--lab-secondary:#c66bd6;--lab-dark:#34204b;--lab-soft:#f4eafa;">
+  <header class="lab-header">
+    <a class="back-link" href="../">← All laboratories</a>
+    <div>
+      <p class="eyebrow">SiTC Games · Laboratory</p>
+      <h1>Haematology</h1>
+      <p>Explore blood cells and the clues they can reveal.</p>
+    </div>
+    <div class="lab-icon" aria-hidden="true">🔬</div>
+  </header>
+
+  <main>
+    <section class="lab-status" data-lab-status>
+      <div class="badge-icon" aria-hidden="true">🔬</div>
+      <div>
+        <p class="eyebrow">YOUR HAEMATOLOGY BADGE</p>
+        <h2 data-badge-title>Badge Not Yet Earned</h2>
+        <p data-badge-description>Complete the Main Mission to earn this laboratory badge for your Young Scientist progress.</p>
+      </div>
+    </section>
+
+    <div class="section-heading">
+      <p class="eyebrow">CHOOSE WHAT TO EXPLORE</p>
+      <h2>Game and Cases</h2>
+      <p>Play the interactive Main Mission for your badge, or open the scientist-guided case library at any time.</p>
+    </div>
+
+    <section class="option-grid">
+      <article class="option-card main-option">
+        <div class="option-art" aria-hidden="true">🔬</div>
+        <p class="eyebrow">INTERACTIVE GAME · MAIN MISSION</p>
+        <h3>Identify the White Blood Cell</h3>
+        <p>Examine five white blood cells, identify each one and match it to its role in the body.</p>
+        <div class="option-meta">
+          <span class="meta-pill">Junior · Explorer · Challenge</span>
+          <span class="meta-pill" data-mission-status>Not completed</span>
         </div>
-        <button id="levelControl" class="bar-button" type="button">Level: <span id="levelLabel">Choose</span></button>
-    </header>
+        <a class="action-button" href="play.html">Start Main Mission →</a>
+      </article>
 
-    <main>
-        <section id="gameScreen" class="game-layout" aria-labelledby="missionTitle" hidden>
-            <div class="mission-panel">
-                <div class="mission-heading">
-                    <div>
-                        <p class="eyebrow">YOUR MISSION</p>
-                        <h1 id="missionTitle">Click a white blood cell to begin</h1>
-                    </div>
-                    <div class="progress-pill" aria-live="polite">
-                        <strong id="progressCount">0/5</strong>
-                        <span>cells identified</span>
-                    </div>
-                </div>
-
-                <div id="bloodScene" class="blood-scene" aria-label="Peripheral blood scene with five selectable white blood cells">
-                    <div id="cellGrid" class="cell-grid"></div>
-                </div>
-            </div>
-
-            <aside class="side-panel" aria-labelledby="checklistTitle">
-                <p class="eyebrow">LAB CHECKLIST</p>
-                <h2 id="checklistTitle">Cells discovered</h2>
-                <ul id="cellChecklist" class="cell-checklist"></ul>
-                <div class="side-note">
-                    <strong>Need help?</strong>
-                    <p>Choose a cell first, then use the Hint button in the question.</p>
-                </div>
-                <button id="howToPlayButton" class="secondary-button" type="button">How to Play</button>
-            </aside>
-        </section>
-    </main>
-
-    <dialog id="levelDialog" aria-labelledby="levelTitle">
-        <div class="dialog-card level-dialog-card">
-            <button class="dialog-close" type="button" data-close-dialog aria-label="Close level selection">×</button>
-            <p class="eyebrow">CHOOSE YOUR CHALLENGE</p>
-            <h2 id="levelTitle">Choose a level</h2>
-            <p>Select the amount of guidance you would like.</p>
-            <div class="level-grid">
-                <button type="button" data-level="junior">
-                    <span class="level-symbol" aria-hidden="true">●</span>
-                    <strong>Junior</strong>
-                    <span>More guidance</span>
-                </button>
-                <button type="button" data-level="explorer">
-                    <span class="level-symbol" aria-hidden="true">●●</span>
-                    <strong>Explorer</strong>
-                    <span>Some guidance</span>
-                </button>
-                <button type="button" data-level="challenge">
-                    <span class="level-symbol" aria-hidden="true">●●●</span>
-                    <strong>Challenge</strong>
-                    <span>Realistic cells and fewer clues</span>
-                </button>
-            </div>
-            <p class="hint-reassurance">A hint is available in every level if you need one.</p>
+      <article class="option-card cases-option">
+        <div class="option-art" aria-hidden="true">🗂️</div>
+        <p class="eyebrow">SCIENTIST-GUIDED · ALWAYS AVAILABLE</p>
+        <h3>Cases</h3>
+        <p>Explore passive, image-based cases with a scientist. Cases do not affect mission progress, stars or badges.</p>
+        <div class="option-meta">
+          <span class="meta-pill">No progress required</span>
         </div>
-    </dialog>
+        <a class="action-button" href="../case-library/?lab=haematology">View Cases →</a>
+      </article>
+    </section>
 
-    <dialog id="questionDialog" aria-labelledby="questionTitle">
-        <div class="dialog-card question-card">
-            <button class="dialog-close" type="button" data-close-dialog aria-label="Close question">×</button>
-            <div class="question-cell-frame">
-                <img id="questionCellImage" src="" alt="Selected white blood cell">
-            </div>
-            <div class="question-content">
-                <p id="questionStep" class="eyebrow">CELL IDENTIFICATION</p>
-                <h2 id="questionTitle">What type of white blood cell is this?</h2>
-                <div id="answerGrid" class="answer-grid"></div>
-                <p id="questionFeedback" class="feedback" aria-live="polite"></p>
-                <p id="hintText" class="hint-text" aria-live="polite" hidden></p>
-                <div class="question-actions">
-                    <button id="hintButton" class="secondary-button" type="button">Hint</button>
-                    <button id="returnButton" class="primary-button" type="button" hidden>Back to cells</button>
-                </div>
-            </div>
-        </div>
-    </dialog>
+    <div class="return-area">
+      <a class="return-link" href="../">← Return to all laboratories</a>
+    </div>
+  </main>
 
-    <dialog id="howToDialog" aria-labelledby="howToTitle">
-        <div class="dialog-card text-dialog-card">
-            <button class="dialog-close" type="button" data-close-dialog aria-label="Close instructions">×</button>
-            <p class="eyebrow">HOW TO PLAY</p>
-            <h2 id="howToTitle">Discover all five cells</h2>
-            <ol>
-                <li>Click or tap any white blood cell.</li>
-                <li>Choose the cell's name.</li>
-                <li>Choose the role of that cell.</li>
-                <li>Complete all five cells.</li>
-            </ol>
-            <p>You can use a hint whenever you need one.</p>
-        </div>
-    </dialog>
-
-    <dialog id="completionDialog" aria-labelledby="completionTitle">
-        <div class="dialog-card completion-card">
-            <div class="completion-mark" aria-hidden="true">✓</div>
-            <p class="eyebrow">MISSION COMPLETE</p>
-            <h2 id="completionTitle">You're an incredible scientist!</h2>
-            <p>You identified all five white blood cells and their roles. Well done!</p>
-            <div class="completion-actions">
-                <button id="playAgainButton" class="primary-button" type="button">Play Again</button>
-                <button id="reviewButton" class="secondary-button" type="button">Review the Cells</button>
-                <button id="chooseLevelButton" class="secondary-button" type="button">Choose Another Level</button>
-            </div>
-        </div>
-    </dialog>
-
-    <dialog id="reviewDialog" aria-labelledby="reviewTitle">
-        <div class="dialog-card review-card">
-            <button class="dialog-close" type="button" data-close-dialog aria-label="Close cell review">×</button>
-            <p class="eyebrow">CELL REVIEW</p>
-            <h2 id="reviewTitle">The five white blood cells</h2>
-            <div id="reviewGrid" class="review-grid"></div>
-        </div>
-    </dialog>
-
-    <script src="game.js"></script>
+  <script src="../assets/lab-section.js?v=20260922-lab-hubs"></script>
 </body>
 </html>
