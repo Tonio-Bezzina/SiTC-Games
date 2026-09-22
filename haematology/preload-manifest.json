@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "Game shell",
+      "files": [
+        "play.html",
+        "styles.css",
+        "game.js"
+      ]
+    },
+    {
+      "name": "Junior and Explorer cells",
+      "files": [
+        "assets/backgrounds/cartoon-blood-smear.png",
+        "assets/cells/cartoon/basophil.png",
+        "assets/cells/cartoon/eosinophil.png",
+        "assets/cells/cartoon/lymphocyte.png",
+        "assets/cells/cartoon/monocyte.png",
+        "assets/cells/cartoon/neutrophil.png"
+      ]
+    },
+    {
+      "name": "Challenge cells",
+      "files": [
+        "assets/backgrounds/realistic-blood-smear.png",
+        "assets/cells/realistic/basophil.png",
+        "assets/cells/realistic/eosinophil.png",
+        "assets/cells/realistic/lymphocyte.png",
+        "assets/cells/realistic/monocyte.png",
+        "assets/cells/realistic/neutrophil.png"
+      ]
+    }
+  ]
+}

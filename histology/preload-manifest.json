@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "Game shell",
+      "files": [
+        "play.html",
+        "styles.css",
+        "logic.js",
+        "game.js",
+        "assets/shared/focus-arrow.svg",
+        "assets/shared/guide-strip-avatar.png",
+        "assets/shared/hint-icon.svg",
+        "assets/shared/histology-game-icon.svg",
+        "assets/shared/histology-lab-shell-bg.png",
+        "assets/shared/journey-down-arrow.svg",
+        "assets/shared/rotate-device-illustration.svg",
+        "assets/shared/scientist-guide-neutral.png",
+        "assets/shared/scientist-guide-pointing.png",
+        "assets/shared/scientist-guide-success.png",
+        "assets/shared/success-check-icon.svg"
+      ]
+    },
+    {
+      "name": "Mission 1",
+      "files": [
+        "assets/mission-1/barcode-scan-light.svg",
+        "assets/mission-1/field-mismatch-marker.svg",
+        "assets/mission-1/paper-request-blank.png",
+        "assets/mission-1/receiving-scanning-rack-accepted.png",
+        "assets/mission-1/receiving-scanning-rack-empty.png",
+        "assets/mission-1/reception-background.png",
+        "assets/mission-1/rejected-set-marker.svg",
+        "assets/mission-1/request-monitor-frame.png",
+        "assets/mission-1/sample-station-tray.png",
+        "assets/mission-1/skin-specimen-container-closed.png",
+        "assets/mission-1/skin-specimen-sample.png",
+        "assets/mission-1/specimen-container-label-blank.svg"
+      ]
+    },
+    {
+      "name": "Mission 2",
+      "files": [
+        "assets/mission-2/cut-guide.svg",
+        "assets/mission-2/cutting-board-clean.png",
+        "assets/mission-2/grossing-bench-background.png",
+        "assets/mission-2/histology-cassette-closed-loaded.png",
+        "assets/mission-2/histology-cassette-open-empty.png",
+        "assets/mission-2/histology-cassette-open-loaded.png",
+        "assets/mission-2/skin-tissue-cut-main.png",
+        "assets/mission-2/skin-tissue-small-piece.png",
+        "assets/mission-2/skin-tissue-whole.png",
+        "assets/mission-2/virtual-scalpel.png"
+      ]
+    },
+    {
+      "name": "Mission 3",
+      "files": [
+        "assets/mission-3/embedding-centre-idle.png",
+        "assets/mission-3/embedding-mould-empty.png",
+        "assets/mission-3/embedding-mould-tissue.png",
+        "assets/mission-3/embedding-mould-wax-filled.png",
+        "assets/mission-3/ffpe-block-complete.png",
+        "assets/mission-3/microtome-choice-idle.png",
+        "assets/mission-3/processing-lab-background.png",
+        "assets/mission-3/processing-path-diagram.svg",
+        "assets/mission-3/staining-machine-choice-idle.png",
+        "assets/mission-3/tissue-processor-active.png",
+        "assets/mission-3/tissue-processor-idle.png"
+      ]
+    },
+    {
+      "name": "Mission 4",
+      "files": [
+        "assets/mission-4/microtome-block-loaded.png",
+        "assets/mission-4/microtome-empty.png",
+        "assets/mission-4/microtome-section-emerging.png",
+        "assets/mission-4/microtomy-before-after.svg",
+        "assets/mission-4/microtomy-lab-background.png",
+        "assets/mission-4/staining-machine-m4-choice.png",
+        "assets/mission-4/thin-section-ribbon.png",
+        "assets/mission-4/thin-section-single.png"
+      ]
+    },
+    {
+      "name": "Mission 5",
+      "files": [
+        "assets/mission-5/cassette-m5-distractor.png",
+        "assets/mission-5/laboratory-bin.png",
+        "assets/mission-5/microscope-slide-blank.png",
+        "assets/mission-5/microscope-slide-unstained.png",
+        "assets/mission-5/section-to-slide-diagram.svg",
+        "assets/mission-5/slide-prep-bench-background.png"
+      ]
+    },
+    {
+      "name": "Mission 6",
+      "files": [
+        "assets/mission-6/slide-carrier-empty.png",
+        "assets/mission-6/slide-carrier-loaded.png",
+        "assets/mission-6/stain-colour-streams.png",
+        "assets/mission-6/stained-slides-output-tray.png",
+        "assets/mission-6/staining-lab-background.png",
+        "assets/mission-6/staining-machine-active.png",
+        "assets/mission-6/staining-machine-empty.png",
+        "assets/mission-6/staining-machine-slide-loaded.png",
+        "assets/mission-6/staining-process-diagram.svg"
+      ]
+    },
+    {
+      "name": "Mission 7",
+      "files": [
+        "assets/mission-7/he-hint-nuclei-callout.svg",
+        "assets/mission-7/he-hint-pink-tissue-callout.svg",
+        "assets/mission-7/he-slide-finished.png",
+        "assets/mission-7/slide-a-green-yellow.png",
+        "assets/mission-7/slide-b-he-purple-pink.png",
+        "assets/mission-7/slide-c-blue-violet.png"
+      ]
+    },
+    {
+      "name": "Completion",
+      "files": [
+        "assets/completion/completion-badge.svg",
+        "assets/completion/completion-lab-background.png",
+        "assets/completion/compound-microscope.png",
+        "assets/completion/he-slide-beside-microscope.png",
+        "assets/completion/journey-cassette-icon.svg",
+        "assets/completion/journey-he-icon.svg",
+        "assets/completion/journey-microtome-icon.svg",
+        "assets/completion/journey-processor-icon.svg",
+        "assets/completion/journey-slide-icon.svg",
+        "assets/completion/journey-specimen-icon.svg",
+        "assets/completion/journey-stain-icon.svg",
+        "assets/completion/journey-wax-block-icon.svg"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "Game shell",
+      "files": [
+        "index.html",
+        "styles.css",
+        "logic.js",
+        "game.js"
+      ]
+    },
+    {
+      "name": "Mission 1",
+      "files": [
+        "assets/mission-1/blue-gloves-draggable.png",
+        "assets/mission-1/face-visor-container.png",
+        "assets/mission-1/gloves-box.png",
+        "assets/mission-1/hard-hat-on-hook.png",
+        "assets/mission-1/hard-hat.png",
+        "assets/mission-1/lab-coat-on-hook.png",
+        "assets/mission-1/ppe-countertop.png",
+        "assets/mission-1/preparation-room-background.png",
+        "assets/mission-1/safety-glasses-container.png",
+        "assets/mission-1/scientist-base.png",
+        "assets/mission-1/scientist-gloves-overlay.png",
+        "assets/mission-1/scientist-lab-coat-overlay.png",
+        "assets/mission-1/scientist-with-gloves.png",
+        "assets/mission-1/scientist-with-lab-coat-and-gloves.png",
+        "assets/mission-1/scientist-with-lab-coat.png"
+      ]
+    },
+    {
+      "name": "Mission 2",
+      "files": [
+        "assets/mission-2/blood-culture.png",
+        "assets/mission-2/laboratory-interior-background.png",
+        "assets/mission-2/throat-swab.png",
+        "assets/mission-2/urine-sample.png"
+      ]
+    },
+    {
+      "name": "Mission 4",
+      "files": [
+        "assets/mission-4/blood-agar.png",
+        "assets/mission-4/chocolate-agar.png",
+        "assets/mission-4/cled-agar.png",
+        "assets/mission-4/salmonella-chromogenic-agar.png"
+      ]
+    },
+    {
+      "name": "Mission 5",
+      "files": [
+        "assets/mission-5/blood-agar-lid.png",
+        "assets/mission-5/blood-agar-plate-closed.png",
+        "assets/mission-5/blood-agar-plate-open.png",
+        "assets/mission-5/inoculation-pool-overlay.png",
+        "assets/mission-5/sterile-loop-10ul.png",
+        "assets/mission-5/streak-pattern-complete.png",
+        "assets/mission-5/streak-pattern-stage-1.png",
+        "assets/mission-5/streak-pattern-stage-2.png",
+        "assets/mission-5/throat-swab-applicator.png",
+        "assets/mission-5/throat-swab-closed.png",
+        "assets/mission-5/throat-swab-open.png"
+      ]
+    },
+    {
+      "name": "Mission 6",
+      "files": [
+        "assets/mission-6/colony-inspection-overlay.png",
+        "assets/mission-6/incubated-blood-agar-plate.png",
+        "assets/mission-6/incubator-closed-active.png",
+        "assets/mission-6/incubator-closed.png",
+        "assets/mission-6/incubator-open-empty.png",
+        "assets/mission-6/laboratory-clock.png",
+        "assets/mission-6/streaked-blood-agar-plate.png"
+      ]
+    },
+    {
+      "name": "Mission 7",
+      "files": [
+        "assets/mission-7/bunsen-burner-lit.png",
+        "assets/mission-7/bunsen-burner-unlit.png",
+        "assets/mission-7/colony-picked-overlay.png",
+        "assets/mission-7/distilled-water-drop.png",
+        "assets/mission-7/distilled-water-dropper.png",
+        "assets/mission-7/incubated-blood-agar-plate.png",
+        "assets/mission-7/loop-with-colony.png",
+        "assets/mission-7/microscope-slide-clean.png",
+        "assets/mission-7/microscope-slide-colony-in-water.png",
+        "assets/mission-7/microscope-slide-heat-fixed.png",
+        "assets/mission-7/microscope-slide-smear-dry.png",
+        "assets/mission-7/microscope-slide-smear-wet.png",
+        "assets/mission-7/microscope-slide-water-drop.png",
+        "assets/mission-7/selectable-colony-overlay.png",
+        "assets/mission-7/slide-rack.png",
+        "assets/mission-7/sterile-loop-1ul.png"
+      ]
+    },
+    {
+      "name": "Mission 8",
+      "files": [
+        "assets/mission-8/carbol-fuchsin-bottle.png",
+        "assets/mission-8/crystal-violet-bottle.png",
+        "assets/mission-8/decolorizer-bottle.png",
+        "assets/mission-8/gram-stain-rack.png",
+        "assets/mission-8/lugols-iodine-bottle.png",
+        "assets/mission-8/reagent-drop-clear.png",
+        "assets/mission-8/reagent-drop-decolorizer.png",
+        "assets/mission-8/reagent-drop-fuchsin.png",
+        "assets/mission-8/reagent-drop-iodine.png",
+        "assets/mission-8/reagent-drop-violet.png",
+        "assets/mission-8/slide-carbol-fuchsin.png",
+        "assets/mission-8/slide-crystal-violet-rinsed.png",
+        "assets/mission-8/slide-crystal-violet.png",
+        "assets/mission-8/slide-decolorized-rinsed.png",
+        "assets/mission-8/slide-decolorizing.png",
+        "assets/mission-8/slide-gram-stain-complete.png",
+        "assets/mission-8/slide-heat-fixed.png",
+        "assets/mission-8/slide-iodine-rinsed.png",
+        "assets/mission-8/slide-iodine.png",
+        "assets/mission-8/staining-tray.png",
+        "assets/mission-8/wash-bottle.png"
+      ]
+    },
+    {
+      "name": "Mission 9",
+      "files": [
+        "assets/mission-9/compound-microscope-empty.png",
+        "assets/mission-9/compound-microscope-with-slide.png",
+        "assets/mission-9/gram-stained-slide-draggable.png",
+        "assets/mission-9/microscope-eyepiece-overlay.png",
+        "assets/mission-9/microscope-focus-sharp.png",
+        "assets/mission-9/microscope-focus-soft.png",
+        "assets/mission-9/microscope-stage-closeup-empty.png",
+        "assets/mission-9/microscope-stage-closeup-with-slide.png",
+        "assets/mission-9/microscopy-field-pink-rods.png",
+        "assets/mission-9/microscopy-field-purple-cocci-chains.png",
+        "assets/mission-9/microscopy-field-purple-cocci-clusters.png",
+        "assets/mission-9/microscopy-field-purple-rods.png"
+      ]
+    },
+    {
+      "name": "Mission 10",
+      "files": [
+        "assets/mission-10/maldi-target-plate-bacteria.png",
+        "assets/mission-10/maldi-target-plate-empty.png",
+        "assets/mission-10/maldi-target-plate-matrix.png",
+        "assets/mission-10/maldi-tof-active.png",
+        "assets/mission-10/maldi-tof-open.png",
+        "assets/mission-10/matrix-solution-bottle.png",
+        "assets/mission-10/pipette-empty.png",
+        "assets/mission-10/pipette-with-matrix.png"
+      ]
+    }
+  ]
+}

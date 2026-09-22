@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "Game shell",
+      "files": [
+        "index.html",
+        "style.css",
+        "game.js"
+      ]
+    },
+    {
+      "name": "Opening",
+      "files": [
+        "assets/doctor-v1.png",
+        "assets/heart-rate-monitor-v1.svg",
+        "assets/hospital-room-v1.png",
+        "assets/nicky-v1.png",
+        "assets/nurse-v1.png"
+      ]
+    },
+    {
+      "name": "Emergency blood issue",
+      "files": [
+        "assets/screen-2/blood-bank-room.png",
+        "assets/screen-2/blood-fridge-open.png",
+        "assets/screen-2/nurse-received.png",
+        "assets/screen-2/nurse-waiting.png",
+        "assets/screen-2/red-cell-pack-blank.png"
+      ]
+    },
+    {
+      "name": "Sample check",
+      "files": [
+        "assets/screen-3/edta-tube.png",
+        "assets/screen-3/paper-request.png",
+        "assets/screen-3/request-monitor.png",
+        "assets/screen-3/workbench-background.png"
+      ]
+    },
+    {
+      "name": "Blood grouping",
+      "files": [
+        "assets/screen-4/mixing-stick.png",
+        "assets/screen-4/pipette-empty.png",
+        "assets/screen-4/pipette-loaded.png",
+        "assets/screen-4/reaction-agglutinated.png",
+        "assets/screen-4/reaction-smooth.png",
+        "assets/screen-4/reagent-anti-a.png",
+        "assets/screen-4/reagent-anti-b.png",
+        "assets/screen-4/reagent-anti-d.png",
+        "assets/screen-4/reagent-control.png",
+        "assets/screen-4/typing-tile.png",
+        "assets/screen-4/used-stick-container.png",
+        "assets/screen-4/workbench-background.png"
+      ]
+    },
+    {
+      "name": "Completion",
+      "files": [
+        "../../assets/icons/transfusion-blood-drop.svg"
+      ]
+    }
+  ]
+}

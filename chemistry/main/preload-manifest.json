@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "Game shell",
+      "files": [
+        "index.html",
+        "style.css",
+        "game.js"
+      ]
+    },
+    {
+      "name": "Opening and Chapter 1",
+      "files": [
+        "assets/malta-window-townscape-v2.png",
+        "assets/ian-seated-v2.png",
+        "assets/reception-background-v1.png",
+        "assets/pts-carrier-closed-v1.png",
+        "assets/pts-receiver-clean-v3.png",
+        "assets/pts-carrier-open-v2.png",
+        "assets/request-monitor-v1.png",
+        "assets/grey-bottle-v1.png",
+        "assets/paper-request-v2.png",
+        "assets/sample-rack-clean-v3.png"
+      ]
+    },
+    {
+      "name": "Chapter 2",
+      "files": [
+        "assets/centrifuge-bench-v1.png",
+        "assets/centrifuge-open-v1.png",
+        "assets/centrifuge-closed-v1.png",
+        "assets/balance-tube-v1.png",
+        "assets/yellow-bottle-v1.png",
+        "assets/inspection-holder-v1.png",
+        "assets/ian-separated-v1.png"
+      ]
+    },
+    {
+      "name": "Chapter 3",
+      "files": [
+        "assets/analyser-exterior-v1.png",
+        "assets/check-sample-vial-v1.png",
+        "assets/scientist-guide-v1.png"
+      ]
+    },
+    {
+      "name": "Chapter 4",
+      "files": [
+        "assets/analyser-cutaway-v1.png",
+        "assets/analyser-probe-v1.png",
+        "assets/glucose-reagent-dispenser-v1.png",
+        "assets/reaction-cup-empty-v1.png"
+      ]
+    },
+    {
+      "name": "Chapter 6",
+      "files": [
+        "assets/doctor-clinic-v1.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "groups": [
+    {
+      "name": "Game shell",
+      "files": [
+        "play.html",
+        "styles.css",
+        "logic.js",
+        "game.js",
+        "assets/shared/dr-mira-neutral.png",
+        "assets/shared/dr-mira-pointing.png",
+        "assets/shared/dr-mira-success.png",
+        "assets/shared/hint-icon.svg",
+        "assets/shared/mycology-game-icon.svg",
+        "assets/shared/mycology-lab-background.png",
+        "assets/shared/reduced-motion-process.svg",
+        "assets/shared/rotate-device.svg",
+        "assets/shared/success-check.svg"
+      ]
+    },
+    {
+      "name": "Mission 1",
+      "files": [
+        "assets/mission-1/safety-lab-vignettes.svg"
+      ]
+    },
+    {
+      "name": "Mission 2",
+      "files": [
+        "assets/mission-2/patient-cards.svg",
+        "assets/mission-2/specimen-items.svg"
+      ]
+    },
+    {
+      "name": "Mission 3",
+      "files": [
+        "assets/mission-3/dermatology-envelope.svg",
+        "assets/mission-3/reception-background.png",
+        "assets/mission-3/request-form-blank.svg"
+      ]
+    },
+    {
+      "name": "Mission 4",
+      "files": [
+        "assets/mission-4/fluorescence-field.svg",
+        "assets/mission-4/microscope-slide.svg",
+        "assets/mission-4/processing-bench-background.png",
+        "assets/mission-4/sdcc-plate.svg",
+        "assets/mission-4/skin-scraping-piece.svg"
+      ]
+    },
+    {
+      "name": "Mission 5",
+      "files": [
+        "assets/mission-5/culture-plate-choices.svg",
+        "assets/mission-5/incubator.svg"
+      ]
+    },
+    {
+      "name": "Mission 6",
+      "files": [
+        "assets/mission-6/aspergillus-colony-set.svg",
+        "assets/mission-6/aspergillus-microscopy-set.svg",
+        "assets/mission-6/identification-key-arrows.svg"
+      ]
+    },
+    {
+      "name": "Mission 7",
+      "files": [
+        "assets/mission-7/mic-plate.svg"
+      ]
+    },
+    {
+      "name": "Mission 8",
+      "files": [
+        "assets/mission-8/detective-board-background.png",
+        "assets/mission-8/journey-icons.svg"
+      ]
+    },
+    {
+      "name": "Completion",
+      "files": [
+        "assets/completion/completion-lab-background.png",
+        "assets/completion/junior-mycologist-badge.svg"
+      ]
+    }
+  ]
+}
