@@ -189,6 +189,11 @@
     changeSlide(horizontal < 0 ? 1 : -1);
   }, { passive: true });
 
+  elements.stage.addEventListener("touchcancel", () => {
+    touchStartX = null;
+    touchStartY = null;
+  }, { passive: true });
+
   window.addEventListener("keydown", (event) => {
     if (!selectedCase || event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === "ArrowLeft") changeSlide(-1);

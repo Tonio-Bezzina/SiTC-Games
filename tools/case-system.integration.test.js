@@ -8,14 +8,20 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 test("passive viewer is navigation-only and cannot write progress", () => {
   const app = read("case-library/app.js");
+  const styles = read("case-library/styles.css");
   assert.doesNotMatch(app, /localStorage|sitcGameProgressV2|completedCases/);
   assert.match(app, /touchstart/);
   assert.match(app, /touchend/);
+  assert.match(app, /touchcancel/);
+  assert.match(app, /Math\.abs\(horizontal\) <= Math\.abs\(vertical\)/);
   assert.match(app, /ArrowLeft/);
   assert.match(app, /ArrowRight/);
   assert.match(app, /previous\.disabled/);
   assert.match(app, /next\.disabled/);
-  assert.match(read("case-library/styles.css"), /object-fit:\s*contain/);
+  assert.match(styles, /object-fit:\s*contain/);
+  assert.match(styles, /\.slide-stage\s*\{[^}]*overflow-y:\s*auto/s);
+  assert.match(styles, /\.slide-stage img\s*\{[^}]*width:\s*auto[^}]*height:\s*auto[^}]*max-width:\s*100%[^}]*max-height:/s);
+  assert.doesNotMatch(styles, /\.slide-stage\s*\{[^}]*overflow:\s*hidden/s);
 });
 
 test("main progress excludes passive Transfusion folders and obsolete entries", () => {
@@ -42,7 +48,9 @@ test("generated catalogue contains expected live and empty libraries", () => {
   assert.equal(catalogue.laboratories.transfusion[0].slideCount, 5);
   assert.equal(catalogue.laboratories.transfusion[1].id, "case-02");
   assert.equal(catalogue.laboratories.transfusion[1].slideCount, 4);
-  for (const laboratory of ["chemistry", "bacteriology", "haematology", "histology", "mycology"]) {
+  assert.equal(catalogue.laboratories.bacteriology[0].slideCount, 5);
+  assert.equal(catalogue.laboratories.histology[0].slideCount, 5);
+  for (const laboratory of ["chemistry", "haematology", "mycology"]) {
     assert.deepEqual(catalogue.laboratories[laboratory], []);
   }
 });
