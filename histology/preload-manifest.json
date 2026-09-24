@@ -1,13 +1,13 @@
 {
-  "version": 1,
+  "version": 2,
   "groups": [
     {
       "name": "Game shell",
       "files": [
         "play.html",
-        "styles.css",
-        "logic.js",
-        "game.js",
+        "styles.css?v=9",
+        "logic.js?v=9",
+        "game.js?v=12",
         "assets/shared/focus-arrow.svg",
         "assets/shared/guide-strip-avatar.png",
         "assets/shared/hint-icon.svg",
@@ -26,7 +26,7 @@
       "files": [
         "assets/mission-1/barcode-scan-light.svg",
         "assets/mission-1/field-mismatch-marker.svg",
-        "assets/mission-1/paper-request-blank.png",
+        "assets/mission-1/paper-request-blank.png?v=2",
         "assets/mission-1/receiving-scanning-rack-accepted.png",
         "assets/mission-1/receiving-scanning-rack-empty.png",
         "assets/mission-1/reception-background.png",
@@ -44,9 +44,9 @@
         "assets/mission-2/cut-guide.svg",
         "assets/mission-2/cutting-board-clean.png",
         "assets/mission-2/grossing-bench-background.png",
-        "assets/mission-2/histology-cassette-closed-loaded.png",
-        "assets/mission-2/histology-cassette-open-empty.png",
-        "assets/mission-2/histology-cassette-open-loaded.png",
+        "assets/mission-2/histology-cassette-closed-loaded.png?v=2",
+        "assets/mission-2/histology-cassette-open-empty.png?v=2",
+        "assets/mission-2/histology-cassette-open-loaded.png?v=2",
         "assets/mission-2/skin-tissue-cut-main.png",
         "assets/mission-2/skin-tissue-small-piece.png",
         "assets/mission-2/skin-tissue-whole.png",
@@ -85,7 +85,7 @@
     {
       "name": "Mission 5",
       "files": [
-        "assets/mission-5/cassette-m5-distractor.png",
+        "assets/mission-5/cassette-m5-distractor.png?v=2",
         "assets/mission-5/laboratory-bin.png",
         "assets/mission-5/microscope-slide-blank.png",
         "assets/mission-5/microscope-slide-unstained.png",

@@ -10,6 +10,7 @@
     let progressBar;
     let progressText;
     let stageText;
+    let retryButton;
 
     function installStyles() {
         const style = document.createElement("style");
@@ -22,6 +23,8 @@
             .game-preload-track { height: 16px; overflow: hidden; border-radius: 999px; background: #dceaf1; }
             .game-preload-bar { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #087fc1, #21c9dc); transition: width .18s ease; }
             .game-preload-percent { display: block; margin-top: 10px; font-weight: 800; color: #073c63; }
+            .game-preload-retry { min-height: 44px; margin-top: 16px; border: 0; border-radius: 999px; padding: 10px 22px; background: #073c63; color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+            .game-preload-retry[hidden] { display: none; }
         `;
         document.head.appendChild(style);
     }
@@ -42,12 +45,15 @@
                     <div class="game-preload-bar"></div>
                 </div>
                 <strong class="game-preload-percent" data-preload-progress>0%</strong>
+                <button class="game-preload-retry" type="button" data-preload-retry hidden>Retry download</button>
             </div>
         `;
         document.body.appendChild(overlay);
         progressBar = overlay.querySelector(".game-preload-bar");
         progressText = overlay.querySelector("[data-preload-progress]");
         stageText = overlay.querySelector("[data-preload-stage]");
+        retryButton = overlay.querySelector("[data-preload-retry]");
+        retryButton.addEventListener("click", () => startAndEnter());
     }
 
     function updateProgress(stageName) {
@@ -59,8 +65,27 @@
         overlay.querySelector("[role='progressbar']").setAttribute("aria-valuenow", String(percent));
     }
 
+    function isImageUrl(assetUrl) {
+        return /\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(assetUrl.pathname);
+    }
+
+    async function loadAndDecodeImage(assetUrl) {
+        const image = new Image();
+        image.decoding = "async";
+        await new Promise((resolve, reject) => {
+            image.addEventListener("load", resolve, { once: true });
+            image.addEventListener("error", () => reject(new Error(`Could not preload ${assetUrl.pathname}`)), { once: true });
+            image.src = assetUrl.href;
+        });
+        if (typeof image.decode === "function") await image.decode();
+    }
+
     async function fetchAsset(file) {
         const assetUrl = new URL(file, manifestUrl);
+        if (isImageUrl(assetUrl)) {
+            await loadAndDecodeImage(assetUrl);
+            return;
+        }
         const response = await fetch(assetUrl, { cache: "force-cache" });
         if (!response.ok) throw new Error(`Could not preload ${assetUrl.pathname}`);
         await response.blob();
@@ -87,6 +112,9 @@
     }
 
     async function preloadMission() {
+        state.complete = false;
+        state.loaded = 0;
+        state.failed = 0;
         const response = await fetch(manifestUrl, { cache: "no-cache" });
         if (!response.ok) throw new Error("Could not load the mission asset list.");
         const manifest = await response.json();
@@ -96,6 +124,7 @@
 
         for (const group of groups) await loadGroup(group);
 
+        if (state.failed) throw new Error(`${state.failed} mission asset${state.failed === 1 ? "" : "s"} could not be prepared.`);
         state.complete = true;
         updateProgress("");
     }
@@ -103,24 +132,37 @@
     function ensurePreload() {
         if (!state.promise) {
             state.promise = preloadMission().catch((error) => {
-                state.failed += 1;
+                state.promise = null;
                 console.warn(error);
+                throw error;
             });
         }
         return state.promise;
     }
 
-    async function enterMission(event) {
-        if (state.complete) return;
-        event.preventDefault();
+    async function startAndEnter() {
         buildOverlay();
         overlay.hidden = false;
+        retryButton.hidden = true;
         document.body.setAttribute("aria-busy", "true");
-        await ensurePreload();
-        stageText.textContent = state.failed ? "The mission is ready. A missing file will retry inside the game." : "Mission ready!";
-        progressBar.style.width = "100%";
-        progressText.textContent = "100%";
-        window.setTimeout(() => window.location.assign(missionLink.href), 180);
+        try {
+            await ensurePreload();
+            stageText.textContent = "Mission ready!";
+            progressBar.style.width = "100%";
+            progressText.textContent = "100%";
+            window.setTimeout(() => window.location.assign(missionLink.href), 180);
+        } catch (_) {
+            const failureCount = state.failed || 1;
+            stageText.textContent = `${failureCount} mission file${failureCount === 1 ? "" : "s"} could not be prepared. Check your connection and retry.`;
+            retryButton.hidden = false;
+            document.body.removeAttribute("aria-busy");
+        }
+    }
+
+    function enterMission(event) {
+        if (state.complete) return;
+        event.preventDefault();
+        startAndEnter();
     }
 
     installStyles();
@@ -129,7 +171,7 @@
     missionLink.addEventListener("focus", ensurePreload, { once: true });
     missionLink.addEventListener("touchstart", ensurePreload, { once: true, passive: true });
 
-    const beginInBackground = () => ensurePreload();
+    const beginInBackground = () => ensurePreload().catch(() => {});
     if ("requestIdleCallback" in window) window.requestIdleCallback(beginInBackground, { timeout: 1200 });
     else window.setTimeout(beginInBackground, 350);
 })();
