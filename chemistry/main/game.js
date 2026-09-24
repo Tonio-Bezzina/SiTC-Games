@@ -31,9 +31,16 @@ let analyserDrag = null;
 let recapDrag = null;
 let lastFocus = null;
 let allowWithinNextCase = false;
+let probeTravel = { frameId:null, direction:0, velocity:0, lastTime:0, cuePlayed:false };
+
+const PROBE_MIN = 0;
+const PROBE_MAX = 2;
+const PROBE_TARGET_TOLERANCE = .27;
+const PROBE_RAIL_LEFT = 7;
+const PROBE_RAIL_STEP = 36.5;
 
 let state = {
-    version: 6,
+    version: 7,
     level: null,
     caseData: null,
     scenario: null,
@@ -167,6 +174,11 @@ function createAnalyserState() {
         tubeLocation:"rack",
         selected:null,
         testSelected:null,
+        probePosition:1,
+        probeLoad:null,
+        guideTarget:null,
+        probeMoving:false,
+        pendingProbeAction:null,
         sampleAdded:false,
         reagentAdded:false,
         reactionComplete:false,
@@ -239,18 +251,25 @@ function centrifugeSlotCount(level) {
     return level === "challenge" ? 8 : 4;
 }
 
-function createBatch(patient) {
+function createBatch(patient, level = state.level) {
+    const leoCap = level === "challenge" ? "grey" : "yellow";
     return [
         { key:"ian", name:patient.name, id:patient.id, dob:patient.dob, accession:patient.accession, cap:"grey", kind:"patient", asset:"grey-bottle-v1.png" },
         { key:"aisha", name:"Aisha Borg", id:`${randomDigits(5)}H`, dob:"18/04/2013", accession:`CC-${randomDigits(6)}`, cap:"yellow", kind:"patient", asset:"yellow-bottle-v1.png" },
-        { key:"leo", name:"Leo Vella", id:`${randomDigits(5)}L`, dob:"07/11/2011", accession:`CC-${randomDigits(6)}`, cap:"grey", kind:"patient", asset:"grey-bottle-v1.png" },
+        { key:"leo", name:"Leo Vella", id:`${randomDigits(5)}L`, dob:"07/11/2011", accession:`CC-${randomDigits(6)}`, cap:leoCap, kind:"patient", asset:leoCap === "grey" ? "grey-bottle-v1.png" : "yellow-bottle-v1.png" },
         { key:"balance", name:"BALANCE", id:"", dob:"", accession:"", cap:"blue", kind:"balance", asset:"balance-tube-v1.png" }
     ];
 }
 
 function createCentrifugeState(level, patient, batch = null) {
+    const preparedBatch = (batch || createBatch(patient, level)).map(tube => {
+        if (level !== "challenge" && tube.key !== "ian" && tube.kind === "patient" && tube.cap === "grey") {
+            return { ...tube, cap:"yellow", asset:"yellow-bottle-v1.png" };
+        }
+        return tube;
+    });
     return {
-        batch: batch || createBatch(patient),
+        batch: preparedBatch,
         rack: ["ian", "aisha", "leo", "balance"],
         slots: Array(centrifugeSlotCount(level)).fill(null),
         selected: null,
@@ -294,23 +313,41 @@ function normaliseCheckpoint(value) {
         value.delivery = null;
         if (qcAccepted) value.stage = "analyser";
     }
-    if (value.version === 6 && value.centrifuge?.cycle === "spinning") {
+    if (value.version === 6) {
+        value.version = 7;
+        if (value.stage === "clue") value.stage = "arrival";
+        if (value.level !== "challenge" && value.centrifuge?.batch) {
+            value.centrifuge.batch.forEach(tube => {
+                if (tube.key !== "ian" && tube.kind === "patient" && tube.cap === "grey") {
+                    tube.cap = "yellow";
+                    tube.asset = "yellow-bottle-v1.png";
+                }
+            });
+        }
+        if (value.stage === "analyser" && !value.chapter4Complete) value.analyser = createAnalyserState();
+    }
+    if (value.version === 7 && value.centrifuge?.cycle === "spinning") {
         value.centrifuge.cycle = "idle";
         value.centrifuge.lidClosed = true;
         value.centrifuge.feedback = "The interrupted demonstration is ready to start safely again.";
         value.stage = "centrifuge-load";
     }
-    if (value.version === 6 && value.qualityControl?.phase === "processing") {
+    if (value.version === 7 && value.qualityControl?.phase === "processing") {
         value.qualityControl.phase = "loaded";
         value.qualityControl.controlLocation = "loader";
         value.qualityControl.result = null;
         value.qualityControl.feedback = "The interrupted quality control check is ready to run safely again.";
     }
-    if (value.version === 6 && ["reaction-running", "light-running"].includes(value.analyser?.phase)) {
+    if (value.version === 7 && ["reaction-running", "light-running"].includes(value.analyser?.phase)) {
         value.analyser.phase = value.analyser.phase === "reaction-running" ? "reaction-ready" : "light-ready";
         value.analyser.feedback = "The interrupted demonstration is ready to continue safely.";
     }
-    if (value.version === 6 && value.delivery?.phase === "sending" && !value.delivery.sent) {
+    if (value.version === 7 && value.analyser?.probeMoving) {
+        value.analyser.probeMoving = false;
+        value.analyser.pendingProbeAction = null;
+        value.analyser.feedback = "The interrupted probe step is ready to try again.";
+    }
+    if (value.version === 7 && value.delivery?.phase === "sending" && !value.delivery.sent) {
         value.delivery.phase = "ready";
         value.delivery.feedback = "The checked report is ready to send again.";
     }
@@ -318,7 +355,7 @@ function normaliseCheckpoint(value) {
 }
 
 function isValidCheckpoint(value) {
-    const stages = ["opening", "story", "clue", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "qc-intro", "qc", "analyser", "review", "delivery", "mission-complete"];
+    const stages = ["opening", "story", "arrival", "carrier", "carrier-open", "inspection", "transfer", "centrifuge-load", "centrifuge-stopped", "centrifuge-retrieve", "plasma", "qc-intro", "qc", "analyser", "review", "delivery", "mission-complete"];
     const c = value?.centrifuge;
     const centrifugeOkay = !isCentrifugeStage(value?.stage) || (c && Array.isArray(c.batch) && c.batch.length === 4
         && Array.isArray(c.slots) && c.slots.length === centrifugeSlotCount(value.level)
@@ -330,7 +367,7 @@ function isValidCheckpoint(value) {
     const analyserOkay = !isAnalyserStage(value?.stage) || (value.chapter3Complete && value.analyser && value.measurementCase);
     const reviewOkay = !isReviewStage(value?.stage) || (value.chapter4Complete && value.review && value.measurementCase);
     const deliveryOkay = !isDeliveryStage(value?.stage) || (value.chapter5Complete && value.delivery && value.report?.checked);
-    return value && value.version === 6 && LEVELS[value.level]
+    return value && value.version === 7 && LEVELS[value.level]
         && value.caseData && typeof value.caseData.name === "string"
         && typeof value.caseData.id === "string" && /^\d{5}[HL]$/.test(value.caseData.id) && typeof value.caseData.dob === "string"
         && typeof value.caseData.accession === "string"
@@ -446,11 +483,11 @@ function pausePhaseTimer() {
 }
 
 function render() {
+    cancelProbeTravel(false);
     cancelPhaseTimer();
     updateChrome();
     if (state.stage === "opening") renderOpening();
     if (state.stage === "story") renderStory();
-    if (state.stage === "clue") renderClueIntro();
     if (state.stage === "arrival") renderArrival();
     if (state.stage === "carrier") renderCarrier(false);
     if (state.stage === "carrier-open") renderCarrier(true);
@@ -464,6 +501,49 @@ function render() {
     if (state.stage === "review") renderReviewChapter();
     if (state.stage === "delivery") renderDeliveryChapter();
     if (state.stage === "mission-complete") renderComplete();
+}
+
+function syncElementAttributes(current, next) {
+    [...current.attributes].forEach(attribute => {
+        if (!next.hasAttribute(attribute.name)) current.removeAttribute(attribute.name);
+    });
+    [...next.attributes].forEach(attribute => current.setAttribute(attribute.name, attribute.value));
+}
+
+function persistentSceneType(element) {
+    if (element?.classList.contains("centrifuge-screen")) return "centrifuge";
+    if (element?.classList.contains("analyser-cutaway-screen")) return "analyser-cutaway";
+    if (element?.matches(".delivery-screen,.clinic-report-screen,.recap-screen,.mission-complete-screen")) return "delivery";
+    return null;
+}
+
+function updatePersistentScene(markup) {
+    const template = document.createElement("template");
+    template.innerHTML = markup.trim();
+    const nextRoot = template.content.firstElementChild;
+    const currentRoot = screenHost.firstElementChild;
+    const sceneType = persistentSceneType(currentRoot);
+    if (!nextRoot || !sceneType || persistentSceneType(nextRoot) !== sceneType) {
+        screenHost.replaceChildren(...template.content.childNodes);
+        return;
+    }
+
+    const reusableImages = new Map();
+    currentRoot.querySelectorAll("img[src]").forEach(image => {
+        const key = `${image.getAttribute("src")}|${image.className}`;
+        if (!reusableImages.has(key)) reusableImages.set(key, []);
+        reusableImages.get(key).push(image);
+    });
+    nextRoot.querySelectorAll("img[src]").forEach(image => {
+        const key = `${image.getAttribute("src")}|${image.className}`;
+        const existing = reusableImages.get(key)?.shift();
+        if (!existing) return;
+        syncElementAttributes(existing, image);
+        image.replaceWith(existing);
+    });
+
+    syncElementAttributes(currentRoot, nextRoot);
+    currentRoot.replaceChildren(...nextRoot.childNodes);
 }
 
 function renderOpening() {
@@ -494,7 +574,7 @@ function renderOpening() {
 function startFresh(level, allowWithin = false) {
     clearCheckpoint();
     state = {
-        version: 6,
+        version: 7,
         level,
         caseData: createCase(level),
         scenario: null,
@@ -544,31 +624,16 @@ function renderStory() {
         </section>`;
     setGuide("Ian's blood test is ready to travel to the laboratory.");
     document.querySelector(".story-next").addEventListener("click", () => {
-        state.stage = "clue";
+        state.clueSeen = true;
+        state.stage = "arrival";
         saveCheckpoint();
         render();
     });
 }
 
-function renderClueIntro() {
-    screenHost.innerHTML = `
-        <section class="screen reception-screen" aria-label="Clinical chemistry reception">
-            <img class="reception-bg" src="assets/reception-background-v1.png" alt="">
-            <div class="scene-shade"></div>
-            <div class="scene-heading"><h1>Welcome to sample reception</h1><p>The clue strip stays with you throughout the mission.</p></div>
-        </section>`;
-    setGuide("Look here for clues to help you complete your mission.", true);
-    schedulePhase(() => {
-        state.clueSeen = true;
-        state.stage = "arrival";
-        saveCheckpoint();
-        render();
-    }, reducedMotionEnabled() ? 950 : 1900);
-}
-
 function receiverMarkup(arriving = false) {
     return `<div class="receiver-wrap ${arriving ? "arriving" : ""}">
-        ${arriving ? '<div class="carrier-transit" aria-hidden="true"><img src="assets/pts-carrier-closed-v1.png" alt=""></div>' : ""}
+        ${arriving ? '<div class="carrier-transit" aria-hidden="true"><span class="whoosh-streak streak-one"></span><span class="whoosh-streak streak-two"></span><span class="whoosh-streak streak-three"></span><span class="whoosh-puff"></span><img src="assets/pts-carrier-closed-v1.png" alt=""></div>' : ""}
         <img class="receiver-art" src="assets/pts-receiver-clean-v3.png" alt="PTS receiving terminal">
         <span class="arrival-light ${arriving ? "on" : ""}" role="status" aria-label="${arriving ? "Carrier arrival light on" : "Carrier arrival light off"}"></span>
         ${arriving ? "" : '<button class="carrier-button" type="button" aria-label="Open the canister inside the PTS receiver"><img src="assets/pts-carrier-closed-v1.png" alt="Canister stopped inside the PTS receiver"><span class="bay-lip" aria-hidden="true"></span></button>'}
@@ -584,7 +649,7 @@ function renderArrival() {
             ${receiverMarkup(true)}
         </section>`;
     setGuide("Watch the PTS canister travel through the duct and stop inside the receiver.");
-    playTone("arrival");
+    playWhoosh();
     schedulePhase(() => {
         state.stage = "carrier";
         saveCheckpoint();
@@ -956,7 +1021,7 @@ function renderCentrifuge() {
     const machineClosed = c.lidClosed || running;
     const loaded = c.slots.filter(Boolean).length;
     const status = running ? "Spinning…" : finished ? "Finished!" : machineClosed ? "Lid closed" : "Stopped · lid open";
-    screenHost.innerHTML = `
+    updatePersistentScene(`
         <section class="screen centrifuge-screen ${running ? "cycle-running" : ""} ${retrieve ? "retrieve-mode" : ""}" aria-labelledby="centrifugeTitle">
             <img class="centrifuge-bg" src="assets/centrifuge-bench-v1.png" alt="Clinical chemistry centrifuge bench">
             <div class="centrifuge-copy">
@@ -980,11 +1045,11 @@ function renderCentrifuge() {
             </div>
             ${retrieve ? `<button class="inspection-drop ${c.selected ? "active" : ""}" type="button" data-holder aria-label="Inspection holder—move Ian's sample here"><span>Inspection holder</span><img src="assets/inspection-holder-v1.png" alt="Empty inspection holder"></button>` : ""}
             <div class="centrifuge-controls">
-                ${!retrieve && !running && !finished ? `<button class="secondary-button" type="button" data-lid>${c.lidClosed ? "Open lid" : "Close lid"}</button><button class="primary-button" type="button" data-spin>Spin</button>` : ""}
-                ${finished && c.lidClosed ? '<button class="primary-button" type="button" data-open-after>Open lid</button>' : ""}
+                ${!retrieve && !running && !finished ? `<button class="${c.lidClosed ? "secondary-button" : "primary-button"}" type="button" data-lid>${c.lidClosed ? "Open lid" : "Close lid"}</button><button class="${c.lidClosed ? "primary-button" : "secondary-button"}" type="button" data-spin>Spin</button>` : ""}
+                ${finished && c.lidClosed ? '<button class="secondary-button" type="button" data-open-after>Open lid</button>' : ""}
             </div>
             <div class="centrifuge-feedback ${c.feedback ? "" : "hidden"}" role="alert">${c.feedback || ""}</div>
-        </section>`;
+        </section>`);
     if (retrieve) setGuide(`Move ${state.caseData.name}, ${state.caseData.id}, to the inspection holder. The other tubes stay at the station.`);
     else if (running) setGuide("Spinning… The closed machine is running a short illustrative cycle.");
     else if (finished) setGuide("Finished! The rotor has stopped completely. Open the lid.");
@@ -1341,9 +1406,11 @@ function qcScreenMarkup() {
 
 function controlVialMarkup(location = "rack") {
     const q = state.qualityControl;
-    return `<button class="qc-vial ${q.selected === "control" ? "selected" : ""}" type="button" data-qc-object="control" data-location="${location}" aria-pressed="${q.selected === "control"}" aria-label="${q.freshControl ? "Fresh " : ""}quality control sample vial—select to move">
+    const interactive = location === "rack";
+    const tag = interactive ? "button" : "div";
+    return `<${tag} class="qc-vial ${interactive && q.selected === "control" ? "selected" : ""} ${interactive ? "" : "loaded-vial"}" ${interactive ? `type="button" data-qc-object="control" aria-pressed="${q.selected === "control"}"` : "aria-hidden=\"true\""} data-location="${location}" aria-label="${interactive ? `${q.freshControl ? "Fresh " : ""}quality control sample vial—select to move` : ""}">
         <img src="assets/check-sample-vial-v1.png" alt="" draggable="false"><span><b>${q.freshControl ? "Fresh QC sample" : "Quality control sample"}</b><small>Expected result known</small></span>
-    </button>`;
+    </${tag}>`;
 }
 
 function ianWaitingMarkup() {
@@ -1418,6 +1485,41 @@ function selectQcObject(object) {
     q.selected = q.selected === object ? null : object;
     saveCheckpoint();
     render();
+}
+
+function playWhoosh() {
+    if (!state.soundOn) return;
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) return;
+    try {
+        const context = new Audio();
+        const duration = 1.55;
+        const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * duration), context.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let index = 0; index < data.length; index += 1) {
+            const progress = index / data.length;
+            const envelope = Math.sin(Math.PI * progress) * (1 - progress * .35);
+            data[index] = (Math.random() * 2 - 1) * envelope;
+        }
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const gain = context.createGain();
+        source.buffer = buffer;
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(1150, context.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(360, context.currentTime + duration);
+        filter.Q.value = .7;
+        gain.gain.setValueAtTime(.001, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.12, context.currentTime + .12);
+        gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + duration);
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(context.destination);
+        source.start();
+        source.stop(context.currentTime + duration);
+    } catch (error) {
+        // Sound is optional; the moving carrier and airflow streaks remain visible.
+    }
 }
 
 function redirectIanToQc() {
@@ -1606,11 +1708,12 @@ function patientIdentityMarkup(compact = false) {
     </dl>`;
 }
 
-function analyserTubeMarkup() {
+function analyserTubeMarkup(interactive = true) {
     const a = state.analyser;
-    return `<button class="analyser-tube ${a.selected === "tube" ? "selected" : ""}" type="button" data-analyser-object="tube" aria-pressed="${a.selected === "tube"}" aria-label="Ian’s prepared grey-top sample—select to move">
+    const tag = interactive ? "button" : "div";
+    return `<${tag} class="analyser-tube ${interactive && a.selected === "tube" ? "selected" : ""} ${interactive ? "" : "loaded-tube"}" ${interactive ? `type="button" data-analyser-object="tube" aria-pressed="${a.selected === "tube"}" aria-label="Ian’s prepared grey-top sample—select to move"` : "aria-hidden=\"true\""}>
         <img src="assets/ian-separated-v1.png" alt="" draggable="false"><span><b>${state.caseData.name}</b><small>${state.caseData.id}</small><small>${state.caseData.accession}</small></span>
-    </button>`;
+    </${tag}>`;
 }
 
 function renderAnalyserChapter() {
@@ -1630,13 +1733,16 @@ function renderAnalyserExterior() {
             <div class="analyser-entry-machine">
                 <img src="assets/analyser-exterior-v1.png" alt="Clinical chemistry analyser">
                 <button class="patient-loader ${a.selected === "tube" ? "active" : ""} ${a.tubeLocation === "loader" ? "loaded" : ""}" type="button" data-analyser-target="patient-loader" aria-label="Patient rack and scanner">
-                    ${a.tubeLocation === "loader" ? analyserTubeMarkup() : "<span>Load Ian’s sample here</span>"}
+                    ${a.tubeLocation === "loader" ? analyserTubeMarkup(false) : "<span>Load Ian’s sample here</span>"}
                 </button>
-                <div class="patient-screen ${a.tubeLocation === "loader" ? "confirmed" : ""}" aria-live="polite">
-                    ${a.tubeLocation === "loader" ? `<strong>Identity confirmed</strong>${patientIdentityMarkup(true)}` : "<strong>Waiting for patient sample</strong>"}
+                <div class="analyser-request-monitor" aria-live="polite">
+                    <img src="assets/request-monitor-v1.png" alt="Laboratory request computer">
+                    <div class="request-test-screen">
+                        ${a.tubeLocation === "loader" ? `<strong>Test request</strong><span>Requested: ${state.caseData.test}</span><div class="test-tiles" aria-label="Select the requested chemistry test"><button type="button" data-test-tile="electrolytes">Salts</button><button type="button" data-test-tile="glucose">Glucose</button><button type="button" data-test-tile="kidney">Kidney clues</button></div>` : "<strong>Test request</strong><span>Waiting for patient sample</span>"}
+                    </div>
                 </div>
             </div>
-            ${a.tubeLocation === "loader" ? `<div class="test-tiles" aria-label="Select the requested chemistry test"><h2>Choose the requested test</h2><button type="button" data-test-tile="electrolytes">Salts</button><button type="button" data-test-tile="glucose">Glucose</button><button type="button" data-test-tile="kidney">Kidney clues</button></div>` : ""}
+            ${a.tubeLocation === "loader" ? `<div class="identity-confirmed-card"><strong>Identity confirmed</strong>${patientIdentityMarkup(true)}</div>` : ""}
             <p class="chapter-feedback ${a.feedback ? "" : "hidden"}" role="alert">${a.feedback || ""}</p>
         </section>`;
     setGuide(a.tubeLocation === "rack" ? "Drag Ian’s prepared grey-top sample into the patient rack." : "The request says glucose. Select the matching test.");
@@ -1667,28 +1773,41 @@ function analyserGraphMarkup() {
 
 function renderAnalyserCutaway() {
     const a = state.analyser;
-    const sampleStep = a.phase === "sample";
-    const reagentStep = a.phase === "reagent";
+    const aspirateStep = ["sample", "reagent-aspirate"].includes(a.phase);
+    const dispenseStep = ["dispense-sample", "dispense-reagent"].includes(a.phase);
+    const liquidStep = aspirateStep || dispenseStep;
     const reactionRunning = a.phase === "reaction-running";
     const lightRunning = a.phase === "light-running";
     const readingStep = ["light-running", "reading"].includes(a.phase);
     const compareStep = a.phase === "compare";
-    screenHost.innerHTML = `
+    const targetPosition = a.phase === "sample" ? 0 : a.phase === "reagent-aspirate" ? 1 : dispenseStep ? 2 : null;
+    const probePosition = normaliseProbePosition(a.probePosition);
+    a.probePosition = probePosition;
+    const probeTarget = nearestProbeTarget(probePosition);
+    const probeLabel = probeTarget === null ? "between stations" : ["Ian’s sample", "glucose reagent", "reaction cell"][probeTarget];
+    updatePersistentScene(`
         <section class="screen analyser-cutaway-screen phase-${a.phase}" aria-labelledby="cutawayTitle">
-            <img class="cutaway-art" src="assets/analyser-cutaway-v1.png" alt="Simplified interior of the clinical chemistry analyser">
+            <img class="cutaway-art" src="assets/analyser-cutaway-v2.png" alt="Simplified interior of the clinical chemistry analyser">
             <header class="cutaway-heading"><p class="kicker">CHAPTER 4 · TEACHING CUTAWAY</p><h1 id="cutawayTitle">Inside the analyser — a simplified view</h1><p>${state.caseData.name} · ${state.caseData.accession}</p></header>
             ${analyserProgressMarkup()}
-            <div class="cutaway-sample"><img src="assets/ian-separated-v1.png" alt="Ian’s original grey-top tube with plasma still inside"><span>Ian’s original tube</span></div>
-            <button class="teaching-tool probe ${a.selected === "probe" ? "selected" : ""} ${a.sampleAdded ? "used" : ""}" type="button" data-analyser-object="probe" aria-pressed="${a.selected === "probe"}" aria-label="Teaching sample probe${sampleStep ? "—select to move" : "—not needed now"}" ${sampleStep ? "" : "disabled"}><img src="assets/analyser-probe-v1.png" alt="" draggable="false"></button>
-            <button class="teaching-tool reagent ${a.selected === "reagent" ? "selected" : ""} ${a.reagentAdded ? "used" : ""}" type="button" data-analyser-object="reagent" aria-pressed="${a.selected === "reagent"}" aria-label="Glucose reagent dispenser${reagentStep ? "—select to move" : "—not needed now"}" ${reagentStep ? "" : "disabled"}><img src="assets/glucose-reagent-dispenser-v1.png" alt="" draggable="false"><span>Glucose reagent</span></button>
-            <button class="reaction-cup-target ${a.selected ? "active" : ""}" type="button" data-analyser-target="reaction-cup" aria-label="Reaction cup target">
-                <img src="assets/reaction-cup-empty-v1.png" alt="Clear reaction cup">
-                <span class="reaction-fill ${a.sampleAdded ? "sample" : ""} ${a.reagentAdded ? "reagent-added" : ""} ${a.reactionComplete ? state.measurementCase.reactionStrength : ""}"></span>
-                <b>${a.graphComplete ? "Measured" : a.reactionComplete ? "Ready for light" : a.reagentAdded ? "Sample + reagent" : a.sampleAdded ? "Tiny plasma aliquot" : "Reaction cup"}</b>
-            </button>
+            <div class="probe-workspace" aria-label="Move the sampling probe between the tube, reagent and reaction cell">
+                <div class="probe-rail" aria-hidden="true"></div>
+                <div class="probe-carriage ${a.probeMoving ? "lowering" : ""}" style="left:${probePositionToPercent(probePosition)}%" role="img" aria-label="Sampling probe at ${probeLabel}"><img src="assets/analyser-probe-front-v1.png" alt=""></div>
+                <button class="probe-arrow probe-left" type="button" data-probe-move="-1" aria-label="Hold to move probe left" ${!liquidStep || a.probeMoving || probePosition <= PROBE_MIN ? "disabled" : ""}>←</button>
+                <button class="probe-arrow probe-right" type="button" data-probe-move="1" aria-label="Hold to move probe right" ${!liquidStep || a.probeMoving || probePosition >= PROBE_MAX ? "disabled" : ""}>→</button>
+                <div class="probe-station sample-station-inside ${targetPosition === 0 ? "next-target" : ""} ${probeTarget === 0 ? "probe-aligned" : ""}"><img src="assets/ian-separated-v1.png" alt="Ian’s grey-top tube in the sampling area"><b>Ian’s sample</b></div>
+                <div class="probe-station reagent-station-inside ${targetPosition === 1 ? "next-target" : ""} ${probeTarget === 1 ? "probe-aligned" : ""}"><img src="assets/glucose-reagent-dispenser-v1.png" alt="Glucose reagent"><b>Glucose reagent</b></div>
+                <div class="probe-station reaction-station-inside ${targetPosition === 2 ? "next-target" : ""} ${probeTarget === 2 ? "probe-aligned" : ""}">
+                    <img src="assets/reaction-cup-empty-v1.png" alt="Clear reaction cell">
+                    <span class="reaction-fill ${a.sampleAdded ? "sample" : ""} ${a.reagentAdded ? "reagent-added" : ""} ${a.reactionComplete || reactionRunning ? state.measurementCase.reactionStrength : ""}"></span>
+                    <b>${a.graphComplete ? "Measured" : a.reactionComplete ? "Ready for light" : a.reagentAdded ? "Sample + reagent" : a.sampleAdded ? "Tiny plasma aliquot" : "Reaction cell"}</b>
+                </div>
+                ${a.guideTarget !== null ? `<span class="probe-guidance target-${a.guideTarget}" aria-hidden="true">↓</span>` : ""}
+            </div>
             <div class="optical-path ${readingStep ? "active" : ""}" aria-hidden="true"><span></span><i></i></div>
             ${analyserGraphMarkup()}
             <div class="cutaway-actions">
+                ${liquidStep ? `<button class="primary-button probe-action-button" type="button" data-probe-action="${aspirateStep ? "aspirate" : "dispense"}" ${a.probeMoving ? "disabled" : ""}>${aspirateStep ? "Aspirate" : "Dispense"}</button>` : ""}
                 ${a.phase === "reaction-ready" ? '<button class="primary-button" type="button" data-start-reaction>Start reaction</button>' : ""}
                 ${a.phase === "light-ready" ? '<button class="primary-button" type="button" data-start-light>Start light reading</button>' : ""}
                 ${reactionRunning || lightRunning ? '<button class="secondary-button" type="button" data-skip-animation>Skip animation</button>' : ""}
@@ -1697,13 +1816,16 @@ function renderAnalyserCutaway() {
             </div>
             ${compareStep ? `<div class="colour-compare"><h2>Which demonstration cup has the stronger colour?</h2><button type="button" data-colour-choice="a"><span class="demo-cup moderate"></span><b>Cup A · lighter pattern</b></button><button type="button" data-colour-choice="b"><span class="demo-cup strong"></span><b>Cup B · stronger pattern</b></button></div>` : ""}
             <p class="chapter-feedback ${a.feedback ? "" : "hidden"}" role="alert">${a.feedback || ""}</p>
-        </section>`;
-    if (sampleStep) setGuide("Drag the teaching probe to the reaction cup to take a tiny plasma aliquot.");
-    else if (reagentStep) setGuide("Add the glucose reagent to the separate reaction cup.");
-    else if (["reaction-ready", "reaction-running"].includes(a.phase)) setGuide("Start the reaction. The colour develops in the reaction cup, not Ian’s tube.");
+        </section>`);
+    if (a.phase === "sample") setGuide("Hold an arrow to line up over Ian’s tube, then press Aspirate.");
+    else if (a.phase === "dispense-sample") setGuide("Hold an arrow to line up over the reaction cell, then press Dispense.");
+    else if (a.phase === "reagent-aspirate") setGuide("Hold an arrow to line up over the glucose reagent, then press Aspirate.");
+    else if (a.phase === "dispense-reagent") setGuide("Hold an arrow to line up over the reaction cell, then press Dispense.");
+    else if (["reaction-ready", "reaction-running"].includes(a.phase)) setGuide("Start the reaction. The colour develops in the reaction cell, not Ian’s tube.");
     else if (["light-ready", "light-running", "reading"].includes(a.phase)) setGuide("Use light to follow the reaction until the reading is steady.");
     else setGuide("Compare the demonstration cups. The analyser calculates Ian’s result.");
     wireAnalyserInteractions();
+    if (a.probeMoving) schedulePhase(finishProbeAction, reducedMotionEnabled() ? 250 : 700);
     if (reactionRunning) schedulePhase(finishReaction, reducedMotionEnabled() ? 700 : 1900);
     if (lightRunning) schedulePhase(finishLightReading, reducedMotionEnabled() ? 900 : 2600);
     if (a.phase === "reading" && state.level === "junior") schedulePhase(completeAnalyserChapter, reducedMotionEnabled() ? 500 : 1100);
@@ -1717,6 +1839,18 @@ function wireAnalyserInteractions() {
     });
     document.querySelectorAll("[data-analyser-target]").forEach(button => button.addEventListener("click", () => useAnalyserTarget(button.dataset.analyserTarget)));
     document.querySelectorAll("[data-test-tile]").forEach(button => button.addEventListener("click", () => chooseAnalyserTest(button.dataset.testTile)));
+    document.querySelectorAll("[data-probe-move]").forEach(button => {
+        const direction = Number(button.dataset.probeMove);
+        button.addEventListener("pointerdown", event => {
+            event.preventDefault();
+            button.setPointerCapture?.(event.pointerId);
+            startProbeTravel(direction);
+        });
+        button.addEventListener("pointerup", releaseProbeTravel);
+        button.addEventListener("pointercancel", () => cancelProbeTravel(true));
+        button.addEventListener("lostpointercapture", releaseProbeTravel);
+    });
+    document.querySelector("[data-probe-action]")?.addEventListener("click", event => attemptProbeAction(event.currentTarget.dataset.probeAction));
     document.querySelector("[data-start-reaction]")?.addEventListener("click", startReaction);
     document.querySelector("[data-start-light]")?.addEventListener("click", startLightReading);
     document.querySelector("[data-skip-animation]")?.addEventListener("click", skipAnalyserAnimation);
@@ -1727,10 +1861,10 @@ function wireAnalyserInteractions() {
 function selectAnalyserObject(object) {
     const a = state.analyser;
     if (Date.now() < (state.suppressClickUntil || 0)) return;
-    const allowed = (a.phase === "entry" && object === "tube") || (a.phase === "sample" && object === "probe") || (a.phase === "reagent" && object === "reagent");
+    const allowed = a.phase === "entry" && object === "tube";
     if (!allowed) return;
     a.selected = a.selected === object ? null : object;
-    a.feedback = a.selected ? `${object === "tube" ? "Ian’s sample" : object === "probe" ? "Teaching probe" : "Glucose reagent"} selected. Choose the highlighted target.` : "";
+    a.feedback = a.selected ? "Ian’s sample selected. Choose the highlighted analyser rack." : "";
     saveCheckpoint();
     render();
 }
@@ -1742,18 +1876,8 @@ function useAnalyserTarget(target) {
         a.tubeLocation = "loader";
         a.phase = "test";
         a.feedback = "Ian’s identity and requested test are confirmed.";
-    } else if (target === "reaction-cup" && a.phase === "sample" && a.selected === "probe") {
-        a.selected = null;
-        a.sampleAdded = true;
-        a.phase = "reagent";
-        a.feedback = "The analyser uses a tiny amount of the plasma. Most remains in Ian’s tube.";
-    } else if (target === "reaction-cup" && a.phase === "reagent" && a.selected === "reagent") {
-        a.selected = null;
-        a.reagentAdded = true;
-        a.phase = "reaction-ready";
-        a.feedback = "This reagent helps us measure glucose.";
     } else {
-        a.feedback = a.phase === "sample" ? "Take the sample from the liquid above the cells, then move it to the reaction cup." : "Complete the highlighted analyser step first.";
+        a.feedback = "Complete the highlighted analyser step first.";
         playTone("try");
     }
     saveCheckpoint();
@@ -1769,8 +1893,224 @@ function chooseAnalyserTest(test) {
     } else {
         a.testSelected = "glucose";
         a.phase = "sample";
-        a.feedback = "Glucose selected. Let’s zoom inside and follow a tiny aliquot.";
+        a.probePosition = 1;
+        a.probeLoad = null;
+        a.guideTarget = null;
+        a.feedback = "Glucose selected. Hold an arrow to move the probe to Ian’s sample.";
         playTone("success");
+    }
+    saveCheckpoint();
+    render();
+}
+
+function normaliseProbePosition(position) {
+    const numeric = Number(position);
+    return Number.isFinite(numeric) ? Math.max(PROBE_MIN, Math.min(PROBE_MAX, numeric)) : 1;
+}
+
+function probePositionToPercent(position) {
+    return PROBE_RAIL_LEFT + normaliseProbePosition(position) * PROBE_RAIL_STEP;
+}
+
+function nearestProbeTarget(position) {
+    const numeric = normaliseProbePosition(position);
+    const nearest = Math.round(numeric);
+    return Math.abs(numeric - nearest) <= PROBE_TARGET_TOLERANCE ? nearest : null;
+}
+
+function probeCanTravel() {
+    const a = state.analyser;
+    return Boolean(a && !a.probeMoving && ["sample", "dispense-sample", "reagent-aspirate", "dispense-reagent"].includes(a.phase) && !portraitQuery.matches && !document.body.classList.contains("dialog-paused"));
+}
+
+function playProbeCue(kind) {
+    if (!state.soundOn) return;
+    const Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) return;
+    try {
+        const context = new Audio();
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(kind === "move" ? 115 : 165, context.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(kind === "move" ? 135 : 130, context.currentTime + .09);
+        gain.gain.setValueAtTime(.025, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .1);
+        oscillator.start();
+        oscillator.stop(context.currentTime + .11);
+    } catch (error) {
+        // Probe sound is optional; the controls and movement remain complete.
+    }
+}
+
+function startProbeTravel(direction) {
+    if (!probeCanTravel() || ![-1, 1].includes(direction)) return;
+    const a = state.analyser;
+    a.probePosition = normaliseProbePosition(a.probePosition);
+    a.guideTarget = null;
+    const starting = !probeTravel.frameId;
+    probeTravel.direction = direction;
+    if (starting) {
+        a.probePosition = normaliseProbePosition(a.probePosition + direction * .018);
+        probeTravel.lastTime = performance.now();
+        updateProbeTravelDom();
+    }
+    if (!probeTravel.cuePlayed) {
+        playProbeCue("move");
+        probeTravel.cuePlayed = true;
+    }
+    if (starting) probeTravel.frameId = requestAnimationFrame(updateProbeTravel);
+}
+
+function updateProbeTravel(now) {
+    if (!probeCanTravel()) {
+        cancelProbeTravel(true);
+        return;
+    }
+    const elapsed = Math.min(34, Math.max(1, now - (probeTravel.lastTime || now)));
+    probeTravel.lastTime = now;
+    const maxSpeed = reducedMotionEnabled() ? .0012 : .00175;
+    const acceleration = reducedMotionEnabled() ? .00005 : .000007;
+    const braking = reducedMotionEnabled() ? .00005 : .0000105;
+    if (probeTravel.direction) {
+        const desired = probeTravel.direction * maxSpeed;
+        const change = acceleration * elapsed;
+        probeTravel.velocity += Math.max(-change, Math.min(change, desired - probeTravel.velocity));
+    } else {
+        const change = braking * elapsed;
+        if (Math.abs(probeTravel.velocity) <= change) probeTravel.velocity = 0;
+        else probeTravel.velocity -= Math.sign(probeTravel.velocity) * change;
+    }
+    const a = state.analyser;
+    const before = normaliseProbePosition(a.probePosition);
+    a.probePosition = normaliseProbePosition(before + probeTravel.velocity * elapsed);
+    updateProbeTravelDom();
+    const hitBoundary = (a.probePosition <= PROBE_MIN && probeTravel.velocity < 0) || (a.probePosition >= PROBE_MAX && probeTravel.velocity > 0);
+    if (hitBoundary) {
+        probeTravel.direction = 0;
+        probeTravel.velocity = 0;
+    }
+    if (!probeTravel.direction && Math.abs(probeTravel.velocity) < .00001) {
+        settleProbeTravel(true);
+        return;
+    }
+    probeTravel.frameId = requestAnimationFrame(updateProbeTravel);
+}
+
+function updateProbeTravelDom() {
+    const a = state.analyser;
+    const carriage = document.querySelector(".probe-carriage");
+    if (!a || !carriage) return;
+    const position = normaliseProbePosition(a.probePosition);
+    const target = nearestProbeTarget(position);
+    carriage.style.left = `${probePositionToPercent(position)}%`;
+    carriage.setAttribute("aria-label", `Sampling probe at ${target === null ? "between stations" : ["Ian’s sample", "glucose reagent", "reaction cell"][target]}`);
+    document.querySelectorAll(".probe-station").forEach((station, index) => station.classList.toggle("probe-aligned", index === target));
+    document.querySelector(".probe-guidance")?.remove();
+    const left = document.querySelector('[data-probe-move="-1"]');
+    const right = document.querySelector('[data-probe-move="1"]');
+    if (left) left.disabled = position <= PROBE_MIN;
+    if (right) right.disabled = position >= PROBE_MAX;
+}
+
+function releaseProbeTravel() {
+    probeTravel.direction = 0;
+    if (reducedMotionEnabled()) probeTravel.velocity = 0;
+    if (!probeTravel.frameId && probeCanTravel()) settleProbeTravel(true);
+}
+
+function settleProbeTravel(updateDom = true) {
+    if (probeTravel.frameId) cancelAnimationFrame(probeTravel.frameId);
+    probeTravel.frameId = null;
+    probeTravel.direction = 0;
+    probeTravel.velocity = 0;
+    probeTravel.lastTime = 0;
+    const hadCue = probeTravel.cuePlayed;
+    probeTravel.cuePlayed = false;
+    const a = state.analyser;
+    if (!a) return;
+    a.probePosition = normaliseProbePosition(a.probePosition);
+    const target = nearestProbeTarget(a.probePosition);
+    a.feedback = target === null
+        ? "The probe is between stations. Line it up over the next container."
+        : `Probe aligned over ${["Ian’s sample", "the glucose reagent", "the reaction cell"][target]}.`;
+    if (hadCue) playProbeCue("stop");
+    saveCheckpoint();
+    if (updateDom && state.stage === "analyser") {
+        updateProbeTravelDom();
+        const feedback = document.querySelector(".analyser-cutaway-screen .chapter-feedback");
+        if (feedback) {
+            feedback.textContent = a.feedback;
+            feedback.classList.toggle("hidden", !a.feedback);
+        }
+    }
+}
+
+function cancelProbeTravel(savePosition = false) {
+    const active = Boolean(probeTravel.frameId || probeTravel.direction || probeTravel.velocity);
+    if (probeTravel.frameId) cancelAnimationFrame(probeTravel.frameId);
+    probeTravel = { frameId:null, direction:0, velocity:0, lastTime:0, cuePlayed:false };
+    if (active && savePosition && state.analyser) {
+        state.analyser.probePosition = normaliseProbePosition(state.analyser.probePosition);
+        saveCheckpoint();
+    }
+}
+
+function attemptProbeAction(action) {
+    const a = state.analyser;
+    if (!a || a.probeMoving) return;
+    if (probeTravel.frameId || probeTravel.direction || probeTravel.velocity) settleProbeTravel(false);
+    const requirements = {
+        sample:{ action:"aspirate", position:0, label:"Ian’s sample" },
+        "dispense-sample":{ action:"dispense", position:2, label:"the reaction cell" },
+        "reagent-aspirate":{ action:"aspirate", position:1, label:"the glucose reagent" },
+        "dispense-reagent":{ action:"dispense", position:2, label:"the reaction cell" }
+    };
+    const required = requirements[a.phase];
+    if (!required || action !== required.action || Math.abs(normaliseProbePosition(a.probePosition) - required.position) > PROBE_TARGET_TOLERANCE) {
+        if (required) {
+            a.guideTarget = required.position;
+            a.feedback = `${required.action === "aspirate" ? "Aspirate from" : "Dispense into"} ${required.label} next. Follow the arrow.`;
+            playTone("try");
+            saveCheckpoint();
+            render();
+        }
+        return;
+    }
+    a.guideTarget = null;
+    a.probeMoving = true;
+    a.pendingProbeAction = a.phase;
+    a.feedback = `${action === "aspirate" ? "Aspirating" : "Dispensing"}…`;
+    saveCheckpoint();
+    render();
+}
+
+function finishProbeAction() {
+    const a = state.analyser;
+    if (!a?.probeMoving || !a.pendingProbeAction) return;
+    const completed = a.pendingProbeAction;
+    a.probeMoving = false;
+    a.pendingProbeAction = null;
+    if (completed === "sample") {
+        a.probeLoad = "sample";
+        a.phase = "dispense-sample";
+        a.feedback = "A tiny plasma aliquot is in the probe. Move to the reaction cell and dispense it.";
+    } else if (completed === "dispense-sample") {
+        a.probeLoad = null;
+        a.sampleAdded = true;
+        a.phase = "reagent-aspirate";
+        a.feedback = "The sample is in the reaction cell. Move to the glucose reagent and aspirate.";
+    } else if (completed === "reagent-aspirate") {
+        a.probeLoad = "reagent";
+        a.phase = "dispense-reagent";
+        a.feedback = "Reagent is in the probe. Move to the reaction cell and dispense it.";
+    } else if (completed === "dispense-reagent") {
+        a.probeLoad = null;
+        a.reagentAdded = true;
+        a.phase = "reaction-ready";
+        a.feedback = "Sample and reagent are together. Start the reaction.";
     }
     saveCheckpoint();
     render();
@@ -1785,7 +2125,7 @@ function startReaction() {
         return;
     }
     a.phase = "reaction-running";
-    a.feedback = "Mixing… the colour is developing in the separate reaction cup.";
+    a.feedback = "Mixing… the colour is developing in the separate reaction cell.";
     saveCheckpoint();
     render();
 }
@@ -1875,7 +2215,6 @@ function completeAnalyserChapter() {
 
 function analyserDropTargetForPhase() {
     if (state.analyser?.phase === "entry") return document.querySelector('[data-analyser-target="patient-loader"]');
-    if (["sample", "reagent"].includes(state.analyser?.phase)) return document.querySelector('[data-analyser-target="reaction-cup"]');
     return null;
 }
 
@@ -1949,10 +2288,10 @@ function cleanupAnalyserDrag() {
 
 function reportScaleMarkup() {
     const within = state.measurementCase.category === "within";
-    return `<div class="report-scale" aria-label="Glucose result ${within ? "within" : "above"} the example range for this story">
-        <strong>Example range for this story</strong>
-        <div class="report-track"><span class="story-band">Example range</span><span class="report-marker" style="--report-marker:${state.measurementCase.reportMarker * 100}%"><b>Ian’s result</b><i>${within ? "✓" : "↑"}</i></span></div>
-        <p>${within ? "Result marker inside the example range" : "Result marker above the example range"}</p>
+    return `<div class="report-scale" aria-label="Glucose result ${within ? "within" : "outside"} the expected range of 3.9 to 9.00 millimoles per litre">
+        <strong>Expected range</strong>
+        <div class="report-track"><span class="story-band">Expected range</span><span class="range-value range-low">3.9 mmol/L</span><span class="range-value range-high">9.00 mmol/L</span><span class="report-marker" style="--report-marker:${state.measurementCase.reportMarker * 100}%"><b>Ian’s result</b><i>${within ? "✓" : "↑"}</i></span></div>
+        <p>${within ? "Result marker within the expected range" : "Result marker outside the expected range"}</p>
     </div>`;
 }
 
@@ -1966,24 +2305,24 @@ function reviewStepState(step) {
 function renderReviewChapter() {
     const r = state.review;
     const junior = state.level === "junior";
-    const choices = junior ? ["within", "outside"] : ["below", "within", "above"];
+    const choices = [["within", "Within expected range"], ["outside", "Outside expected range"]];
     screenHost.innerHTML = `
         <section class="screen review-screen" aria-labelledby="reviewTitle">
             <img class="review-bg" src="assets/reception-background-v1.png" alt="Clinical chemistry reporting bench">
-            <header class="review-heading"><p class="kicker">CHAPTER 5 · CHECK THE RESULT</p><h1 id="reviewTitle">Review Ian’s glucose result</h1><p>${junior ? "Compare the result with the range shown." : "Check the patient, compare the result, and acknowledge the scientist’s review."}</p></header>
+            <header class="review-heading"><p class="kicker">CHAPTER 5 · CHECK THE RESULT</p><h1 id="reviewTitle">Review Ian’s glucose result</h1><p>${junior ? "Compare the result with the expected range." : "Check the patient, compare the result, and acknowledge the scientist’s review."}</p></header>
             <article class="result-report"><div class="report-title"><strong>Checked result</strong><span>Glucose</span></div>${patientIdentityMarkup(true)}${reportScaleMarkup()}</article>
             <ol class="review-checklist" aria-label="Result review checklist">
                 ${junior ? "" : `<li class="${reviewStepState("identity")}"><button type="button" data-review-step="identity"><span>${r.identityConfirmed ? "✓" : "1"}</span>Confirm Ian’s identity<small>${r.identityConfirmed ? "Complete" : "Compare report and accepted request"}</small></button></li>`}
-                <li class="${reviewStepState("compare")}"><button type="button" data-review-step="compare"><span>${r.comparisonComplete ? "✓" : junior ? "1" : "2"}</span>Compare the glucose result<small>${r.comparisonComplete ? "Complete" : "Use the example range"}</small></button></li>
+                <li class="${reviewStepState("compare")}"><button type="button" data-review-step="compare"><span>${r.comparisonComplete ? "✓" : junior ? "1" : "2"}</span>Compare the glucose result<small>${r.comparisonComplete ? "Complete" : "Use the expected range"}</small></button></li>
                 ${junior ? `<li class="${r.reviewAcknowledged ? "complete" : "pending"} automatic"><span>${r.reviewAcknowledged ? "✓" : "2"}</span><b>Scientist review</b><small>${r.reviewAcknowledged ? "Completed automatically after comparison" : "Follows the comparison"}</small></li>` : `<li class="${reviewStepState("scientist")}"><button type="button" data-review-step="scientist"><span>${r.reviewAcknowledged ? "✓" : "3"}</span>Acknowledge scientist review<small>${r.reviewAcknowledged ? "Complete" : "Available after comparison"}</small></button></li>`}
             </ol>
             ${r.phase === "identity-open" ? `<div class="review-action-panel identity-panel"><h2>Compare the identifiers</h2><div class="identity-columns"><div><h3>Accepted request</h3>${patientIdentityMarkup()}</div><div><h3>Result report</h3>${patientIdentityMarkup()}</div></div><button class="primary-button" type="button" data-confirm-identity>Matches Ian</button></div>` : ""}
-            ${r.phase === "compare" ? `<div class="review-action-panel compare-panel"><h2>Where is Ian’s result marker?</h2><div class="classification-buttons">${choices.map(choice => `<button type="button" data-result-choice="${choice}">${choice[0].toUpperCase() + choice.slice(1)}</button>`).join("")}</div></div>` : ""}
+            ${r.phase === "compare" ? `<div class="review-action-panel compare-panel"><h2>Is Ian’s result within the normal expected range?</h2><div class="classification-buttons">${choices.map(([value, label]) => `<button type="button" data-result-choice="${value}">${label}</button>`).join("")}</div></div>` : ""}
             ${r.phase === "scientist" ? '<div class="review-action-panel scientist-panel"><img class="review-scientist" src="assets/scientist-guide-v1.png" alt="Clinical scientist"><div><h2>Scientist review</h2><p>The report and result comparison are ready for a laboratory scientist.</p><button class="primary-button" type="button" data-request-review>Request scientist review</button></div></div>' : ""}
             ${r.phase === "acknowledge" ? `<div class="review-action-panel scientist-panel"><img class="review-scientist" src="assets/scientist-guide-v1.png" alt="Clinical scientist"><div><h2>Scientist review complete</h2><p>${state.level === "challenge" ? "A result is one clue. The doctor interprets it with symptoms, history, and other information." : "The checked result is ready to report."}</p><button class="primary-button" type="button" data-acknowledge-review>Acknowledge review</button></div></div>` : ""}
             <p class="chapter-feedback ${r.feedback ? "" : "hidden"}" role="alert">${r.feedback || ""}</p>
         </section>`;
-    setGuide(junior ? "The result is ready. Use your checklist to compare it with the range shown." : "Work through the checklist: check the patient, compare the result, and acknowledge the scientist’s review.");
+    setGuide(junior ? "The result is ready. Use your checklist to compare it with the expected range." : "Work through the checklist: check the patient, compare the result, and acknowledge the scientist’s review.");
     wireReviewInteractions();
     if (r.phase === "complete") schedulePhase(completeReviewChapter, reducedMotionEnabled() ? 500 : 1100);
 }
@@ -2021,9 +2360,9 @@ function chooseResultCategory(choice) {
     const r = state.review;
     if (r.phase !== "compare") return;
     r.categorySelected = choice;
-    const expected = state.measurementCase.category === "above" ? (state.level === "junior" ? "outside" : "above") : "within";
+    const expected = state.measurementCase.category === "above" ? "outside" : "within";
     if (choice !== expected) {
-        r.feedback = state.measurementCase.category === "above" ? `The marker is above the shaded band. Choose ${state.level === "junior" ? "Outside" : "Above"}.` : "The marker is inside the shaded band. Choose Within.";
+        r.feedback = state.measurementCase.category === "above" ? "The marker is beyond 9.00 mmol/L. Choose Outside expected range." : "The marker is between 3.9 and 9.00 mmol/L. Choose Within expected range.";
         playTone("try");
         saveCheckpoint();
         render();
@@ -2034,10 +2373,10 @@ function chooseResultCategory(choice) {
         r.scientistReviewed = true;
         r.reviewAcknowledged = true;
         r.phase = "complete";
-        r.feedback = state.measurementCase.category === "above" ? "The marker is outside the example range, above the shaded band. The scientist reviewed it before reporting." : "The marker is inside the example range. The scientist still reviewed it before reporting.";
+        r.feedback = state.measurementCase.category === "above" ? "The marker is outside the expected range, above the shaded band. The scientist reviewed it before reporting." : "The marker is within the expected range. The scientist still reviewed it before reporting.";
     } else {
         r.phase = "scientist";
-        r.feedback = state.measurementCase.category === "above" ? "This result needs the doctor’s attention. It is not a diagnosis." : "This result is within the example range. The doctor will consider it with Ian’s other information.";
+        r.feedback = state.measurementCase.category === "above" ? "This result needs the doctor’s attention. It is not a diagnosis." : "This result is within the expected range. The doctor will consider it with Ian’s other information.";
     }
     playTone("success");
     saveCheckpoint();
@@ -2078,7 +2417,7 @@ function completeReviewChapter() {
 }
 
 function checkedReportMarkup() {
-    return `<article class="checked-report"><header><strong>Clinical Chemistry · Checked report</strong><span>✓ Scientist review complete</span></header>${patientIdentityMarkup()}${reportScaleMarkup()}<p class="report-conclusion">${state.measurementCase.category === "above" ? "This result needs the doctor’s attention." : "This result is within the example range. The doctor will consider it with Ian’s other information."}</p></article>`;
+    return `<article class="checked-report"><header><strong>Clinical Chemistry · Checked report</strong><span>✓ Scientist review complete</span></header>${patientIdentityMarkup()}${reportScaleMarkup()}<p class="report-conclusion">${state.measurementCase.category === "above" ? "This result needs the doctor’s attention." : "This result is within the expected range. The doctor will consider it with Ian’s other information."}</p></article>`;
 }
 
 function renderDeliveryChapter() {
@@ -2090,13 +2429,13 @@ function renderDeliveryChapter() {
 
 function renderReportDelivery() {
     const d = state.delivery;
-    screenHost.innerHTML = `<section class="screen delivery-screen" aria-labelledby="deliveryTitle">
+    updatePersistentScene(`<section class="screen delivery-screen" aria-labelledby="deliveryTitle">
         <img class="review-bg" src="assets/reception-background-v1.png" alt="Clinical chemistry reporting bench">
         <header class="delivery-heading"><p class="kicker">CHAPTER 6 · DELIVER THE CLUES</p><h1 id="deliveryTitle">Send Ian’s checked report</h1><p>The laboratory work is reviewed and ready for Ian’s doctor.</p></header>
         ${checkedReportMarkup()}
         <div class="delivery-action"><button class="primary-button" type="button" data-send-report ${d.phase === "sending" ? "disabled" : ""}>${d.phase === "sending" ? "Sending checked report…" : "Send checked report"}</button></div>
         <p class="chapter-feedback ${d.feedback ? "" : "hidden"}" role="status">${d.feedback || ""}</p>
-    </section>`;
+    </section>`);
     setGuide(d.phase === "sending" ? "Sending the checked report securely to Ian’s doctor…" : "The report is checked. Send it to Ian’s doctor.");
     document.querySelector("[data-send-report]")?.addEventListener("click", sendCheckedReport);
     if (d.phase === "sending") schedulePhase(showClinicReport, reducedMotionEnabled() ? 450 : 1300);
@@ -2126,11 +2465,11 @@ function renderClinicReport() {
     const d = state.delivery;
     const doctorCopy = state.measurementCase.doctorDialogue === "above"
         ? "Thank you. I’ll look at this glucose result together with Ian’s symptoms and other information to decide what to do next."
-        : "Thank you. This glucose result is within the range shown. I’ll use it with the other information to understand why Ian feels tired.";
-    screenHost.innerHTML = `<section class="screen clinic-report-screen" aria-labelledby="clinicReportTitle">
+        : "Thank you. This glucose result is within the expected range. I’ll use it with the other information to understand why Ian feels tired.";
+    updatePersistentScene(`<section class="screen clinic-report-screen" aria-labelledby="clinicReportTitle">
         <div class="clinic-return-art"><div class="clinic-window"><img src="assets/malta-window-townscape-v2.png" alt=""></div><img class="ian-return" src="assets/ian-seated-v2.png" alt="Ian sitting calmly"><img class="doctor-return" src="assets/doctor-clinic-v1.png" alt="Ian’s doctor"></div>
         <div class="clinic-dialogue"><p class="kicker">REPORT RECEIVED</p><h1 id="clinicReportTitle">Ian’s doctor has the clues</h1><p><strong>Doctor:</strong> “${doctorCopy}”</p><p><strong>Ian:</strong> “Thank you for looking after my sample!”</p><button class="primary-button" type="button" data-start-recap>Review the laboratory journey →</button></div>
-    </section>`;
+    </section>`);
     setGuide("The checked glucose report is back with Ian’s doctor.");
     document.querySelector("[data-start-recap]").addEventListener("click", () => {
         d.doctorAcknowledged = true;
@@ -2154,7 +2493,7 @@ function recapCardMarkup(key, source = "pool") {
 function renderRecap() {
     const d = state.delivery;
     const placed = new Set(d.recapSlots.filter(Boolean));
-    screenHost.innerHTML = `<section class="screen recap-screen" aria-labelledby="recapTitle">
+    updatePersistentScene(`<section class="screen recap-screen" aria-labelledby="recapTitle">
         <header class="recap-heading"><p class="kicker">CHAPTER 6 · MISSION RECAP</p><h1 id="recapTitle">Put the laboratory journey in order</h1><p>Drag each card into a slot, or select a card and then a slot.</p></header>
         <div class="recap-pool" aria-label="Recap card tray">${d.recapCards.filter(key => !placed.has(key)).map(key => recapCardMarkup(key)).join("")}</div>
         <div class="recap-slots" aria-label="Journey order">
@@ -2162,7 +2501,7 @@ function renderRecap() {
         </div>
         <button class="primary-button recap-submit" type="button" data-submit-recap ${d.recapSlots.some(value => !value) ? "disabled" : ""}>Check the order</button>
         <p class="chapter-feedback ${d.feedback ? "" : "hidden"}" role="alert">${d.feedback || ""}</p>
-    </section>`;
+    </section>`);
     setGuide("Order the journey: checking and preparation happen before measurement, review, and reporting.");
     wireRecapInteractions();
 }
@@ -2338,7 +2677,7 @@ function replayQualityControl() {
 }
 
 function renderComplete() {
-    screenHost.innerHTML = `
+    updatePersistentScene(`
         <section class="screen complete-screen mission-complete-screen" aria-labelledby="completeTitle">
             <div class="complete-card chemistry-badge-card">
                 <div class="chemistry-badge" aria-hidden="true"><span class="badge-tube"></span><span class="badge-cup"></span><span class="badge-beam"></span><b>★</b></div>
@@ -2352,7 +2691,7 @@ function renderComplete() {
                 </div>
                 <p class="no-badge">${storageAvailable ? "The badge is saved in your laboratory passport." : "The mission is complete, but the badge could not be saved on this device."}</p>
             </div>
-        </section>`;
+        </section>`);
     setGuide("Clinical Chemistry Badge Earned! Ian’s checked report reached his doctor.");
     document.getElementById("newVersionButton").addEventListener("click", startNewVersion);
     document.getElementById("completeTitle")?.focus();
@@ -2367,7 +2706,7 @@ function resetToOpening(allowWithin = false) {
     clearCheckpoint();
     allowWithinNextCase = allowWithin;
     state = {
-        version:6, level:null, caseData:null, scenario:null, stage:"opening", clueSeen:false,
+        version:7, level:null, caseData:null, scenario:null, stage:"opening", clueSeen:false,
         inspectionIndex:null, mismatchFields:[], acceptedIndex:null, bottleSelected:false,
         chapter1Complete:false, chapter2Complete:false, chapter3Complete:false, chapter4Complete:false, chapter5Complete:false, chapter6Complete:false,
         centrifuge:null, qualityControl:null, measurementCase:null, analyser:null, review:null, report:null, delivery:null, soundOn
@@ -2435,7 +2774,8 @@ function changeLevel(level) {
     }
     state.level = level;
     state.scenario = createScenario(level, state.caseData);
-    state.stage = state.stage === "story" ? "story" : state.clueSeen ? "arrival" : "clue";
+    state.stage = state.stage === "story" ? "story" : "arrival";
+    state.clueSeen = true;
     state.inspectionIndex = null;
     state.mismatchFields = [];
     state.acceptedIndex = null;
@@ -2457,6 +2797,7 @@ function showDialog(dialog, invoker) {
     cancelCentrifugeDrag();
     cancelQcDrag();
     cancelAnalyserDrag();
+    cancelProbeTravel(true);
     cancelRecapDrag();
     document.body.classList.add("dialog-paused");
     if (typeof dialog.showModal === "function") dialog.showModal();
@@ -2483,6 +2824,7 @@ function updateOrientation() {
         cancelCentrifugeDrag();
         cancelQcDrag();
         cancelAnalyserDrag();
+        cancelProbeTravel(true);
         cancelRecapDrag();
     } else {
         startPhaseTimer();
@@ -2535,6 +2877,19 @@ soundButton.addEventListener("click", () => {
     if (state.level) saveCheckpoint();
 });
 fullscreenButton.addEventListener("click", attemptFullscreen);
+document.addEventListener("keydown", event => {
+    if (state.stage !== "analyser" || !state.analyser || portraitQuery.matches || document.body.classList.contains("dialog-paused")) return;
+    if (!["sample", "dispense-sample", "reagent-aspirate", "dispense-reagent"].includes(state.analyser.phase)) return;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        event.preventDefault();
+        startProbeTravel(event.key === "ArrowLeft" ? -1 : 1);
+    }
+});
+document.addEventListener("keyup", event => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    releaseProbeTravel();
+});
 document.addEventListener("fullscreenchange", () => {
     fullscreenButton.textContent = document.fullscreenElement ? "×" : "⛶";
     fullscreenButton.setAttribute("aria-label", document.fullscreenElement ? "Exit full screen" : "Enter full screen");
@@ -2546,6 +2901,7 @@ window.addEventListener("blur", () => {
     if (centrifugeDrag) cancelCentrifugeDrag();
     if (qcDrag) cancelQcDrag();
     if (analyserDrag) cancelAnalyserDrag();
+    cancelProbeTravel(true);
     if (recapDrag) cancelRecapDrag();
 });
 

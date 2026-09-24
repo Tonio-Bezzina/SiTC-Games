@@ -42,6 +42,14 @@ Use case: illustration-story. Asset type: transparent reusable game character. P
 
 Use case: illustration-story. Asset type: transparent calm clinic character for a children’s laboratory game. Primary request: create a friendly doctor in a reassuring consultation pose, gently gesturing toward a separate report area while holding a blank tablet at their side. Style/medium: polished child-friendly 3D-cartoon SiTC style matching the referenced seated boy’s proportions and warm lighting. Composition/framing: three-quarter body, front-three-quarter view facing slightly toward the boy, complete hands and body visible. Constraints: genuine transparent background; no emergency equipment, blood tube, gloves, procedure, readable text, diagnosis, speech bubble, logo, patient or scenery; calm expression and clean alpha edges.
 
+7. Revised analyser cutaway
+
+Use case: precise-object-edit. Asset type: wide illustrated game background for a touchscreen clinical chemistry analyser chapter. Edit target: analyser-cutaway-v1.png. Primary request: simplify the analyser interior by removing the built-in hanging sample probe, large central reagent/probe mechanism, carousel and foreground racks. Replace them with a clean interior work deck and simple horizontal travel rail. Preserve the outer analyser housing, cyan accent light, optical emitter/detector assembly, perspective, lighting and blue-white educational 3D style. Constraints: no sample tube, reagent bottle, reaction cell, probe needle, labels, text, arrows, controls, people or watermark; all interactive objects remain separate layers. Generated with built-in image generation as exec-5db254cc-0f07-4cbf-8e0e-e1da434b3e0a.
+
+8. Front-view analyser probe
+
+Use case: precise-object-edit. Asset type: transparent interactive game object. Edit target: analyser-probe-v1.png. Primary request: redraw the sampling probe in a straight-on front elevation with a symmetrical white-and-navy carriage, cyan accent, centred dark-blue body and narrow stainless-steel needle pointing vertically down. Preserve the polished educational 3D style. Constraints: full object visible with transparent padding; genuine transparency; no machine interior, stand, text, labels, arrows, UI or watermark. Generated with built-in image generation as exec-db8f5a8d-7903-4871-8e1e-94bf6d5d052d.
+
 Selection, verification and processing
 
 - Generation mode: OpenAI built-in image generation, reference-image editing where listed above.
@@ -49,6 +57,6 @@ Selection, verification and processing
 - A first reagent candidate (exec-1fa0c3a9-0d04-4328-9c12-b64e254eb5b7.png) was rejected because it depicted a complete analyser rather than the detachable module requested.
 - The selected files were chosen for visual continuity, clear silhouettes and separation of readable/stateful UI from the raster artwork.
 - Dimensions and colour/alpha details are recorded in assets-manifest.json.
-- All five transparent cutouts have 32-bit alpha and alpha-0 corner pixels. The cutaway is an opaque 16:9 background by design.
+- The transparent cutouts use 32-bit alpha. The cutaway backgrounds are opaque 16:9 assets by design.
 - Reviewer: Codex implementation pass, 22 September 2026.
-- Known limitation: the opaque cutaway includes illustrative internal housing details; all changing tools, liquids, labels, graph and light beam remain separate code-native layers.
+- The revised opaque cutaway contains only static analyser housing and optical hardware; all changing tools, liquids, labels, graph and light beam remain separate interactive layers.

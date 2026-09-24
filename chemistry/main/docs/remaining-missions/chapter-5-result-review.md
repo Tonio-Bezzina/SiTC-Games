@@ -1,6 +1,6 @@
 # Chapter 5 implementation brief — Check the result
 
-Status: not implemented
+Status: implemented; keep this brief aligned with the playable chapter
 Applies to: the existing plain HTML/CSS/JavaScript mission in `chemistry/main/`
 Design authority: `chemistry-game-design.md`, Chapter 5 and shared continuity, difficulty, interaction, persistence, and accessibility rules
 
@@ -8,11 +8,11 @@ This document is self-contained. It specifies the full result-review chapter and
 
 ## Learning outcome and boundaries
 
-The player learns that producing an analyser result is not the same as reviewing and reporting it. The result must stay linked to the correct patient, be compared with the educational range shown, and receive scientist review before it is sent.
+The player learns that producing an analyser result is not the same as reviewing and reporting it. The result must stay linked to the correct patient, be compared with the expected range shown, and receive scientist review before it is sent.
 
-The chapter must not diagnose Ian, prescribe treatment, imply that a within-band result proves he is well, or replace an out-of-range result with a normal result after a wrong answer. Do not invent clinical units or cutoffs. Label the band:
+The chapter must not diagnose Ian, prescribe treatment, imply that a within-band result proves he is well, or replace an out-of-range result with a normal result after a wrong answer. Label the educational band and show its supplied endpoints:
 
-> Example range for this story
+> Expected range · 3.9 mmol/L to 9.00 mmol/L
 
 ## Entry contract
 
@@ -35,7 +35,7 @@ Return from the analyser cutaway to a laboratory reporting monitor. Reuse the vi
 - Accession.
 - Test: Glucose.
 - A result marker.
-- A large labelled **Example range for this story** band.
+- A large labelled **Expected range** band with visible endpoints **3.9 mmol/L** and **9.00 mmol/L**.
 - A visible checklist whose rows open the associated action.
 - The existing scientist guide and bottom clue strip.
 
@@ -45,8 +45,8 @@ The result marker must be clearly within or above the band; do not use boundary 
 
 ### Default above-band story
 
-- Marker clearly above the example band.
-- Correct category: **Above** (or **Outside** in Junior).
+- Marker clearly above the expected band.
+- Correct category: **Outside expected range**.
 - Neutral conclusion:
 
 > This result needs the doctor's attention.
@@ -59,7 +59,7 @@ This is not a diagnosis.
 - Correct category: **Within**.
 - Neutral conclusion:
 
-> This result is within the example range. The doctor will consider it alongside Ian's other information.
+> This result is within the expected range. The doctor will consider it alongside Ian's other information.
 
 Never state that Ian is healthy or that the result explains all symptoms.
 
@@ -88,7 +88,7 @@ Persist the selected category and every completed row. Wrong choices never alter
 
 Guide:
 
-> The result is ready. Use your checklist to compare it with the range shown.
+> The result is ready. Use your checklist to compare it with the expected range.
 
 Visible player checklist contains one actionable row:
 
@@ -98,18 +98,18 @@ Ian's identity remains visible, but identity confirmation and scientist review h
 
 Choices:
 
-- **Within**
-- **Outside**
+- **Within expected range**
+- **Outside expected range**
 
 After the correct comparison, explain the direction in plain language and visibly mark background checks/review as complete without requiring input.
 
 Above-band correct feedback:
 
-> The marker is outside the example range, above the shaded band. The scientist will review it before reporting.
+> The marker is outside the expected range, above the shaded band. The scientist will review it before reporting.
 
 Within-band correct feedback:
 
-> The marker is inside the example range. The scientist will still review it before reporting.
+> The marker is within the expected range. The scientist will still review it before reporting.
 
 ## Explorer flow
 
@@ -131,13 +131,14 @@ Provide **Matches Ian** only after all fields are visible. If the player attempt
 
 ### Result comparison
 
-Choices:
+Ask: **Is Ian's result within the normal expected range?**
 
-- **Below**
-- **Within**
-- **Above**
+Choices at every level:
 
-Enable after identity confirmation. The current first-release variants use Above or Within; Below remains a valid classification control but is not selected by the supplied cases unless a coherent future case is added.
+- **Within expected range**
+- **Outside expected range**
+
+Enable after identity confirmation. The marker position and endpoint labels show whether it is within or outside; do not add separate Below/Above choices.
 
 ### Scientist review
 
@@ -163,11 +164,11 @@ Preserve the marker and case. Highlight its position relative to the nearest rel
 
 For the default above case:
 
-> The marker is above the shaded band. Choose Above.
+> The marker is beyond 9.00 mmol/L. Choose Outside expected range.
 
 For a within case:
 
-> The marker is inside the shaded band. Choose Within.
+> The marker is between 3.9 and 9.00 mmol/L. Choose Within expected range.
 
 An incorrect category is a deliberate scientific decision and may count as an attempt. It never changes the underlying result.
 

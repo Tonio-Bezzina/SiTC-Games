@@ -26,7 +26,7 @@ Implement in this order:
 2. [Chapter 4 — analyser measurement](chapter-4-analyser-measurement.md)
    Load Ian's prepared sample, choose glucose, enter the teaching cutaway, transfer an aliquot, add reagent, mix/react, and obtain a settled light reading.
 3. [Chapter 5 — result review](chapter-5-result-review.md)
-   Review identity, compare the result with the story's example range, and complete scientist review according to level.
+   Review identity, compare the result with the expected range, and complete scientist review according to level.
 4. [Chapter 6 — report delivery and completion](chapter-6-report-delivery-and-completion.md)
    Send the checked report, return to the clinic, complete the recap, award and persist the badge, and provide replay/return routes.
 
