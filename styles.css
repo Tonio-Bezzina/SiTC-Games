@@ -397,7 +397,7 @@ main {
     grid-template-columns:
         repeat(
             auto-fit,
-            minmax(250px, 1fr)
+            minmax(300px, 1fr)
         );
 
     gap: 22px;
@@ -788,65 +788,42 @@ main {
 
 
 /* =========================================================
-   TEMPORARY DEVELOPMENT TEST AREA
-   This will disappear before the public version.
+   BOTTOM PROGRESS CONTROL
    ========================================================= */
 
-.developer-test {
-    margin-top: 55px;
-
-    padding: 26px;
-
-    text-align: center;
-
-    background: #fff9dc;
-
-    border:
-        2px dashed #e3b900;
-
-    border-radius: 22px;
+.hub-tools {
+    margin-top: 46px;
+    display: flex;
+    justify-content: center;
 }
 
-.developer-test h2 {
-    margin:
-        0 0 7px;
-}
-
-.developer-test > p:not(.eyebrow) {
-    margin:
-        0 0 18px;
-
-    color: #665800;
-}
-
-.developer-test button {
-    margin: 5px;
-
-    padding:
-        11px 17px;
-
-    border: none;
-
-    border-radius: 12px;
-
-    background: #10245c;
-
-    color: white;
-
+.reset-progress-button {
+    padding: 10px 16px;
+    border: 1px solid #b9c9d5;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #52677a;
+    font: inherit;
+    font-size: 0.86rem;
     font-weight: 800;
-
     cursor: pointer;
-
     transition:
-        transform 0.15s ease,
-        background 0.15s ease;
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        transform 0.15s ease;
 }
 
-.developer-test button:hover {
-    transform:
-        translateY(-1px);
+.reset-progress-button:hover {
+    background: white;
+    border-color: #8aa8bb;
+    color: #29485d;
+    transform: translateY(-1px);
+}
 
-    background: #1b377d;
+.reset-progress-button:focus-visible {
+    outline: 3px solid #8edcff;
+    outline-offset: 3px;
 }
 
 
