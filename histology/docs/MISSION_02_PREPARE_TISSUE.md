@@ -29,7 +29,7 @@ Use a clean histology grossing bench viewed from a clear, slightly elevated angl
 - one cutting board or grossing surface;
 - the accepted skin specimen, initially whole;
 - a child-safe virtual representation of a scalpel;
-- an open labelled histology cassette;
+- an open histology cassette with **HIST-931222** printed directly on its built-in writing panel;
 - three large answer controls;
 - the scientist guide strip;
 - **Mission 2 of 7** in the game bar.
@@ -56,6 +56,7 @@ The activity is educational and diagrammatic. Avoid blood, injury imagery, or gr
 - A missed swipe gives a gentle visual cue and does not count as a wrong scientific answer.
 - After a successful cut, disable further cutting.
 - Only the small cut piece is transferable to the cassette.
+- The cassette identifier **HIST-931222** is part of every cassette image state, follows the cassette surface and perspective, and is never added as a floating HTML or paper-label overlay.
 - The cassette drop zone must be larger than its visible opening.
 - If the piece is dropped elsewhere, return it to its last safe position without changing mission state.
 

@@ -7,7 +7,7 @@
   const orientationBlocker = document.getElementById("orientationBlocker");
   const STORAGE_KEY = "sitcHistologyMission1V1";
   const HUB_STORAGE_KEY = "sitcGameProgressV2";
-  const VERSION = 7;
+  const VERSION = 8;
   let pendingFocus = null;
   let cutStart = null;
   let sequenceTimer = null;
@@ -50,7 +50,7 @@
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (!saved || (saved.caseData && !validCase(saved.caseData))) return initialState();
-      if (![1, 2, 3, 4, 5, 6, VERSION].includes(saved.version)) return initialState();
+      if (![1, 2, 3, 4, 5, 6, 7, VERSION].includes(saved.version)) return initialState();
       const mission3 = { ...L.createMission3State(), ...(saved.mission3 || {}) };
       const mission4 = { ...L.createMission4State(), ...(saved.mission4 || {}) };
       const mission5 = { ...L.createMission5State(), ...(saved.mission5 || {}) };
@@ -60,6 +60,7 @@
         ...initialState(),
         ...saved,
         version: VERSION,
+        caseData: saved.caseData ? { ...saved.caseData, accession: L.HISTOLOGY_ACCESSION } : null,
         mission2: { ...L.createMission2State(), ...(saved.mission2 || {}) },
         mission3: L.applyMission3Action(mission3, "resume-safe"),
         mission4: L.applyMission4Action(mission4, "resume-safe"),
@@ -438,7 +439,7 @@
             <img src="assets/mission-2/virtual-scalpel.png" alt="Child-safe virtual scalpel"><span>${state.mission2.scalpelSelected ? "Scalpel selected" : "Select virtual scalpel"}</span>
           </button>
           <button class="cassette-target ${state.mission2.tissueSelected ? "ready" : ""} ${loaded ? "loaded" : ""}" type="button" data-action="mission2-place-tissue" data-drop="cassette" ${step === "transfer" ? "" : "disabled"} aria-label="${loaded ? "Histology cassette containing the tissue" : "Open empty histology cassette. Place the small tissue piece here."}">
-            <img src="assets/mission-2/${complete ? "histology-cassette-closed-loaded.png" : loaded ? "histology-cassette-open-loaded.png" : "histology-cassette-open-empty.png"}" alt="${complete ? "Closed cassette containing the patient tissue" : loaded ? "Open cassette containing the patient tissue" : "Open empty histology cassette"}"><span>${complete ? "Cassette closed safely" : loaded ? "Tissue inside cassette" : "Histology cassette"}</span>
+            <img src="assets/mission-2/${complete ? "histology-cassette-closed-loaded.png" : loaded ? "histology-cassette-open-loaded.png" : "histology-cassette-open-empty.png"}?v=2" alt="${complete ? "Closed cassette labelled HIST-931222 containing the patient tissue" : loaded ? "Open cassette labelled HIST-931222 containing the patient tissue" : "Open empty histology cassette labelled HIST-931222"}"><span>${complete ? "Cassette closed safely" : loaded ? "Tissue inside cassette" : "Histology cassette"}</span>
           </button>
         </div>
       </div>`;
@@ -519,7 +520,7 @@
   function mission3ProcessView() {
     const step = state.mission3.step;
     if (step === "question") {
-      return `<div class="mission-input-object"><img src="assets/mission-2/histology-cassette-closed-loaded.png" alt="Labelled cassette containing the accepted patient's tissue"><strong>Loaded histology cassette</strong></div>${mission3Choices()}`;
+      return `<div class="mission-input-object"><img src="assets/mission-2/histology-cassette-closed-loaded.png?v=2" alt="Cassette labelled HIST-931222 containing the accepted patient's tissue"><strong>Loaded histology cassette</strong></div>${mission3Choices()}`;
     }
     if (step === "processing") {
       return `<div class="process-stage"><img src="assets/mission-3/tissue-processor-active.png" alt="Cassette inside the active tissue processor"><div><h2>1. Process the tissue</h2><p>The cassette enters the processor so the tissue can be prepared for wax embedding.</p></div></div>`;
@@ -632,7 +633,7 @@
   function mission5Choices() {
     return `<div class="equipment-grid slide-choice-grid" aria-label="Choose where to put the thin tissue section">
       <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="glass-slide"><img src="assets/mission-5/microscope-slide-blank.png" alt="Blank glass microscope slide with a frosted label end and clear viewing area"><strong>On a glass microscope slide</strong></button>
-      <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="cassette"><img src="assets/mission-5/cassette-m5-distractor.png" alt="Closed histology cassette"><strong>Back into the cassette</strong></button>
+      <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="cassette"><img src="assets/mission-5/cassette-m5-distractor.png?v=2" alt="Closed histology cassette labelled HIST-931222"><strong>Back into the cassette</strong></button>
       <button class="equipment-choice" type="button" data-action="mission5-choice" data-value="bin"><img src="assets/mission-5/laboratory-bin.png" alt="Closed laboratory waste bin"><strong>Into the bin</strong></button>
     </div>`;
   }

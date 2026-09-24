@@ -33,7 +33,7 @@ Output: one intact tissue section positioned on a glass microscope slide, reveal
 Show the thin tissue section or ribbon and three large objects on a clean laboratory bench:
 
 1. a blank glass microscope slide;
-2. the prior histology cassette;
+2. the prior histology cassette, still visibly printed with **HIST-931222** on its built-in writing panel;
 3. a laboratory waste bin.
 
 Each object also has a visible text label matching its answer option. The slide must have a clear frosted label end and a transparent viewing area.

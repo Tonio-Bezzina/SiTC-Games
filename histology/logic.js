@@ -10,6 +10,7 @@
     explorer: Object.freeze({ label: "Explorer", guidance: "Some guidance", minAge: 10, maxAge: 12 }),
     challenge: Object.freeze({ label: "Challenge", guidance: "Fewer clues", minAge: 13, maxAge: 16 })
   });
+  const HISTOLOGY_ACCESSION = "HIST-931222";
 
   const MISSION2_CORRECT_CHOICE = "cut-cassette";
 
@@ -367,7 +368,7 @@
       level,
       reference,
       candidates: orderCandidates(correct, incorrect, rng),
-      accession: `HIST-${String(randomInteger(100000, 999999, rng))}`
+      accession: HISTOLOGY_ACCESSION
     };
   }
 
@@ -391,6 +392,7 @@
 
   return Object.freeze({
     LEVELS,
+    HISTOLOGY_ACCESSION,
     MISSION2_CORRECT_CHOICE,
     MISSION3_CORRECT_CHOICE,
     MISSION4_CORRECT_CHOICE,

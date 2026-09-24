@@ -11,6 +11,7 @@ test("generated cases obey every difficulty's identity rules", () => {
       const correct = gameCase.candidates.find((candidate) => logic.isCorrectCandidate(gameCase.reference, candidate));
       const incorrect = gameCase.candidates.find((candidate) => !logic.isCorrectCandidate(gameCase.reference, candidate));
       const age = logic.ageOn(gameCase.reference.dob, new Date());
+      assert.equal(gameCase.accession, "HIST-931222");
       assert.ok(age >= minimum && age <= maximum, `${level} age ${age}`);
       assert.equal(logic.isPatientIdValid(gameCase.reference.id, gameCase.reference.dob), true);
       assert.equal(logic.isPatientIdValid(incorrect.id, incorrect.dob), true);

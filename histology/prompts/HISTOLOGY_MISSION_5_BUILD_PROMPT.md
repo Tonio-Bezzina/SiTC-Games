@@ -39,6 +39,8 @@ Copy and use under `histology/assets/mission-5/`:
 - `section-to-slide-diagram.svg`
 - `slide-prep-bench-background.png`
 
+The reused cassette must retain **HIST-931222** printed directly on its built-in writing panel as part of the raster artwork; never add the identifier as a UI or paper-label overlay.
+
 Reuse the actual thin-section output from Mission 4 and the existing shared shell/guide/progress/success/orientation assets. Use supplied objects with live HTML answer labels; do not add a water-bath activity or substitute artwork.
 
 ## Mission behavior

@@ -62,6 +62,8 @@ Copy these reviewed files from the source asset library into the matching reposi
 - `skin-tissue-whole.png`
 - `virtual-scalpel.png`
 
+Every cassette state must have **HIST-931222** printed directly on the cassette's built-in writing panel as part of the raster artwork. Match the panel perspective and lighting. Do not implement this identifier as HTML text, a floating label, a paper label, or any other overlay.
+
 Reuse only the shared Histology assets needed by the existing shell, scientist guide strip, hint/focus feedback, progress display, success state, and orientation handling. Do not duplicate assets already present. Do not substitute emoji, CSS drawings, or newly generated artwork for supplied assets.
 
 ## Mission behavior
