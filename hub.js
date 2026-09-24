@@ -299,64 +299,6 @@ function loadProgress() {
 
 
 /* =========================================================
-   SAVE PROGRESS
-   ========================================================= */
-
-function saveProgress(progress) {
-
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(progress)
-    );
-
-}
-
-
-/* =========================================================
-   COMPLETE A PROGRESS-BEARING MISSION
-
-   Later, each real game can call:
-
-       completeMission("transfusion", "nicky");
-
-   when its final screen is reached.
-   ========================================================= */
-
-function completeMission(labId, missionId) {
-
-    const progress =
-        loadProgress();
-
-
-    /* Create the laboratory's legacy storage list if this is
-       its first completed interactive mission. */
-    if (!progress.completedCases[labId]) {
-
-        progress.completedCases[labId] = [];
-
-    }
-
-
-    /* Avoid saving the same mission more than once. */
-    if (
-        !progress.completedCases[labId]
-            .includes(missionId)
-    ) {
-
-        progress.completedCases[labId]
-            .push(missionId);
-
-    }
-
-
-    saveProgress(progress);
-
-    renderHub();
-
-}
-
-
-/* =========================================================
    CHECK WHETHER A MISSION IS COMPLETE
    ========================================================= */
 
@@ -782,38 +724,25 @@ function resetProgress() {
 
 
 /* =========================================================
-   TEMPORARY DEVELOPMENT CONTROLS
+   RESET BADGE PROGRESS CONTROL
+
+   This clears only the shared SiTC badge/progress record.
+   Individual games may keep their own separate saved state.
    ========================================================= */
 
-
-/* Simulate completing Nicky's progress-bearing Main Mission. */
 document
-    .getElementById(
-        "testMainMission"
-    )
+    .getElementById("resetBadgeProgress")
     .addEventListener(
         "click",
         function () {
 
-            completeMission(
-                "transfusion",
-                "nicky"
+            const confirmed = window.confirm(
+                "Reset all earned laboratory badges and Young Scientist progress on this browser?"
             );
 
-        }
-    );
-
-
-/* Clear everything. */
-document
-    .getElementById(
-        "testResetProgress"
-    )
-    .addEventListener(
-        "click",
-        function () {
-
-            resetProgress();
+            if (confirmed) {
+                resetProgress();
+            }
 
         }
     );
