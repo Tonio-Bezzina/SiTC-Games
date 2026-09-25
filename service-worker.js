@@ -15,8 +15,12 @@ self.addEventListener('fetch', event => {
       const response = await fetch(event.request);
       if (response.ok) return response;
     } catch (_) { /* Use an existing offline copy. */ }
+    // Browsers can launch the installed app at the directory URL (/), while
+    // the download list stores that page as index.html.
+    const offlineURL = url.pathname.endsWith('/')
+      ? new URL('index.html', url.href).href : event.request;
     for (const name of cachesInOrder) {
-      const match = await (await caches.open(name)).match(event.request, { ignoreSearch: true });
+      const match = await (await caches.open(name)).match(offlineURL, { ignoreSearch: true });
       if (match) return match;
     }
     return Response.error();
