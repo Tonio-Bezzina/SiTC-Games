@@ -6,7 +6,7 @@ This library implements `../MYCOLOGY_ASSETS.md` for The Mycology Journey. It com
 
 The raster art uses a friendly semi-realistic 3D educational style with soft cool upper-left lighting, clean rounded materials, and the SiTC navy, cyan, teal, white, and gold palette. Dr Mira’s neutral, pointing, and success sprites share the same identity, clothing, 1024-square canvas, scale, and `(512,930)` foot anchor. Mission 2 patients share 1024-square registered canvases and a `(512,960)` foot anchor; specimen choices share 640-square canvases and a `(320,570)` base anchor. Mission backgrounds retain wide empty overlay areas.
 
-The continuing specimen is represented by reusable SVG rather than baked case data. The Mission 4 plate continues into Mission 5; microscopy, culture, identification, and MIC visuals become Mission 8 clue cards. Scientific colours are confined to laboratory artwork.
+The continuing specimen is represented by reusable SVG rather than baked case data. The Mission 4 plate continues into Mission 5; the laboratory journey illustration is reused by the final read-only progress summary. Scientific colours are confined to laboratory artwork.
 
 ## Inventory
 
@@ -18,7 +18,7 @@ The continuing specimen is represented by reusable SVG rather than baked case da
 - `mission-5/`: incubator states and four individual registered culture-choice plates.
 - `mission-6/`: four colony references, four simplified microscopic references, identification-key arrows, with live HTML overlays supplied by the game.
 - `mission-7/`: 96-well geometry with live state applied by CSS.
-- `mission-8/`: empty detective board and eight journey icons.
+- `mission-8/`: legacy sequence-board background and the journey illustration now reused by the read-only progress summary; the old Mission 8 interaction is not loaded.
 - `completion/`: completion background and badge.
 - `contact-sheets/`: labelled shared/background, Mission 2 patient/specimen, mission, and state-family review sheets.
 - `sources/`: generation notes only; no third-party source art.

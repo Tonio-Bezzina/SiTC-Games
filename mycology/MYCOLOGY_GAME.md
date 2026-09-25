@@ -188,35 +188,26 @@ Correct: **Excellent! You found the MIC — the Minimum Inhibitory Concentration
 Incorrect: **Look from the lower concentrations upwards. Find the first concentration where visible growth is inhibited.**
 Hint: **Pink means visible growth in this simulation. Blue means no visible growth. Find the first blue well in order.**
 Learning: **Antifungal susceptibility testing investigates how a fungus responds to antifungal agents. MIC means Minimum Inhibitory Concentration. The result is not a treatment recommendation.**
-Completion: **MIC clue saved. You now have every clue needed to reconstruct the journey.**
+Completion: the correct MIC clue opens the complete journey summary automatically.
 
 The simulated row uses arbitrary display units and never names a drug or applies a susceptible/resistant category.
 
-### Mission 8 Become the Mycology Detective
+## Complete journey progress summary
 
-Instruction: **You’ve collected all the clues. Can you put the laboratory journey in the correct order?**
+There is no eighth mission. After Mission 7, the game immediately displays a read-only summary of all seven completed missions and their saved clues in chronological order. The player does not reorder cards, answer another question, request a hint, check an order, or activate a separate completion control.
 
-Required order: **sample arrives → check details → microscopy → culture → check growth → identification → antifungal susceptibility testing → laboratory result**.
-
-Correct: **Fantastic! You followed the specimen through the mycology laboratory.**
-Incorrect: **Almost! Think about what the laboratory needs to do first, and what information becomes available later.**
-Hint: **The sample must arrive and be checked before testing begins. Identification follows visible growth.**
-Learning: **Different laboratory methods provide different pieces of information. Together they help the mycologist investigate the specimen.**
-Completion action label: **Complete my journey**
-
-## Final screen and hub award
-
-The final screen appears only after the completion action validates all eight mission flags, the case ID, the selected difficulty, the accepted skin-scraping lineage, and all required clue records.
+On entry, the summary validates all seven mission flags, the case ID, selected difficulty, accepted skin-scraping lineage, and required clue records. A valid summary automatically and idempotently awards `mycology/main` while preserving every other laboratory’s hub progress.
 
 Exact copy:
 
-- **CONGRATULATIONS, JUNIOR MYCOLOGIST! You solved the fungal mystery!**
-- **Mycology scientists use many different laboratory clues and tests to investigate fungal infections. You followed the specimen all the way from the patient to the final laboratory result!**
-- **JUNIOR MYCOLOGIST — MISSION COMPLETE!**
+- **YOUR COMPLETE MYCOLOGY JOURNEY · 7 OF 7**
+- **CONGRATULATIONS, JUNIOR MYCOLOGIST!**
+- **You solved the fungal mystery!**
+- **JUNIOR MYCOLOGIST — JOURNEY COMPLETE!**
 
-Actions: **Review my journey**, **Back to SiTC Games**, and **Play again**. Play again requires confirmation: **Start a fresh fictional case? Your SiTC laboratory badge will stay safe.**
+The progress is already visible, so no separate review action is needed. Actions: **Back to SiTC Games** and **Play again**. Play again requires confirmation: **Start a fresh fictional case? Your SiTC laboratory badge will stay safe.**
 
-Only the validated final action may idempotently append `"main"` to `completedCases.mycology` in `sitcGameProgressV2`. No earlier mission, direct final-route load, malformed save, or replay may award completion. Existing progress for other laboratories must be preserved byte-for-byte after parse/stringify semantics.
+Only entry to the validated summary may idempotently append `"main"` to `completedCases.mycology` in `sitcGameProgressV2`. No earlier mission, malformed save, or replay may award completion. Existing progress for other laboratories must be preserved byte-for-byte after parse/stringify semantics.
 
 ## Interaction contract
 
@@ -236,7 +227,7 @@ Animations last under 1.2 seconds except the optional culture time-lapse, which 
 
 ## Save, migration, resume, and review
 
-Storage key: `sitcMycologyJourneyV1`. Current schema version: `1`.
+Storage key: `sitcMycologyJourneyV1`. Current schema version: `11`.
 
 Required top-level fields: `version`, `caseId`, `difficulty`, `currentMission`, `missionFlags`, `clues`, `missionState`, `completed`, `updatedAt`. Saves occur after every correct sub-step and mission transition.
 
@@ -244,7 +235,7 @@ Required top-level fields: `version`, `caseId`, `difficulty`, `currentMission`, 
 - Unknown future versions are quarantined and start at difficulty selection with: **We couldn’t safely read this journey, so we started a fresh case. Your SiTC badges are unchanged.**
 - If a later mission is claimed without all earlier flags, resume at the earliest incomplete mission and discard downstream transient state.
 - Continue copy: **Continue case MYC-#### from Mission N**.
-- Review mode may open completed missions but cannot clear forward flags, alter clues, or re-award the hub badge.
+- The completed summary is read-only and may be revisited without altering clues or duplicating the hub badge.
 - Replay clears only `sitcMycologyJourneyV1` after confirmation and creates a new case ID; it never clears `sitcGameProgressV2`.
 
 ## SiTC shell and design system
@@ -272,19 +263,19 @@ Hub integration adds one available Mycology card with `id: "mycology"`, `href: "
 ## Acceptance criteria and end-to-end QA
 
 1. Difficulty is the first scene and all three modes preserve the same science and gate.
-2. Eight missions appear in the specified order with one continuous `MYC-####` lineage.
+2. Seven missions appear in the specified order with one continuous `MYC-####` lineage.
 3. Every exact question, choice, feedback phrase, transition, and completion phrase above is present.
 4. Mission 3 has five cases and exactly two specified mismatch types.
 5. Mission 4 requires a 3/3 split and a distinct microscopy-find step.
 6. Mission 5 uses a skippable simulated-week transition and offers one mould-like plate.
 7. Mission 6 exposes all four source pathways and labels the key non-diagnostic.
 8. Mission 7 identifies the first no-growth well only and provides no clinical interpretation.
-9. Mission 8 requires the exact eight-stage order.
-10. Save corruption, missing predecessors, refresh, Continue, replay, and review behave as specified.
-11. `mycology/main` is absent before the validated final action and appended once afterward without changing other lab progress.
+9. The read-only summary automatically shows all seven missions and their saved clues without a player interaction.
+10. Save corruption, missing predecessors, refresh, Continue, replay, and summary migration behave as specified.
+11. `mycology/main` is absent before the validated summary and appended once on entry without changing other lab progress.
 12. All asset URLs resolve from a basic HTTP server and GitHub Pages subpath.
 13. Keyboard-only, mouse, touch/tap alternative, reduced-motion, desktop landscape, tablet landscape, short-phone landscape, and narrow portrait paths complete successfully.
 14. Focus is visible, live feedback is announced, target sizes pass, landmarks/headings are logical, and automated accessibility checks show no serious violations.
 15. Browser console and network logs are clean; automated logic, migration, gate, link, manifest, and asset tests pass; `git diff --check` passes.
 
-Full QA must start fresh at each difficulty, exercise correct and incorrect answers, use every hint/retry, refresh within every mission, complete a full keyboard path, confirm every prior mission remains reviewable, verify reduced-motion equivalents, and test final award idempotency with pre-existing progress in other laboratories.
+Full QA must start fresh at each difficulty, exercise correct and incorrect answers, use every hint/retry, refresh within every mission, complete a full keyboard path, verify the automatic read-only summary and reduced-motion equivalents, and test award idempotency with pre-existing progress in other laboratories.

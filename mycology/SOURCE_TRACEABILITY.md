@@ -50,8 +50,8 @@ This is an implementation numbering correction, not a change to the story order.
 | 96-well antifungal plate; different agents/concentrations; pink growth, blue no growth | Mission 7 simplified supervised simulation |
 | Identify lowest/first concentration with no visible growth as MIC | Mission 7 validation and exact success copy |
 | Present YeastOne only as supervised laboratory simulation | Mission 7 safety copy; no operational protocol |
-| Detective board sequence of eight cards ending in laboratory result | Mission 8 ordered interaction and final gate |
-| Final scientist congratulations and Junior Mycologist completion wording | Completion screen, preserved verbatim |
+| Laboratory journey ending in the final result | Read-only complete journey progress summary |
+| Final scientist congratulations and Junior Mycologist completion wording | Progress summary completion panel |
 | Correct, incorrect, and learning-point copy for every source mission | Base specification and each mission specification |
 
 ## Scientific additions and boundaries

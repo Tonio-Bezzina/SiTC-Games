@@ -5,9 +5,9 @@
       "name": "Game shell",
       "files": [
         "play.html",
-        "styles.css?v=20260925-mission456-redesign",
-        "logic.js?v=20260925-mission456-redesign",
-        "game.js?v=20260925-mission456-redesign",
+        "styles.css?v=20260925-seven-mission-summary",
+        "logic.js?v=20260925-seven-mission-summary",
+        "game.js?v=20260925-seven-mission-summary",
         "assets/shared/dr-mira-neutral.png",
         "assets/shared/dr-mira-pointing.png",
         "assets/shared/dr-mira-success.png",
@@ -87,9 +87,8 @@
       ]
     },
     {
-      "name": "Mission 8",
+      "name": "Journey summary",
       "files": [
-        "assets/mission-8/detective-board-background.png",
         "assets/mission-8/journey-icons.svg"
       ]
     },

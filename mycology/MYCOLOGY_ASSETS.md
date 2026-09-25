@@ -37,8 +37,8 @@ Raster style is a polished, friendly, semi-realistic 3D educational illustration
 | `aspergillus-fields` / `mission-6/aspergillus-microscopy-set.svg` | Four microscopic references | SVG 1400×700 | Transparent; simplified head morphology | Code-rendered; educational disclaimer in HTML |
 | `key-arrows` / `mission-6/identification-key-arrows.svg` | Branching key | SVG 1200×500 | Transparent, arrows only | Code-rendered; all clue text HTML |
 | `mic-plate` / `mission-7/mic-plate.svg` | Simplified 96-well plate | SVG 1200×720 | Transparent; well geometry only; fills controlled by CSS | Code-rendered; no drug/clinical labels |
-| `detective-board` / `mission-8/detective-board-background.png` | Sequence board | PNG 1536×1024 | Opaque cork/clean lab hybrid with empty card zones | Generated raster; “Illustrated clue board with empty card spaces” |
-| `journey-icons` / `mission-8/journey-icons.svg` | Eight ordering cards | SVG 1200×400 | Transparent; eight symbols without labels | Code-rendered; text remains HTML |
+| `detective-board` / `mission-8/detective-board-background.png` | Retired sequence-board background | PNG 1536×1024 | Retained for asset compatibility but not loaded by the game | Generated raster; legacy only |
+| `journey-icons` / `mission-8/journey-icons.svg` | Complete laboratory journey illustration | SVG 1200×400 | Transparent; eight pathway symbols without labels | Code-rendered; summary text remains HTML |
 | `completion-bg` / `completion/completion-lab-background.png` | Final screen | PNG 1536×1024 | Opaque; bright lab, central negative space, subtle fungi motifs | Generated raster; “Celebratory illustrated mycology laboratory” |
 | `completion-badge` / `completion/junior-mycologist-badge.svg` | Final award | SVG 300×300 | Transparent; mushroom/microscope motif, no words | Code-rendered |
 | `reduced-process` / `shared/reduced-motion-process.svg` | Static animation equivalent | SVG 1200×260 | Transparent before/after timeline | Code-rendered; labels HTML |
@@ -49,7 +49,7 @@ Raster style is a polished, friendly, semi-realistic 3D educational illustration
 - `skin-scraping-piece.svg` is instantiated six times; duplication happens in markup, not separate files.
 - `microscope-slide.svg` and `sdcc-plate.svg` are each instantiated three times as independent one-capacity targets in Mission 4.
 - `sdcc-plate.svg` continues from Mission 4 into Mission 5 before being replaced by the four registered plate-choice assets.
-- Mission 4 microscopy, Mission 5 colony, Mission 6 identification, and Mission 7 MIC become the four scientific clue cards reused in Mission 8 and review mode.
+- Mission 4 microscopy, Mission 5 colony, Mission 6 identification, and Mission 7 MIC feed the read-only complete journey summary.
 - Shared icons and shell background are reused across missions but never baked with text.
 
 ## Registration and production standards
