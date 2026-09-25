@@ -5,9 +5,9 @@
       "name": "Game shell",
       "files": [
         "play.html",
-        "styles.css",
-        "logic.js",
-        "game.js",
+        "styles.css?v=20260925-mission2-patients",
+        "logic.js?v=20260925-mission2-patients",
+        "game.js?v=20260925-mission2-patients",
         "assets/shared/dr-mira-neutral.png",
         "assets/shared/dr-mira-pointing.png",
         "assets/shared/dr-mira-success.png",

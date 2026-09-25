@@ -12,7 +12,9 @@ const game=read(path.join(mycology,"game.js"));
 const hub=read(path.join(root,"hub.js"));
 const preload=JSON.parse(read(path.join(mycology,"preload-manifest.json")));
 for(const file of ["styles.css","logic.js","game.js"]) assert(fs.existsSync(path.join(mycology,file)),`${file} missing`);
-assert(play.includes('href="styles.css"')&&play.includes('src="logic.js"')&&play.includes('src="game.js"'));
+for(const file of ["styles.css","logic.js","game.js"])assert(play.includes(`${file}?v=20260925-mission2-patients`),`${file} cache-buster missing`);
+assert(html.includes('preload-manifest.json?v=20260925-mission2-patients'),"Mission 2 preload manifest cache-buster missing");
+assert(html.includes('href="play.html?v=20260925-mission2-patients"'),"Mission 2 play-page cache-buster missing");
 for(const match of game.matchAll(/(?:src=\\?"|url\(\\?")([^"')]+assets\/[^"')]+)/g)){
   const relative=match[1].replace(/^\.\//,"");
   assert(fs.existsSync(path.join(mycology,relative)),`missing runtime asset ${relative}`);
