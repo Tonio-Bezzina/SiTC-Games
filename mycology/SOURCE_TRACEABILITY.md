@@ -35,7 +35,7 @@ This is an implementation numbering correction, not a change to the story order.
 | Correct “Correct.” and incorrect “Try again.” | Mission 1 feedback exactly |
 | Five complaints: ear, skin, nail, urine, mouth | Mission 2 fictional patient cards and Mission 3 reception cases |
 | Five samples: ear swab, skin scrapings, nail clippings, urine, mouth swab | Mission 2 matching assets/state and Mission 3 case set |
-| Drag samples to corresponding patients | Mission 2 drag/drop plus tap/select and keyboard alternatives |
+| Match samples to corresponding patients | Mission 2 sequential patient presentation with pointer and keyboard specimen choices; this later product decision preserves every source pairing while reducing simultaneous visual load |
 | Reception with five samples and request forms | Mission 3 scene and data model |
 | Compare patient name, ID number, specimen type | Mission 3 live HTML fields |
 | Exactly two mismatches: one ID and one surname | Mission 3 deterministic validation set |

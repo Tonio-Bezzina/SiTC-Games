@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-20T00:00:00Z",
+  "generatedAt": "2026-09-25T00:00:00Z",
   "palette": {
     "navy": "#073C63",
     "blue": "#087FC1",
@@ -91,22 +91,25 @@
       "status": "production"
     },
     {
-      "id": "mission-2-patient-cards",
-      "file": "mission-2/patient-cards.svg",
-      "type": "svg",
-      "width": 1400,
-      "height": 760,
-      "bytes": 1434,
-      "sha256": "a0664ee8efe512752e5cca9ab59a0b94e218778035f14c6f01e1a4ba90a8b78a",
+      "id": "mission-2-patient-alex-mouth",
+      "file": "mission-2/patient-alex-mouth.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 527874,
+      "sha256": "03718f90af11fec9687ab906875ad62ad2e617a2d81f6b9a41036b24c4046c23",
       "background": "transparent-or-svg",
-      "source": "Repository-native SVG",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
       "missions": [
         2
       ],
       "usage": "See MYCOLOGY_ASSETS.md",
-      "alt": "patient cards",
-      "registrationFamily": null,
-      "anchor": null,
+      "alt": "patient alex mouth",
+      "registrationFamily": "mission-2-patients",
+      "anchor": {
+        "x": 512,
+        "y": 960
+      },
       "scientificNotes": "Educational illustration; live copy supplies interpretation.",
       "prohibited": [
         "real patient data",
@@ -116,22 +119,249 @@
       "status": "production"
     },
     {
-      "id": "mission-2-specimen-items",
-      "file": "mission-2/specimen-items.svg",
-      "type": "svg",
-      "width": 1400,
-      "height": 360,
-      "bytes": 1226,
-      "sha256": "57ac8ce2fee0470677778b3bbbceee7d66c83a902c334929c72801303271aa18",
+      "id": "mission-2-patient-jamie-skin",
+      "file": "mission-2/patient-jamie-skin.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 512039,
+      "sha256": "0b2c99c3fcf14ef6eab5232da0c764e624663302846631b37aed7b309e9d3eac",
       "background": "transparent-or-svg",
-      "source": "Repository-native SVG",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
       "missions": [
         2
       ],
       "usage": "See MYCOLOGY_ASSETS.md",
-      "alt": "specimen items",
-      "registrationFamily": null,
-      "anchor": null,
+      "alt": "patient jamie skin",
+      "registrationFamily": "mission-2-patients",
+      "anchor": {
+        "x": 512,
+        "y": 960
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-patient-morgan-ear",
+      "file": "mission-2/patient-morgan-ear.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 553298,
+      "sha256": "5af2f8d0c5809f8dbe7e81cd04d12eb2e6917b052871c3bc6ff5016280cd0a73",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "patient morgan ear",
+      "registrationFamily": "mission-2-patients",
+      "anchor": {
+        "x": 512,
+        "y": 960
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-patient-riley-nail",
+      "file": "mission-2/patient-riley-nail.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 494254,
+      "sha256": "6951c9ab25754381b09dcd71940aa47f6d58826951847a42c42a40c8c4010cce",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "patient riley nail",
+      "registrationFamily": "mission-2-patients",
+      "anchor": {
+        "x": 512,
+        "y": 960
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-patient-sam-urinary",
+      "file": "mission-2/patient-sam-urinary.png",
+      "type": "png",
+      "width": 1024,
+      "height": 1024,
+      "bytes": 517334,
+      "sha256": "f453050abb9ec6a0e5258973d362b8987a62c7e4d1d6bcbdfcfe8f472d25752b",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "patient sam urinary",
+      "registrationFamily": "mission-2-patients",
+      "anchor": {
+        "x": 512,
+        "y": 960
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-specimen-ear-swab",
+      "file": "mission-2/specimen-ear-swab.png",
+      "type": "png",
+      "width": 640,
+      "height": 640,
+      "bytes": 150643,
+      "sha256": "951e6b723ed537a0cd36ac5cbe8125009228d342925fb7d3e7950faeb3ca1743",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "specimen ear swab",
+      "registrationFamily": "mission-2-specimens",
+      "anchor": {
+        "x": 320,
+        "y": 570
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-specimen-mouth-swab",
+      "file": "mission-2/specimen-mouth-swab.png",
+      "type": "png",
+      "width": 640,
+      "height": 640,
+      "bytes": 177270,
+      "sha256": "dd159c3ca598caaa0da38cc648a8be58921c58986e84d98ccb1e1bdb396c71f7",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "specimen mouth swab",
+      "registrationFamily": "mission-2-specimens",
+      "anchor": {
+        "x": 320,
+        "y": 570
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-specimen-nail-clippings",
+      "file": "mission-2/specimen-nail-clippings.png",
+      "type": "png",
+      "width": 640,
+      "height": 640,
+      "bytes": 413102,
+      "sha256": "ba680e3b48469ff6234981413c0faab51596ebfd024abcbd5abff335557613b1",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "specimen nail clippings",
+      "registrationFamily": "mission-2-specimens",
+      "anchor": {
+        "x": 320,
+        "y": 570
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-specimen-skin-scrapings",
+      "file": "mission-2/specimen-skin-scrapings.png",
+      "type": "png",
+      "width": 640,
+      "height": 640,
+      "bytes": 348423,
+      "sha256": "fd3d011620addc6ccd961dd2ce79e1d4c8f5773396d8f7b081da7423991d586d",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "specimen skin scrapings",
+      "registrationFamily": "mission-2-specimens",
+      "anchor": {
+        "x": 320,
+        "y": 570
+      },
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-2-specimen-urine-sample",
+      "file": "mission-2/specimen-urine-sample.png",
+      "type": "png",
+      "width": 640,
+      "height": 640,
+      "bytes": 356712,
+      "sha256": "b50ead23d28ddf6f3ffb7b501d914577e8caedf55e8a52d2f7e78cb1cb011a0f",
+      "background": "transparent-or-svg",
+      "source": "OpenAI generated raster, resized and registered with Sharp",
+      "missions": [
+        2
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "specimen urine sample",
+      "registrationFamily": "mission-2-specimens",
+      "anchor": {
+        "x": 320,
+        "y": 570
+      },
       "scientificNotes": "Educational illustration; live copy supplies interpretation.",
       "prohibited": [
         "real patient data",

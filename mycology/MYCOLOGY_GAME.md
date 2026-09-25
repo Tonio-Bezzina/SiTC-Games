@@ -53,7 +53,7 @@ The game must not claim the organism caused the symptoms. It may say that fungal
 | Mission | Title | Input | Core interaction and learning purpose | Output |
 |---:|---|---|---|---|
 | 1 | The Basics | Selected difficulty | Answer six safety and specimen-handling questions | Safety check complete |
-| 2 | Match the Sample | Safety check | Match five specimens to five fictional complaints | Five matched patient/sample pairs; Jamie’s skin scraping selected as continuing case |
+| 2 | Match the Sample | Safety check | Meet five fictional patients sequentially and choose the correct specimen for each complaint | Five matched patient/sample pairs; Jamie’s skin scraping selected as continuing case |
 | 3 | Detail Checking | Five matched pairs | Compare sample and request fields; accept three and reject two mismatches | Jamie’s correctly matched skin scraping accepted as `MYC-2048` |
 | 4 | Process the Dermatology Sample | Accepted skin scraping | Divide six pieces equally between slide and culture; focus/pan simulated fluorescence field | “Fungal elements seen” clue plus inoculated SDCC fungal culture plate |
 | 5 | Check the Culture | Incubated plate after simulated one-week time-lapse | Select mould-like growth among four plates | Growth-positive colony clue |
@@ -107,13 +107,13 @@ Completion: **Safety check complete. Let’s match each patient with the right s
 
 ### Mission 2 Match the Sample
 
-Instruction: **Fungal infections can occur all over the body. Can you match the sample to the correct patient?**
+Instruction: **Meet each patient one at a time. Look at their complaint, then choose the specimen that should be collected.**
 
-Pairs: ear discomfort ↔ ear swab; skin rash ↔ skin scrapings; changed nail ↔ nail clippings; urinary symptoms ↔ urine sample; sore mouth ↔ mouth swab. These are complaints under investigation, not confirmed infections.
+Morgan, Jamie, Riley, Sam, and Alex appear one after another. For each patient, the player chooses among five illustrated specimen types. Pairs: ear discomfort ↔ ear swab; skin rash ↔ skin scrapings; changed nail ↔ nail clippings; urinary symptoms ↔ urine sample; sore mouth ↔ mouth swab. These are complaints under investigation, not confirmed infections.
 
 Correct: **Well done! This sample is needed for this patient.**
 Incorrect: **Not this one. Look closely at what the patient is complaining of and try again.**
-Hint: **Match the sample name to the body area shown on the patient card.**
+Hint: **Match the specimen name to the body area and complaint shown by the current patient.**
 Learning: **Fungal infections can affect many areas of the body. Collecting the right sample is important for the scientist investigating what may be present.**
 Completion: **All five samples are matched. Jamie’s skin scraping will continue through our journey.**
 

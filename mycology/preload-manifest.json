@@ -28,8 +28,16 @@
     {
       "name": "Mission 2",
       "files": [
-        "assets/mission-2/patient-cards.svg",
-        "assets/mission-2/specimen-items.svg"
+        "assets/mission-2/patient-alex-mouth.png",
+        "assets/mission-2/patient-jamie-skin.png",
+        "assets/mission-2/patient-morgan-ear.png",
+        "assets/mission-2/patient-riley-nail.png",
+        "assets/mission-2/patient-sam-urinary.png",
+        "assets/mission-2/specimen-ear-swab.png",
+        "assets/mission-2/specimen-mouth-swab.png",
+        "assets/mission-2/specimen-nail-clippings.png",
+        "assets/mission-2/specimen-skin-scrapings.png",
+        "assets/mission-2/specimen-urine-sample.png"
       ]
     },
     {

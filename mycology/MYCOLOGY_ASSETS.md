@@ -21,8 +21,8 @@ Raster style is a polished, friendly, semi-realistic 3D educational illustration
 | `success-icon` / `shared/success-check.svg` | Correct state | SVG 48×48 | Transparent | Shared |
 | `rotate-icon` / `shared/rotate-device.svg` | Orientation panel | SVG 240×160 | Transparent | Shared |
 | `mission-1-safety` / `mission-1/safety-lab-vignettes.svg` | Six-question support strip | SVG 1200×500 | Transparent; six safe, non-procedural icons | Code-rendered; no answer labels |
-| `patient-family` / `mission-2/patient-cards.svg` | Five fictional complaints | SVG 1400×760 | Transparent; consistent illustrated cards, body-site icon only | Code-rendered; live names/copy; no diagnostic claim |
-| `specimen-family` / `mission-2/specimen-items.svg` | Ear swab, skin scrapings, nail clippings, urine cup, mouth swab | SVG 1400×360 | Transparent; consistent scale and anchors | Code-rendered; isolated objects; no identifiers |
+| `patient-family` / five `mission-2/patient-*.png` files | Five fictional adults showing ear, skin, nail, urinary, or mouth complaints | PNG 1024×1024 each | Transparent; registered to anchor 512×960; one patient per file | Generated raster; live names/copy; age-neutral; no diagnostic claim |
+| `specimen-family` / five `mission-2/specimen-*.png` files | Ear swab, skin scrapings, nail clippings, sealed urine cup, mouth swab | PNG 640×640 each | Transparent; registered to anchor 320×570; one isolated object per file | Generated raster; no identifiers or answer styling |
 | `reception-bg` / `mission-3/reception-background.png` | Reception setting | PNG 1536×1024 | Opaque; counters and empty safe areas for live forms | Generated raster; “Illustrated laboratory specimen reception” |
 | `sample-envelope` / `mission-3/dermatology-envelope.svg` | Continuing case | SVG 480×320 | Transparent, blank label area | Code-rendered; no baked data |
 | `request-form` / `mission-3/request-form-blank.svg` | Live identity comparison | SVG 600×760 | Opaque white paper, blank rows | Code-rendered; all data HTML overlays |

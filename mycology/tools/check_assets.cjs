@@ -48,16 +48,20 @@ async function main() {
     if (asset.width !== meta.width || asset.height !== meta.height) errors.push(`Dimension mismatch ${asset.file}`);
     if (asset.bytes !== canonicalBuffer.length) errors.push(`Byte mismatch ${asset.file}`);
     if (asset.sha256 !== hash) errors.push(`Hash mismatch ${asset.file}`);
-    if (asset.file.includes("dr-mira") && !meta.hasAlpha) errors.push(`Guide lacks alpha ${asset.file}`);
+    if ((asset.file.includes("dr-mira") || asset.file.startsWith("mission-2/")) && !meta.hasAlpha) errors.push(`Transparent asset lacks alpha ${asset.file}`);
   }
 
-  for (const sheet of ["shared-and-backgrounds.png", "mission-assets.png", "state-families.png"]) {
+  for (const sheet of ["shared-and-backgrounds.png", "mission-2-patients-and-specimens.png", "mission-assets.png", "state-families.png"]) {
     if (!fs.existsSync(path.join(root, "contact-sheets", sheet))) errors.push(`Missing contact sheet ${sheet}`);
   }
   const guides = manifest.assets.filter((a) => a.registrationFamily === "dr-mira");
   if (guides.some((a) => a.width !== 1024 || a.height !== 1024 || a.anchor?.x !== 512 || a.anchor?.y !== 930)) errors.push("Guide registration mismatch");
+  const patients = manifest.assets.filter((a) => a.registrationFamily === "mission-2-patients");
+  if (patients.length !== 5 || patients.some((a) => a.width !== 1024 || a.height !== 1024 || a.anchor?.x !== 512 || a.anchor?.y !== 960)) errors.push("Mission 2 patient registration mismatch");
+  const specimens = manifest.assets.filter((a) => a.registrationFamily === "mission-2-specimens");
+  if (specimens.length !== 5 || specimens.some((a) => a.width !== 640 || a.height !== 640 || a.anchor?.x !== 320 || a.anchor?.y !== 570)) errors.push("Mission 2 specimen registration mismatch");
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
-  console.log(`PASS: ${manifest.assets.length} production assets, ${manifest.assets.filter(a=>a.type==="png").length} PNG, ${manifest.assets.filter(a=>a.type==="svg").length} SVG, 3 contact sheets`);
+  console.log(`PASS: ${manifest.assets.length} production assets, ${manifest.assets.filter(a=>a.type==="png").length} PNG, ${manifest.assets.filter(a=>a.type==="svg").length} SVG, 4 contact sheets`);
 }
 
 main().catch((error) => { console.error(error); process.exit(1); });

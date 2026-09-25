@@ -2,7 +2,7 @@
 
 Confirm the Mission 1 checkpoint and gate. Then read `MYCOLOGY_GAME.md`, `missions/MISSION_02_MATCH_THE_SAMPLE.md`, the reviewed manifest subset, and existing implementation. Implement Mission 2 only plus safe state migration. Copy the specification unchanged to `mycology/docs/MISSION_02_MATCH_THE_SAMPLE.md`.
 
-Use exact copy and five deterministic semantic pairs. Provide Pointer Events drag/drop, tap-select/place, and keyboard select/place/Escape alternatives. Persist each match and preserve the continuing Jamie skin-scraping lineage. Add focused logic/state tests for 25 possible pair attempts, resumption, review non-destruction, and no hub award.
+Use exact copy and five deterministic semantic pairs. Show one illustrated fictional patient at a time, followed by five equally prominent illustrated specimen buttons. Provide pointer and keyboard choice, explicit Next patient advancement, and live feedback. Persist each match and the awaiting-advance state, and preserve the continuing Jamie skin-scraping lineage. Add focused logic/state tests for 25 possible pair attempts, resumption, review non-destruction, and no hub award.
 
 Run the complete suite and prior Mission 1 smoke path. In a real browser verify correct/incorrect/hint, refresh/Continue, all input methods, reduced motion, target sizes/focus/live feedback, required layouts, console/network/assets, regression, and `git diff --check`.
 

@@ -41,9 +41,6 @@ writeSvg("shared/reduced-motion-process.svg", "Static before and after laborator
 
 writeSvg("mission-1/safety-lab-vignettes.svg", "Six laboratory safety symbols", 1200, 500, `<g stroke="${C.navy}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(45 55)"><path d="M70 20h70l35 85-23 88H58l-23-88z" fill="${C.cyan}"/><path d="M70 20 35 105m105-85 35 85" fill="none"/></g><g transform="translate(235 55)"><rect x="22" y="35" width="150" height="120" rx="18" fill="white"/><path d="M48 70h98M48 102h98M48 134h55"/></g><g transform="translate(430 55)"><rect x="20" y="95" width="160" height="86" rx="16" fill="${C.soft}"/><path d="m55 60 25 15-25 15m70-30-25 15 25 15"/><path d="M40 130h120" stroke="${C.cyan}"/></g><g transform="translate(625 55)"><circle cx="100" cy="58" r="35" fill="#8E5B3D"/><path d="M52 178c7-65 89-65 96 0M65 63c20 24 50 24 70 0" fill="${C.soft}"/><path d="M100 20v-16"/></g><g transform="translate(820 55)"><path d="M55 170c-32-38-20-97 12-117 17 22 30 50 30 78 0-34 13-67 34-92 34 30 35 95 1 131z" fill="#49B7E8"/><path d="M96 60v110"/></g><g transform="translate(1010 55)"><path d="M55 55h90l-12 125H67z" fill="${C.soft}"/><path d="M45 55h110M80 35h40M82 90v55m36-55v55"/><path d="M45 195h110" stroke="${C.success}"/></g></g>`);
 
-writeSvg("mission-2/patient-cards.svg", "Five fictional patient body-site cards", 1400, 760, `<g stroke="${C.navy}" stroke-width="5"><g fill="white">${[20,296,572,848,1124].map(x => `<rect x="${x}" y="20" width="256" height="720" rx="28"/>`).join("")}</g><g fill="${C.soft}">${[148,424,700,976,1252].map(x => `<circle cx="${x}" cy="178" r="78"/>`).join("")}</g><g fill="#C98A68">${[148,424,700,976,1252].map(x => `<circle cx="${x}" cy="166" r="47"/><path d="M${x-76} 430c4-105 148-105 152 0v180H${x-76}z"/>`).join("")}</g><g fill="${C.gold}" stroke="${C.navy}"><circle cx="108" cy="166" r="18"/><circle cx="424" cy="365" r="27"/><rect x="662" y="360" width="76" height="28" rx="12"/><path d="M942 365h68v96h-68z"/><circle cx="1252" cy="166" r="26"/></g></g>`);
-writeSvg("mission-2/specimen-items.svg", "Five mycology specimen items", 1400, 360, `<g stroke="${C.navy}" stroke-width="6" stroke-linejoin="round"><g transform="translate(35 35)"><rect x="38" y="35" width="190" height="45" rx="20" fill="${C.soft}"/><path d="M55 57h140"/><circle cx="205" cy="57" r="17" fill="white"/></g><g transform="translate(305 35)"><path d="M35 160h210v75H35z" fill="#E8D4BA"/><g fill="#C9A783" stroke-width="3"><path d="m70 175 20-18 25 20-18 20z"/><path d="m120 198 28-24 25 27-24 21z"/><path d="m177 172 20-17 23 22-18 18z"/></g></g><g transform="translate(580 35)"><path d="M48 90c35-45 145-45 180 0l-18 115c-42 30-102 30-144 0z" fill="#E5C59E"/><path d="M72 105h132"/></g><g transform="translate(855 35)"><path d="M65 65h150l-12 190H77z" fill="white"/><path d="M78 145h124v98H78z" fill="#F1D34F"/><rect x="58" y="35" width="164" height="44" rx="15" fill="${C.cyan}"/></g><g transform="translate(1130 35)"><rect x="35" y="60" width="200" height="42" rx="18" fill="${C.soft}"/><path d="M55 81h145"/><ellipse cx="205" cy="81" rx="23" ry="15" fill="white"/></g></g>`);
-
 writeSvg("mission-3/dermatology-envelope.svg", "Blank dermatology specimen envelope", 480, 320, `<path d="M35 55h410v225H35z" fill="#D9B878" stroke="${C.navy}" stroke-width="7"/><path d="m35 55 205 135L445 55" fill="#E9CA8E" stroke="${C.navy}" stroke-width="7"/><rect x="118" y="188" width="244" height="66" rx="8" fill="white" stroke="${C.navy}" stroke-width="5"/>`);
 writeSvg("mission-3/request-form-blank.svg", "Blank laboratory request form", 600, 760, `<rect x="35" y="25" width="530" height="710" rx="18" fill="white" stroke="${C.navy}" stroke-width="8"/><rect x="70" y="70" width="460" height="80" rx="12" fill="${C.soft}"/><g fill="none" stroke="${C.muted}" stroke-width="4"><path d="M70 210h460M70 280h460M70 350h460M70 420h460M70 490h460M70 560h460"/><rect x="70" y="615" width="42" height="42"/><rect x="180" y="615" width="42" height="42"/><rect x="290" y="615" width="42" height="42"/></g>`);
 
@@ -83,6 +80,20 @@ async function guideRaster(sourceKey, target) {
     .toFile(path.join(root, target));
 }
 
+async function registeredRaster(sourceKey, target, canvasWidth, canvasHeight, maxWidth, maxHeight, anchorY) {
+  if (!input[sourceKey]) throw new Error(`Missing generated source ${sourceKey}`);
+  const trimmed = await sharp(input[sourceKey])
+    .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .resize({ width: maxWidth, height: maxHeight, fit: "inside", withoutEnlargement: true })
+    .png()
+    .toBuffer();
+  const meta = await sharp(trimmed).metadata();
+  await sharp({ create: { width: canvasWidth, height: canvasHeight, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: trimmed, left: Math.round((canvasWidth - meta.width) / 2), top: Math.max(0, anchorY - meta.height) }])
+    .png({ compressionLevel: 9 })
+    .toFile(path.join(root, target));
+}
+
 function esc(value) { return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 async function contactSheet(files, output, columns, cellW, cellH) {
   const cards = [];
@@ -108,10 +119,27 @@ async function main() {
   await raster("detective", "mission-8/detective-board-background.png", 1536, 1024);
   await raster("completion", "completion/completion-lab-background.png", 1536, 1024);
 
-  const rasterFiles=["shared/dr-mira-neutral.png","shared/dr-mira-pointing.png","shared/dr-mira-success.png","shared/mycology-lab-background.png","mission-3/reception-background.png","mission-4/processing-bench-background.png","mission-8/detective-board-background.png","completion/completion-lab-background.png"];
+  const mission2Sources = [
+    ["patientEar", "mission-2/patient-morgan-ear.png", 1024, 1024, 850, 930, 960],
+    ["patientSkin", "mission-2/patient-jamie-skin.png", 1024, 1024, 850, 930, 960],
+    ["patientNail", "mission-2/patient-riley-nail.png", 1024, 1024, 850, 930, 960],
+    ["patientUrinary", "mission-2/patient-sam-urinary.png", 1024, 1024, 850, 930, 960],
+    ["patientMouth", "mission-2/patient-alex-mouth.png", 1024, 1024, 850, 930, 960],
+    ["specimenEar", "mission-2/specimen-ear-swab.png", 640, 640, 500, 500, 570],
+    ["specimenSkin", "mission-2/specimen-skin-scrapings.png", 640, 640, 500, 500, 570],
+    ["specimenNail", "mission-2/specimen-nail-clippings.png", 640, 640, 500, 500, 570],
+    ["specimenUrinary", "mission-2/specimen-urine-sample.png", 640, 640, 500, 500, 570],
+    ["specimenMouth", "mission-2/specimen-mouth-swab.png", 640, 640, 500, 500, 570]
+  ];
+  for (const source of mission2Sources) await registeredRaster(...source);
+
+  const baseRasterFiles=["shared/dr-mira-neutral.png","shared/dr-mira-pointing.png","shared/dr-mira-success.png","shared/mycology-lab-background.png","mission-3/reception-background.png","mission-4/processing-bench-background.png","mission-8/detective-board-background.png","completion/completion-lab-background.png"];
+  const mission2Files=mission2Sources.map(([,file])=>file);
+  const rasterFiles=[...baseRasterFiles,...mission2Files];
   const svgFiles=[];
   for(const dir of dirs.filter(d=>!d.includes("contact")&&!d.includes("sources"))) for(const name of fs.readdirSync(path.join(root,dir))) if(name.endsWith(".svg")) svgFiles.push(`${dir}/${name}`);
-  await contactSheet(rasterFiles,"shared-and-backgrounds.png",2,520,380);
+  await contactSheet(baseRasterFiles,"shared-and-backgrounds.png",2,520,380);
+  await contactSheet(mission2Files,"mission-2-patients-and-specimens.png",5,300,300);
   await contactSheet(svgFiles,"mission-assets.png",3,420,310);
   await contactSheet(["shared/dr-mira-neutral.png","shared/dr-mira-pointing.png","shared/dr-mira-success.png","mission-5/culture-plate-choices.svg","mission-6/aspergillus-colony-set.svg","mission-6/aspergillus-microscopy-set.svg"],"state-families.png",3,440,360);
 
@@ -127,11 +155,13 @@ async function main() {
     const missionMatch=file.match(/mission-(\d)/);
     usage[file]=missionMatch?[Number(missionMatch[1])]:file.startsWith("completion/")?[8]:[1,2,3,4,5,6,7,8];
     sourceNotes[file]=file.endsWith(".png")?"OpenAI generated raster, resized and registered with Sharp":"Repository-native SVG";
-    manifest.assets.push({id:file.replace(/\.[^.]+$/,"").replace(/\//g,"-"),file,type:path.extname(file).slice(1),width:meta.width,height:meta.height,bytes:buf.length,sha256:crypto.createHash("sha256").update(buf).digest("hex"),background:file.includes("background")?"opaque":"transparent-or-svg",source:sourceNotes[file],missions:usage[file],usage:"See MYCOLOGY_ASSETS.md",alt:path.basename(file,path.extname(file)).replace(/-/g," "),registrationFamily:file.includes("dr-mira")?"dr-mira":file.includes("aspergillus")?"aspergillus-reference":file.includes("culture-plate-choices")?"culture-choices":null,anchor:file.includes("dr-mira")?{"x":512,"y":930}:null,scientificNotes:"Educational illustration; live copy supplies interpretation.",prohibited:["real patient data","logos","baked answer labels"],status:"production"});
+    const isPatient=file.startsWith("mission-2/patient-");
+    const isSpecimen=file.startsWith("mission-2/specimen-");
+    manifest.assets.push({id:file.replace(/\.[^.]+$/,"").replace(/\//g,"-"),file,type:path.extname(file).slice(1),width:meta.width,height:meta.height,bytes:buf.length,sha256:crypto.createHash("sha256").update(buf).digest("hex"),background:file.includes("background")?"opaque":"transparent-or-svg",source:sourceNotes[file],missions:usage[file],usage:"See MYCOLOGY_ASSETS.md",alt:path.basename(file,path.extname(file)).replace(/-/g," "),registrationFamily:file.includes("dr-mira")?"dr-mira":isPatient?"mission-2-patients":isSpecimen?"mission-2-specimens":file.includes("aspergillus")?"aspergillus-reference":file.includes("culture-plate-choices")?"culture-choices":null,anchor:file.includes("dr-mira")?{"x":512,"y":930}:isPatient?{"x":512,"y":960}:isSpecimen?{"x":320,"y":570}:null,scientificNotes:"Educational illustration; live copy supplies interpretation.",prohibited:["real patient data","logos","baked answer labels"],status:"production"});
   }
   fs.writeFileSync(path.join(root,"asset-manifest.json"),JSON.stringify(manifest,null,2)+"\n");
-  fs.writeFileSync(path.join(root,"sources","generation-prompts.md"),`# Mycology Raster Generation Notes\n\nGenerated with the built-in OpenAI image-generation tool on 20 September 2026. Prompts locked a polished semi-realistic 3D educational style, soft cool upper-left lighting, SiTC teal/navy/cyan/gold palette, safe overlay areas, and prohibited text, labels, logos, watermarks, real patient data, and open-culture handling. Dr Mira variants used the neutral pose as their identity and registration reference.\n`);
+  fs.writeFileSync(path.join(root,"sources","generation-prompts.md"),`# Mycology Raster Generation Notes\n\nGenerated with the built-in OpenAI image-generation tool on 20 and 25 September 2026. Prompts locked a polished semi-realistic 3D educational style, soft cool upper-left lighting, SiTC teal/navy/cyan/gold palette, safe overlay areas, and prohibited text, labels, logos, watermarks, real patient data, and open-culture handling. Dr Mira variants used the neutral pose as their identity and registration reference.\n\nMission 2 used ten transparent-background prompts: five fictional, age-neutral adult patients individually showing ear discomfort, a mild forearm rash, changed fingernails, lower-abdominal/urinary discomfort, or a sore mouth; and five isolated specimen objects showing an ear swab, skin scrapings, nail clippings, a sealed urine container, or a mouth swab. Each prompt required one centered subject or object, the established friendly educational style and palette, no text or logos, no diagnosis, no graphic pathology, no real patient data, and ample transparent padding.\n`);
 }
 
-const manifest={schemaVersion:1,generatedAt:"2026-09-20T00:00:00Z",palette:C,style:"Friendly semi-realistic 3D raster environments plus deterministic scientific SVG",assets:[]};
+const manifest={schemaVersion:1,generatedAt:"2026-09-25T00:00:00Z",palette:C,style:"Friendly semi-realistic 3D raster environments plus deterministic scientific SVG",assets:[]};
 main().catch((error)=>{console.error(error);process.exit(1);});

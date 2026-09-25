@@ -12,6 +12,8 @@ const s=L.freshState("explorer",2048);assert.equal(L.finishMission1(s),false);s.
 assert.equal(L.canAwardHub(s),false);
 assert.equal(L.sanitize({version:99}),null);
 for(const a of L.MATCHES)for(const b of L.MATCHES)assert.equal(L.matchSample(a.key,b.key),a.key===b.key);
+assert.equal(L.MATCHES.length,5);L.MATCHES.forEach(x=>{assert(x.patientAsset.endsWith(".png"));assert(x.specimenAsset.endsWith(".png"));assert(x.patientAlt.length>10);});
+const migrated=L.freshState("junior",2048);migrated.version=8;migrated.missionState[2].matched=["ear"];migrated.missionState[2].pendingKey="ear";assert.equal(L.sanitize(migrated).missionState[2].pendingKey,"ear");migrated.missionState[2].pendingKey="skin";assert.equal(L.sanitize(migrated).missionState[2].pendingKey,null);
 const s2=L.freshState("junior",2048);s2.missionFlags[1]=true;s2.currentMission=2;s2.missionState[2].matched=L.MATCHES.map(x=>x.key);assert(L.finishMission2(s2));assert.equal(s2.clues.patient,"Jamie Borg");assert.equal(s2.clues.specimen,"skin scrapings");assert.equal(L.canAwardHub(),false);
 assert.equal(L.RECEPTION_CASES.length,5);assert.deepEqual(L.RECEPTION_CASES.map(x=>x.match),[true,false,true,false,true]);L.RECEPTION_CASES.forEach((c,i)=>{assert(L.receptionDecision(i,c.match));assert(!L.receptionDecision(i,!c.match));});
 const s3=L.freshState("explorer",2048);s3.missionState[3].decisions=L.RECEPTION_CASES.map(x=>x.key);assert(L.finishMission3(s3));assert.equal(s3.clues.reception,"accepted MYC-2048 skin scraping");

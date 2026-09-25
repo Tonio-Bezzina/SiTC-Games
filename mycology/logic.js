@@ -4,7 +4,7 @@
   else root.MycologyLogic = api;
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
-  const VERSION = 8;
+  const VERSION = 9;
   const JOURNEY=["arrives","details","microscopy","culture","growth","identification","ast","result"];
   const SPECIES=[
     {key:"fumigatus",colony:"Blue-green colony",head:"Columnar head with small blue-green spores",name:"Aspergillus fumigatus"},
@@ -22,11 +22,11 @@
     { q:"What is the proper way to leave your lab station when you finish an experiment?", a:["Leave everything on the desk for the next person.","Dispose of waste in the proper bin, clean surfaces, wash your hands, and remove your PPE.","Throw everything into the recycling bin.","Just turn off the lights and walk out."], correct:1 }
   ];
   const MATCHES = [
-    {key:"ear",patient:"Morgan — ear discomfort",specimen:"Ear swab"},
-    {key:"skin",patient:"Jamie Borg — skin rash",specimen:"Skin scrapings"},
-    {key:"nail",patient:"Riley — changed nail",specimen:"Nail clippings"},
-    {key:"urinary",patient:"Sam — urinary symptoms",specimen:"Urine sample"},
-    {key:"mouth",patient:"Alex — sore mouth",specimen:"Mouth swab"}
+    {key:"ear",name:"Morgan",complaint:"Ear discomfort",patient:"Morgan — ear discomfort",specimen:"Ear swab",patientAsset:"patient-morgan-ear.png",specimenAsset:"specimen-ear-swab.png",patientAlt:"Morgan cupping a hand beside one ear to show discomfort"},
+    {key:"skin",name:"Jamie Borg",complaint:"Itchy rash on the forearm",patient:"Jamie Borg — skin rash",specimen:"Skin scrapings",patientAsset:"patient-jamie-skin.png",specimenAsset:"specimen-skin-scrapings.png",patientAlt:"Jamie pointing to a mild rash on one forearm"},
+    {key:"nail",name:"Riley",complaint:"A changed fingernail",patient:"Riley — changed nail",specimen:"Nail clippings",patientAsset:"patient-riley-nail.png",specimenAsset:"specimen-nail-clippings.png",patientAlt:"Riley closely examining changed fingernails"},
+    {key:"urinary",name:"Sam",complaint:"Urinary discomfort",patient:"Sam — urinary symptoms",specimen:"Urine sample",patientAsset:"patient-sam-urinary.png",specimenAsset:"specimen-urine-sample.png",patientAlt:"Sam holding the lower abdomen to show urinary discomfort"},
+    {key:"mouth",name:"Alex",complaint:"A sore mouth",patient:"Alex — sore mouth",specimen:"Mouth swab",patientAsset:"patient-alex-mouth.png",specimenAsset:"specimen-mouth-swab.png",patientAlt:"Alex touching one cheek to show a sore mouth"}
   ];
   const RECEPTION_CASES = [
     {key:"case-1",sample:["Nadia","MYC-1103","Ear swab"],form:["Nadia","MYC-1103","Ear swab"],match:true},
@@ -38,11 +38,11 @@
   function caseId(seed=Date.now()) { return `MYC-${String(Math.abs(Number(seed))%10000).padStart(4,"0")}`; }
   function freshState(difficulty, seed) {
     if (!DIFFICULTIES.includes(difficulty)) throw new Error("Invalid difficulty");
-    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false},2:{matched:[],selected:null,attempts:0,hintShown:false},3:{caseIndex:0,decisions:[],attempts:0,hintShown:false},4:{destinations:{},focus:35,stage:"allocate",found:false,attempts:0,hintShown:false},5:{stage:"timelapse",viewed:false,selected:null,attempts:0,hintShown:false},6:{node:0,selections:[],viewed:[],attempts:0,hintShown:false},7:{step:0,transitionViewed:false,selectedWell:null,attempts:0,hintShown:false},8:{order:["culture","arrives","identification","details","result","microscopy","ast","growth"],selected:null,attempts:0,hintShown:false}},completed:false,completedAt:null,updatedAt:new Date().toISOString()};
+    return {version:VERSION,caseId:caseId(seed),difficulty,currentMission:1,missionFlags:{},clues:{},missionState:{1:{questionIndex:0,attempts:[0,0,0,0,0,0],completedQuestions:[],hintShown:false},2:{matched:[],pendingKey:null,attempts:0,hintShown:false},3:{caseIndex:0,decisions:[],attempts:0,hintShown:false},4:{destinations:{},focus:35,stage:"allocate",found:false,attempts:0,hintShown:false},5:{stage:"timelapse",viewed:false,selected:null,attempts:0,hintShown:false},6:{node:0,selections:[],viewed:[],attempts:0,hintShown:false},7:{step:0,transitionViewed:false,selectedWell:null,attempts:0,hintShown:false},8:{order:["culture","arrives","identification","details","result","microscopy","ast","growth"],selected:null,attempts:0,hintShown:false}},completed:false,completedAt:null,updatedAt:new Date().toISOString()};
   }
   function earliestIncomplete(flags={}) { for(let i=1;i<=8;i+=1) if(flags[i]!==true) return i; return 8; }
   function sanitize(raw) {
-    if (!raw || typeof raw!=="object" || ![1,2,3,4,5,6,7,VERSION].includes(raw.version) || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
+    if (!raw || typeof raw!=="object" || ![1,2,3,4,5,6,7,8,VERSION].includes(raw.version) || !DIFFICULTIES.includes(raw.difficulty) || !/^MYC-\d{4}$/.test(raw.caseId||"")) return null;
     const flags={}; let gap=false;
     for(let i=1;i<=8;i+=1){ if(raw.missionFlags?.[i]===true && !gap) flags[i]=true; else gap=true; }
     const mission=Math.min(Number(raw.currentMission)||1,earliestIncomplete(flags));
@@ -51,13 +51,14 @@
     const attempts=Array.from({length:6},(_,i)=>Math.max(0,Number(source.attempts?.[i])||0));
     const m2=raw.missionState?.[2]||{};
     const matched=Array.isArray(m2.matched)?m2.matched.filter(k=>MATCHES.some(x=>x.key===k)).filter((k,i,a)=>a.indexOf(k)===i):[];
+    const pendingKey=matched.includes(m2.pendingKey)?m2.pendingKey:null;
     const m3=raw.missionState?.[3]||{};const decisions=Array.isArray(m3.decisions)?m3.decisions.filter(k=>RECEPTION_CASES.some(x=>x.key===k)).filter((k,i,a)=>a.indexOf(k)===i):[];
     const m4=raw.missionState?.[4]||{};const destinations={};for(let i=1;i<=6;i+=1)if(["slide","culture"].includes(m4.destinations?.[i]))destinations[i]=m4.destinations[i];
     const m5=raw.missionState?.[5]||{};
     const m6=raw.missionState?.[6]||{};const selections=Array.isArray(m6.selections)?m6.selections.slice(0,3):[];
     const m7=raw.missionState?.[7]||{};
     const m8=raw.missionState?.[8]||{};const order=Array.isArray(m8.order)&&m8.order.length===8&&JOURNEY.every(k=>m8.order.includes(k))?m8.order.slice():["culture","arrives","identification","details","result","microscopy","ast","growth"];
-    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)},2:{matched,selected:null,attempts:Math.max(0,Number(m2.attempts)||0),hintShown:Boolean(m2.hintShown)},3:{caseIndex:Math.min(decisions.length,4),decisions,attempts:Math.max(0,Number(m3.attempts)||0),hintShown:Boolean(m3.hintShown)},4:{destinations,focus:Math.min(100,Math.max(0,Number(m4.focus)||35)),stage:m4.stage==="microscopy"?"microscopy":"allocate",found:Boolean(m4.found),attempts:Math.max(0,Number(m4.attempts)||0),hintShown:Boolean(m4.hintShown)},5:{stage:m5.stage==="choices"?"choices":"timelapse",viewed:Boolean(m5.viewed),selected:["mould","none","bacteria","yeast"].includes(m5.selected)?m5.selected:null,attempts:Math.max(0,Number(m5.attempts)||0),hintShown:Boolean(m5.hintShown)},6:{node:Math.min(2,Math.max(0,Number(m6.node)||0)),selections,viewed:Array.isArray(m6.viewed)?m6.viewed.filter(k=>SPECIES.some(x=>x.key===k)):[],attempts:Math.max(0,Number(m6.attempts)||0),hintShown:Boolean(m6.hintShown)},7:{step:Math.min(2,Math.max(0,Number(m7.step)||0)),transitionViewed:Boolean(m7.transitionViewed),selectedWell:Number.isInteger(m7.selectedWell)?m7.selectedWell:null,attempts:Math.max(0,Number(m7.attempts)||0),hintShown:Boolean(m7.hintShown)},8:{order,selected:JOURNEY.includes(m8.selected)?m8.selected:null,attempts:Math.max(0,Number(m8.attempts)||0),hintShown:Boolean(m8.hintShown)}},completed:Boolean(raw.completed)&&Object.keys(flags).length===8};
+    return {...raw,version:VERSION,missionFlags:flags,currentMission:mission,clues:raw.clues&&typeof raw.clues==="object"?raw.clues:{},missionState:{...raw.missionState,1:{questionIndex:Math.min(5,Math.max(0,Number(source.questionIndex)||0)),attempts,completedQuestions,hintShown:Boolean(source.hintShown)},2:{matched,pendingKey,attempts:Math.max(0,Number(m2.attempts)||0),hintShown:Boolean(m2.hintShown)},3:{caseIndex:Math.min(decisions.length,4),decisions,attempts:Math.max(0,Number(m3.attempts)||0),hintShown:Boolean(m3.hintShown)},4:{destinations,focus:Math.min(100,Math.max(0,Number(m4.focus)||35)),stage:m4.stage==="microscopy"?"microscopy":"allocate",found:Boolean(m4.found),attempts:Math.max(0,Number(m4.attempts)||0),hintShown:Boolean(m4.hintShown)},5:{stage:m5.stage==="choices"?"choices":"timelapse",viewed:Boolean(m5.viewed),selected:["mould","none","bacteria","yeast"].includes(m5.selected)?m5.selected:null,attempts:Math.max(0,Number(m5.attempts)||0),hintShown:Boolean(m5.hintShown)},6:{node:Math.min(2,Math.max(0,Number(m6.node)||0)),selections,viewed:Array.isArray(m6.viewed)?m6.viewed.filter(k=>SPECIES.some(x=>x.key===k)):[],attempts:Math.max(0,Number(m6.attempts)||0),hintShown:Boolean(m6.hintShown)},7:{step:Math.min(2,Math.max(0,Number(m7.step)||0)),transitionViewed:Boolean(m7.transitionViewed),selectedWell:Number.isInteger(m7.selectedWell)?m7.selectedWell:null,attempts:Math.max(0,Number(m7.attempts)||0),hintShown:Boolean(m7.hintShown)},8:{order,selected:JOURNEY.includes(m8.selected)?m8.selected:null,attempts:Math.max(0,Number(m8.attempts)||0),hintShown:Boolean(m8.hintShown)}},completed:Boolean(raw.completed)&&Object.keys(flags).length===8};
   }
   function answerQuestion(index,choice){ return Number.isInteger(index)&&QUESTIONS[index]&&QUESTIONS[index].correct===choice; }
   function shouldAutoHint(difficulty,attempts){ return difficulty==="junior"?attempts>=1:difficulty==="explorer"?attempts>=2:false; }
