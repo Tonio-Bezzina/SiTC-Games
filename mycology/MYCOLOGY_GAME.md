@@ -55,9 +55,9 @@ The game must not claim the organism caused the symptoms. It may say that fungal
 | 1 | The Basics | Selected difficulty | Answer six safety and specimen-handling questions | Safety check complete |
 | 2 | Match the Sample | Safety check | Meet five fictional patients sequentially and choose the correct specimen for each complaint | Five matched patient/sample pairs; Jamie’s skin scraping selected as continuing case |
 | 3 | Detail Checking | Five matched pairs | Compare sample and request fields; accept three and reject two mismatches | Jamie’s correctly matched skin scraping accepted as `MYC-2048` |
-| 4 | Process the Dermatology Sample | Accepted skin scraping | Divide six pieces equally between slide and culture; focus/pan simulated fluorescence field | “Fungal elements seen” clue plus inoculated SDCC fungal culture plate |
-| 5 | Check the Culture | Incubated plate after simulated one-week time-lapse | Select mould-like growth among four plates | Growth-positive colony clue |
-| 6 | Mystery Fungi | Growth-positive colony | Compare four reference cultures/micrographs and follow a simplified key | Educational identification clue: *Aspergillus fumigatus* |
+| 4 | Process the Dermatology Sample | Accepted skin scraping | Place six pieces one-per-target across three slides and three culture media; choose the focused microscope view and tap its clue area | “Fungal elements seen” clue plus inoculated SDCC fungal culture plate |
+| 5 | Check the Culture | Incubated plate after simulated one-week time-lapse | Select mould-like growth among four paired image/description cards | Growth-positive colony clue |
+| 6 | Mystery Fungi | Growth-positive colony | Compare four reference cultures/micrographs with image-overlay hints and follow a simplified key | Educational identification clue: *Aspergillus fumigatus* |
 | 7 | The Antifungal Challenge | Identified simulated isolate | Read a simplified colour endpoint across increasing concentrations | MIC clue card; no susceptible/resistant or treatment interpretation |
 | 8 | Become the Mycology Detective | All seven prior clue cards | Order eight laboratory stages | Final journey flag and access to completion action |
 
@@ -139,10 +139,11 @@ Completion: **Jamie’s skin scraping is correctly identified and ready for the 
 
 Instruction: **Let’s use the skin scraping sample for fluorescent microscopy and culture.**
 
-Transfer prompt: **Place three pieces on the microscope slide and three pieces on the SDCC fungal agar plate.**
-Balanced success: **Good work. Three pieces are ready for microscopy and three are ready for culture.**
-Unbalanced attempt: **Keep the sample balanced: three pieces for each laboratory method.**
-Microscope prompt: **Place the prepared slide on the microscope, adjust the focus, then explore the field to find bright fungal structures.**
+Transfer prompt: **Drag each skin-scraping piece onto an empty slide or empty culture medium. Each target can hold only one piece.**
+Placement cue: **EMPTY — DROP SAMPLE HERE.**
+Occupied attempt: **That slide or culture medium already has a sample. Put this piece on a target marked EMPTY instead.**
+Balanced success: **Good work. Every slide and culture medium holds exactly one sample.**
+Microscope prompt: **Compare all five views. Choose the sharpest one, then tap the area where you would look for fungal clues.**
 Success: **You found them! The bright structures are fungal elements. Fluorescence makes it easier for us to find them.**
 Incorrect region: **Look carefully through the microscope and try finding a different area.**
 Hint: **Look for bright branching, tube-like hyphae with cross-walls and small spore shapes.**

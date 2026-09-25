@@ -14,9 +14,9 @@ The continuing specimen is represented by reusable SVG rather than baked case da
 - `mission-1/`: laboratory-safety vignette strip.
 - `mission-2/`: five separate fictional patient illustrations and five separate specimen-object illustrations.
 - `mission-3/`: reception background, blank dermatology envelope, blank request form.
-- `mission-4/`: skin flake, slide, SDCC fungal plate, processing background, stylised fluorescence field.
-- `mission-5/`: incubator states and registered culture choices.
-- `mission-6/`: four colony references, four simplified microscopic references, identification-key arrows.
+- `mission-4/`: skin flake, reusable empty slide and culture-medium targets, processing background, and five registered focus views.
+- `mission-5/`: incubator states and four individual registered culture-choice plates.
+- `mission-6/`: four colony references, four simplified microscopic references, identification-key arrows, with live HTML overlays supplied by the game.
 - `mission-7/`: 96-well geometry with live state applied by CSS.
 - `mission-8/`: empty detective board and eight journey icons.
 - `completion/`: completion background and badge.

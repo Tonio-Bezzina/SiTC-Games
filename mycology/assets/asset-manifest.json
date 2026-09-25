@@ -446,31 +446,6 @@
       "status": "production"
     },
     {
-      "id": "mission-4-fluorescence-field",
-      "file": "mission-4/fluorescence-field.svg",
-      "type": "svg",
-      "width": 1400,
-      "height": 900,
-      "bytes": 1201,
-      "sha256": "9d217515f242906fbe251a8bc795a6a04d0ddf1525cece42ce0ae69cbcb6bda1",
-      "background": "transparent-or-svg",
-      "source": "Repository-native SVG",
-      "missions": [
-        4
-      ],
-      "usage": "See MYCOLOGY_ASSETS.md",
-      "alt": "fluorescence field",
-      "registrationFamily": null,
-      "anchor": null,
-      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
-      "prohibited": [
-        "real patient data",
-        "logos",
-        "baked answer labels"
-      ],
-      "status": "production"
-    },
-    {
       "id": "mission-4-microscope-slide",
       "file": "mission-4/microscope-slide.svg",
       "type": "svg",
@@ -486,6 +461,131 @@
       "usage": "See MYCOLOGY_ASSETS.md",
       "alt": "microscope slide",
       "registrationFamily": null,
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-microscopy-view-1",
+      "file": "mission-4/microscopy-view-1.svg",
+      "type": "svg",
+      "width": 1400,
+      "height": 900,
+      "bytes": 1321,
+      "sha256": "517bb0400bf5a5555e21f3bc6c6adc0d46a1830bec21282380a6333e79fbd565",
+      "background": "opaque",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "microscopy view 1",
+      "registrationFamily": "microscopy-focus-views",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-microscopy-view-2",
+      "file": "mission-4/microscopy-view-2.svg",
+      "type": "svg",
+      "width": 1400,
+      "height": 900,
+      "bytes": 1321,
+      "sha256": "ab69b6f880817bb4d9ef59a39239a795b49b1c6aa9de09653c0e45d9433a41c0",
+      "background": "opaque",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "microscopy view 2",
+      "registrationFamily": "microscopy-focus-views",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-microscopy-view-3",
+      "file": "mission-4/microscopy-view-3.svg",
+      "type": "svg",
+      "width": 1400,
+      "height": 900,
+      "bytes": 1296,
+      "sha256": "da5c406cbf6e2f88d99d4093928be521d5191948a2770b6796750bfc0e723303",
+      "background": "opaque",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "microscopy view 3",
+      "registrationFamily": "microscopy-focus-views",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-microscopy-view-4",
+      "file": "mission-4/microscopy-view-4.svg",
+      "type": "svg",
+      "width": 1400,
+      "height": 900,
+      "bytes": 1320,
+      "sha256": "d21bd94ec90094b852460148af9590b3293de5831e1dfd5f911b4a64f4ac7af8",
+      "background": "opaque",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "microscopy view 4",
+      "registrationFamily": "microscopy-focus-views",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-4-microscopy-view-5",
+      "file": "mission-4/microscopy-view-5.svg",
+      "type": "svg",
+      "width": 1400,
+      "height": 900,
+      "bytes": 1321,
+      "sha256": "c722175c1e6eccb02723925207e8becf2fa710602e7cecf7bd57c52597ae7702",
+      "background": "opaque",
+      "source": "Repository-native SVG",
+      "missions": [
+        4
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "microscopy view 5",
+      "registrationFamily": "microscopy-focus-views",
       "anchor": null,
       "scientificNotes": "Educational illustration; live copy supplies interpretation.",
       "prohibited": [
@@ -571,20 +671,95 @@
       "status": "production"
     },
     {
-      "id": "mission-5-culture-plate-choices",
-      "file": "mission-5/culture-plate-choices.svg",
+      "id": "mission-5-culture-plate-bacteria",
+      "file": "mission-5/culture-plate-bacteria.svg",
       "type": "svg",
-      "width": 1400,
-      "height": 700,
-      "bytes": 1522,
-      "sha256": "e04079af51047144d0fa8d3fa3351bb99d85b5c27858f3e87ff08aa901dd0920",
+      "width": 600,
+      "height": 600,
+      "bytes": 692,
+      "sha256": "33c32e155095cd981cb879550364750fca69b0bbadaae79e624843b544bb7063",
       "background": "transparent-or-svg",
       "source": "Repository-native SVG",
       "missions": [
         5
       ],
       "usage": "See MYCOLOGY_ASSETS.md",
-      "alt": "culture plate choices",
+      "alt": "culture plate bacteria",
+      "registrationFamily": "culture-choices",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-5-culture-plate-mould",
+      "file": "mission-5/culture-plate-mould.svg",
+      "type": "svg",
+      "width": 600,
+      "height": 600,
+      "bytes": 766,
+      "sha256": "8cd87d9f2d3f97dbf8b756f8b4488eba99f21f9d3ba70576fdd2e02079f9c32f",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        5
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "culture plate mould",
+      "registrationFamily": "culture-choices",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-5-culture-plate-none",
+      "file": "mission-5/culture-plate-none.svg",
+      "type": "svg",
+      "width": 600,
+      "height": 600,
+      "bytes": 596,
+      "sha256": "b7bed0141a7a28b9612c9c3003687a742e7fd8080bcca714bc71f05b10f8171d",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        5
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "culture plate none",
+      "registrationFamily": "culture-choices",
+      "anchor": null,
+      "scientificNotes": "Educational illustration; live copy supplies interpretation.",
+      "prohibited": [
+        "real patient data",
+        "logos",
+        "baked answer labels"
+      ],
+      "status": "production"
+    },
+    {
+      "id": "mission-5-culture-plate-yeast",
+      "file": "mission-5/culture-plate-yeast.svg",
+      "type": "svg",
+      "width": 600,
+      "height": 600,
+      "bytes": 725,
+      "sha256": "69dc127e9e9b984754e908664febd382a6a74cb0af4b1dc5a047fb46e84a1a70",
+      "background": "transparent-or-svg",
+      "source": "Repository-native SVG",
+      "missions": [
+        5
+      ],
+      "usage": "See MYCOLOGY_ASSETS.md",
+      "alt": "culture plate yeast",
       "registrationFamily": "culture-choices",
       "anchor": null,
       "scientificNotes": "Educational illustration; live copy supplies interpretation.",

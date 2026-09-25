@@ -60,6 +60,10 @@ async function main() {
   if (patients.length !== 5 || patients.some((a) => a.width !== 1024 || a.height !== 1024 || a.anchor?.x !== 512 || a.anchor?.y !== 960)) errors.push("Mission 2 patient registration mismatch");
   const specimens = manifest.assets.filter((a) => a.registrationFamily === "mission-2-specimens");
   if (specimens.length !== 5 || specimens.some((a) => a.width !== 640 || a.height !== 640 || a.anchor?.x !== 320 || a.anchor?.y !== 570)) errors.push("Mission 2 specimen registration mismatch");
+  const focusViews = manifest.assets.filter((a) => a.registrationFamily === "microscopy-focus-views");
+  if (focusViews.length !== 5 || focusViews.some((a) => a.width !== 1400 || a.height !== 900)) errors.push("Mission 4 focus-view registration mismatch");
+  const cultureChoices = manifest.assets.filter((a) => a.registrationFamily === "culture-choices");
+  if (cultureChoices.length !== 4 || cultureChoices.some((a) => a.width !== 600 || a.height !== 600)) errors.push("Mission 5 culture-choice registration mismatch");
   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
   console.log(`PASS: ${manifest.assets.length} production assets, ${manifest.assets.filter(a=>a.type==="png").length} PNG, ${manifest.assets.filter(a=>a.type==="svg").length} SVG, 4 contact sheets`);
 }

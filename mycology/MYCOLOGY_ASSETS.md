@@ -30,9 +30,9 @@ Raster style is a polished, friendly, semi-realistic 3D educational illustration
 | `skin-piece` / `mission-4/skin-scraping-piece.svg` | Six draggable pieces | SVG 160×120 | Transparent; neutral small flakes, non-gory | Reused instance, six HTML copies |
 | `slide` / `mission-4/microscope-slide.svg` | Microscopy target | SVG 520×260 | Transparent | Code-rendered |
 | `culture-plate` / `mission-4/sdcc-plate.svg` | Culture target | SVG 520×420 | Transparent, neutral agar, blank live label area | Code-rendered; no recipe |
-| `fluorescence-field` / `mission-4/fluorescence-field.svg` | Pan/focus observation | SVG 1400×900 | Opaque near-black; sparse bright septate branching elements and spores in one target region | Code-rendered for scientific control; stylised not diagnostic |
+| `microscopy-focus-family` / five `mission-4/microscopy-view-*.svg` files | Focus comparison and clue-area observation | SVG 1400×900 each | Opaque near-black; one crisp field and four visibly blurred variants on identical registered canvases | Code-rendered for scientific control; stylised not diagnostic |
 | `incubator` / `mission-5/incubator.svg` | Time transition | SVG 900×700 | Transparent; closed/open states via groups | Code-rendered |
-| `culture-choices` / `mission-5/culture-plate-choices.svg` | Four culture choices | SVG 1400×700 | Transparent; registered plates on identical canvases | Code-rendered; only one mould-like target, no text |
+| `culture-choices` / four `mission-5/culture-plate-*.svg` files | Four culture choices paired with live descriptions | SVG 600×600 each | Transparent; registered plates on identical canvases | Code-rendered; only one mould-like target, no baked text |
 | `aspergillus-colonies` / `mission-6/aspergillus-colony-set.svg` | Four colony references | SVG 1400×700 | Transparent; blue-green, yellow-green, black, cinnamon-brown | Code-rendered; equal prominence |
 | `aspergillus-fields` / `mission-6/aspergillus-microscopy-set.svg` | Four microscopic references | SVG 1400×700 | Transparent; simplified head morphology | Code-rendered; educational disclaimer in HTML |
 | `key-arrows` / `mission-6/identification-key-arrows.svg` | Branching key | SVG 1200×500 | Transparent, arrows only | Code-rendered; all clue text HTML |
@@ -47,7 +47,8 @@ Raster style is a polished, friendly, semi-realistic 3D educational illustration
 
 - Dr Mira’s three registered states appear in the difficulty scene, hints, mission completions, and final screen.
 - `skin-scraping-piece.svg` is instantiated six times; duplication happens in markup, not separate files.
-- `sdcc-plate.svg` continues from Mission 4 into Mission 5 before being replaced by the registered plate-choice family.
+- `microscope-slide.svg` and `sdcc-plate.svg` are each instantiated three times as independent one-capacity targets in Mission 4.
+- `sdcc-plate.svg` continues from Mission 4 into Mission 5 before being replaced by the four registered plate-choice assets.
 - Mission 4 microscopy, Mission 5 colony, Mission 6 identification, and Mission 7 MIC become the four scientific clue cards reused in Mission 8 and review mode.
 - Shared icons and shell background are reused across missions but never baked with text.
 

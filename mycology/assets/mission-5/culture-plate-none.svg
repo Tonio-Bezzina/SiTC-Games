@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" role="img" aria-labelledby="title" >
+  <title id="title">Culture plate with no visible growth</title>
+<circle cx="300" cy="300" r="245" fill="#EEF7FA" stroke="#073C63" stroke-width="12"/><circle cx="300" cy="300" r="212" fill="#E6D79A" stroke="#B79F55" stroke-width="8"/><path d="M135 220c80-68 265-82 355 0" fill="none" stroke="white" stroke-opacity=".55" stroke-width="16" stroke-linecap="round"/><circle cx="300" cy="300" r="22" fill="#D2C77C" opacity=".45"/>
+</svg>
