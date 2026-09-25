@@ -10,6 +10,8 @@
   const VERSION = 8;
   let pendingFocus = null;
   let cutStart = null;
+  let touchDrag = null;
+  let suppressClickUntil = 0;
   let sequenceTimer = null;
   let lastRenderedScreen = null;
 
@@ -1293,6 +1295,10 @@
   }
 
   app.addEventListener("click", (event) => {
+    if (Date.now() < suppressClickUntil) {
+      event.preventDefault();
+      return;
+    }
     const control = event.target.closest("[data-action]");
     if (!control || control.disabled) return;
     handleAction(control.dataset.action, control.dataset.value, "click");
@@ -1361,19 +1367,138 @@
     if (stainingMachine && payload === "histology-unstained-slide") handleAction("mission6-place-slide", "", "drop");
   });
 
+  function touchDragDefinition(source) {
+    const action = source && source.dataset.action;
+    if (action === "toggle-transfer" && !state.racked) {
+      return { dropSelector: '[data-drop="rack"]', action: "rack-sample", label: "Move specimen to rack" };
+    }
+    if (action === "mission2-select-tissue" && state.mission2.step === "transfer") {
+      return { dropSelector: '[data-drop="cassette"]', action: "mission2-place-tissue", label: "Move tissue to cassette" };
+    }
+    if (action === "mission5-select-section" && state.mission5.step === "transfer_ready") {
+      return { dropSelector: '[data-drop="slide"]', action: "mission5-place-section", label: "Move section to slide" };
+    }
+    if (action === "mission6-select-slide" && state.mission6.step === "transfer_ready") {
+      return { dropSelector: '[data-drop="staining-machine"]', action: "mission6-place-slide", label: "Move slide to staining machine" };
+    }
+    return null;
+  }
+
+  function positionTouchDragPreview(x, y) {
+    if (!touchDrag || !touchDrag.preview) return;
+    touchDrag.preview.style.left = `${x}px`;
+    touchDrag.preview.style.top = `${y}px`;
+  }
+
+  function touchDropAt(x, y) {
+    if (!touchDrag) return null;
+    const belowFinger = document.elementFromPoint(x, y);
+    return belowFinger && belowFinger.closest(touchDrag.dropSelector);
+  }
+
+  function highlightTouchDrop(dropTarget) {
+    if (!touchDrag || touchDrag.dropTarget === dropTarget) return;
+    if (touchDrag.dropTarget) touchDrag.dropTarget.classList.remove("touch-drop-active");
+    touchDrag.dropTarget = dropTarget;
+    if (dropTarget) dropTarget.classList.add("touch-drop-active");
+  }
+
+  function startTouchDrag() {
+    if (!touchDrag || touchDrag.active) return;
+    touchDrag.active = true;
+    const preview = document.createElement("div");
+    preview.className = "touch-drag-preview";
+    preview.setAttribute("aria-hidden", "true");
+    const image = touchDrag.source.querySelector("img");
+    if (image) preview.append(image.cloneNode(true));
+    const label = document.createElement("span");
+    label.textContent = touchDrag.label;
+    preview.append(label);
+    document.body.append(preview);
+    touchDrag.preview = preview;
+    touchDrag.source.classList.add("touch-drag-source");
+    document.documentElement.classList.add("is-dragging");
+    positionTouchDragPreview(touchDrag.lastX, touchDrag.lastY);
+  }
+
+  function finishTouchDrag(event, cancelled) {
+    if (!touchDrag || event.pointerId !== touchDrag.pointerId) return false;
+    const completedDrag = touchDrag.active;
+    const dropTarget = !cancelled && completedDrag ? touchDropAt(event.clientX, event.clientY) : null;
+    const action = touchDrag.action;
+    if (touchDrag.dropTarget) touchDrag.dropTarget.classList.remove("touch-drop-active");
+    if (touchDrag.preview) touchDrag.preview.remove();
+    touchDrag.source.draggable = touchDrag.nativeDraggable;
+    touchDrag.source.classList.remove("touch-drag-source");
+    document.documentElement.classList.remove("is-dragging");
+    touchDrag = null;
+    if (completedDrag) {
+      suppressClickUntil = Date.now() + 650;
+      event.preventDefault();
+      if (dropTarget) handleAction(action, "", "drop");
+    }
+    return completedDrag;
+  }
+
   app.addEventListener("pointerdown", (event) => {
+    if (event.isPrimary && event.pointerType !== "mouse") {
+      const source = event.target.closest('[draggable="true"][data-action]');
+      const definition = touchDragDefinition(source);
+      if (definition) {
+        touchDrag = {
+          ...definition,
+          source,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          lastX: event.clientX,
+          lastY: event.clientY,
+          nativeDraggable: source.draggable,
+          active: false,
+          preview: null,
+          dropTarget: null
+        };
+        source.setPointerCapture(event.pointerId);
+        source.draggable = false;
+        return;
+      }
+    }
     if (!event.target.closest("[data-cut-zone]") || state.mission2.step !== "cutting" || !state.mission2.scalpelSelected) return;
     cutStart = { x: event.clientX, y: event.clientY };
     document.documentElement.classList.add("is-dragging");
   });
 
+  app.addEventListener("pointermove", (event) => {
+    if (!touchDrag || event.pointerId !== touchDrag.pointerId) return;
+    touchDrag.lastX = event.clientX;
+    touchDrag.lastY = event.clientY;
+    if (!touchDrag.active && Math.hypot(event.clientX - touchDrag.startX, event.clientY - touchDrag.startY) >= 9) startTouchDrag();
+    if (!touchDrag.active) return;
+    event.preventDefault();
+    positionTouchDragPreview(event.clientX, event.clientY);
+    highlightTouchDrop(touchDropAt(event.clientX, event.clientY));
+  });
+
   app.addEventListener("pointerup", (event) => {
+    if (finishTouchDrag(event, false)) return;
     if (!cutStart) return;
     const distance = Math.hypot(event.clientX - cutStart.x, event.clientY - cutStart.y);
     cutStart = null;
     document.documentElement.classList.remove("is-dragging");
     if (distance >= 55) handleAction("mission2-cut", "", "swipe");
     else setFeedback("Try a longer swipe across the broad gold cutting guide, or use Cut along the guide.", "info");
+  });
+
+  app.addEventListener("pointercancel", (event) => {
+    if (finishTouchDrag(event, true)) return;
+    if (cutStart) {
+      cutStart = null;
+      document.documentElement.classList.remove("is-dragging");
+    }
+  });
+
+  app.addEventListener("lostpointercapture", (event) => {
+    finishTouchDrag(event, true);
   });
 
   function updateOrientation() {

@@ -178,8 +178,20 @@ h1, h2, h3, p { margin-top: 0; }
 .rejected-card span { display: block; color: var(--muted); }
 .rejected-card .specimen-pot { width: 110px; opacity: .72; }
 .accepted-sample, .receiving-rack { position: relative; min-height: 300px; padding: 18px; color: var(--navy); cursor: pointer; font-weight: 900; }
-.accepted-sample[draggable="true"] { touch-action: none; }
+.accepted-sample[draggable="true"],
+.small-tissue[draggable="true"],
+.transfer-section[draggable="true"],
+.unstained-slide-source[draggable="true"] { touch-action: none; }
 .is-dragging { overflow: hidden; }
+.touch-drag-source { opacity: .55; }
+.touch-drag-preview {
+  position: fixed; z-index: 2000; width: min(180px, 34vw); max-height: 170px; overflow: hidden;
+  border: 4px solid var(--gold); border-radius: 18px; padding: 8px; background: rgba(255,255,255,.96);
+  box-shadow: 0 14px 34px rgba(3,40,66,.35); color: var(--navy); font-size: .82rem; font-weight: 900;
+  pointer-events: none; text-align: center; transform: translate(-50%, -58%);
+}
+.touch-drag-preview img { display: block; width: 100%; height: 105px; object-fit: contain; }
+.touch-drop-active { border-color: var(--gold) !important; background: #fff9dd !important; transform: scale(1.015); }
 .accepted-sample.selected { border: 5px solid var(--gold); background: #fff9dd; }
 .accepted-sample.transferred { opacity: .42; }
 .accepted-sample .specimen-pot { width: min(100%,180px); }

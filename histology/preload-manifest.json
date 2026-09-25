@@ -5,9 +5,9 @@
       "name": "Game shell",
       "files": [
         "play.html",
-        "styles.css?v=9",
+        "styles.css?v=10",
         "logic.js?v=9",
-        "game.js?v=12",
+        "game.js?v=13",
         "assets/shared/focus-arrow.svg",
         "assets/shared/guide-strip-avatar.png",
         "assets/shared/hint-icon.svg",
